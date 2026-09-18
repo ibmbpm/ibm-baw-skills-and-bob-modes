@@ -8,9 +8,8 @@ This skill automates two things that BAW developers typically do manually: writi
 
 ## Setup and configuration
 
-- Phase A discovery (optional MCP): If the BAW Authoring MCP server (`workflow-runtime-authoring`) is connected, Bob uses it to list apps and snapshots. If not, discovery falls back to REST using `GET /ops/std/bpm/containers`.
-- Phase A TWX export (always REST): Regardless of MCP availability, the `.twx` file is always downloaded via REST (`GET /ops/std/bpm/containers/{container}/versions/{version}/export`). Your BAW server URL and credentials are required for this step.
-- Phase B execution (optional MCP): If the BAW Runtime MCP server (`workflow-runtime`) is connected, Bob uses it to start processes, claim tasks, and complete them. If not, Phase B falls back to REST.
+- Phase A discovery & TWX export: Discovers applications and snapshots via the BAW Operations REST API (`GET /ops/std/bpm/containers`). The `.twx` file is downloaded via REST (`GET /ops/std/bpm/containers/{container}/versions/{version}/export`). Your BAW server URL and credentials are required for this step.
+- Phase B execution (optional Runtime MCP): If the BAW Runtime MCP server (`workflow-runtime`) is connected, Bob uses it to start processes, claim tasks, and complete them. If not, Phase B runs via standard REST calls.
 - Local TWX fallback: If you already have the `.twx` file on disk, provide the file path and Bob will work from it without connecting to a server.
 - BAW server credentials are only used to obtain a session token for the current conversation — they are not stored.
 - Admin-level credentials are typically required for the TWX export endpoint.

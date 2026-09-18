@@ -1,6 +1,7 @@
 ---
 name: troubleshoot-baw-logs
 description: "Diagnoses IBM Business Automation Workflow (BAW) runtime failures by analyzing error logs, stack traces, and FFDC files. Identifies root causes, correlates entries across log types, and provides structured remediation steps. Use when the user: pastes BAW log content (SystemOut.log, messages.log, trace.log, FFDC files, or Liberty log lines); asks about a BAW error code (e.g. BPMD0049E, CWTBG0019E, CWWKB*, CWLLG*); mentions a process instance in error or stuck state; says snapshot deployment or activation failed; or asks why a process/task/service failed. Also use when pointing to a local BAW log file, or when the MCP server is connected and they want get_process_instance_errors or get_baw_server_logs called. Trigger phrases: BAW error, FFDC, process is stuck, error state, task keeps failing, service call failed, stack trace, TWException, BPDInstance, messages.log, SystemOut.log, trace.log, BPMD, CWWKB, or any pasted log content with Liberty/BPM thread IDs and error codes."
+license: Apache-2.0
 metadata:
   version: 1.0.0
 ---

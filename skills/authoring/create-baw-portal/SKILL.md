@@ -8,6 +8,7 @@ description: >
   Three usage patterns: (1) API guidance only, (2) adapt an existing application, (3) generate
   a new portal or full application. Carbon is the default design system where appropriate.
   Does NOT generate BAW process diagrams (BPMN) or internal BAW XML artifacts.
+license: Apache-2.0
 metadata:
   version: 1.0.0
   display_name: BAW Portal Builder

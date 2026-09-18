@@ -13,6 +13,7 @@ description: >
   artifacts", "run a code review before deployment", uploads a .twx file, or provides a
   Checkstyle report to ingest. Also triggers when the user mentions code quality, code
   smell, anti-patterns, or performance issues in BAW artifacts.
+license: Apache-2.0
 metadata:
   version: 1.0.0
 permissions:

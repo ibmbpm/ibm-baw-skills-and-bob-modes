@@ -1,6 +1,9 @@
 ---
 name: generate-baw-business-objects
 description: Generates and modifies BAW Business Object import files -- valid OpenAPI 3.0 JSON that IBM BAW WebPD imports via the "Import business objects" option in the Data menu. Use when the user wants to generate Business Objects or BOs for a BAW process app, or when the user wants to modify an existing Business Object or BO .json file (whether pasted inline or referenced via @file). Always use this skill for BO modifications -- even simple field additions, removals, or renames -- because the output must comply with BAW's specific OpenAPI format rules, include import instructions, and surface safety warnings when fields are removed or renamed (removing or renaming a field breaks consumers immediately on re-import). Do not edit BO JSON files directly without this skill. This skill covers ONLY the Business Objects import artifact -- for BPMN process generation use generate-baw-bpmn instead.
+license: Apache-2.0
+metadata:
+  version: 1.0.0
 ---
 
 # Generate BAW Business Objects

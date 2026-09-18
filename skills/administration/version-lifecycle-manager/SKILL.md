@@ -13,6 +13,7 @@ description: >-
   inspecting snapshots — use the version-inspector skill for those. Supports
   BAW on-premises, BAW on Cloud, and CP4BA (IBM Cloud Pak for Business
   Automation).
+license: Apache-2.0
 metadata:
   version: "1.0.0"
 ---

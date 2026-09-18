@@ -2,6 +2,7 @@
 name: process-compliance-violation-detection
 description: >
   Evaluate IBM BAW and CP4BA process applications against compliance, governance, regulatory, business policy, architecture, or standards documents. Detects violations, gaps, risks, and missing controls, then recommends remediation using documented BAW/CP4BA platform capabilities. Use for: compliance checks, policy audits, governance reviews, flagging violations before production, or when the user says "does this process comply", "compliance check", "audit my BAW process", "check against our policy", "SOX compliance", "GDPR compliance", "process governance review", "flag violations", or "compliance violations". Always use this skill for any BAW/CP4BA compliance, governance, audit, or policy analysis — even when the user does not say "compliance" explicitly. Do not use for process authoring or BAW runtime inspection.
+license: Apache-2.0
 metadata:
   version: 1.0.0
 ---

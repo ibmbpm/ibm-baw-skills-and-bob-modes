@@ -14,6 +14,7 @@ description: >-
   installed on this server", "snapshot summary", "check snapshot state", "list
   snapshots", "list versions", "show all versions", or "inspect snapshot". Use
   proactively before activating, deactivating, or deleting a snapshot.
+license: Apache-2.0
 metadata:
   version: "1.0.0"
 ---

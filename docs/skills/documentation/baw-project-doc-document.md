@@ -18,7 +18,7 @@ This skill produces a complete Markdown documentation file for a BAW process app
 - TWX exports from BAW ≥ 8.6.x (CP4A flat layout) and older ≤ 8.5 subfolder layout are both supported. The extraction script handles both automatically.
 - BPMN + XSD output from the `generate-baw-bpmn` skill is fully supported as an alternative input.
 - Services, coach views, and integration endpoint details are not available from BPMN + XSD input. These are only extracted from a TWX export. The skill notes the gap automatically in the Assumptions & Gaps section.
-- No live BAW server connection. REST API and MCP (`get_process_model`, `export_solution_expanded`) paths are out of scope for this skill.
+- No live BAW server connection. REST API and MCP paths are out of scope for this skill.
 
 ## Prompt examples
 

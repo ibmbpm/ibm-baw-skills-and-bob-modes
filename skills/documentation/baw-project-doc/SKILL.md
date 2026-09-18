@@ -1,6 +1,7 @@
 ---
 name: baw-project-doc
 description: "Generates comprehensive, up-to-date documentation for IBM Business Automation Workflow (BAW) applications by analyzing process models, services, integrations, business objects, and application artifacts — no MCP server or live server connection required. Accepts three input types: a TWX export file, a BPMN + XSD pair (output of the generate-baw-bpmn skill), or a ZIP archive containing a BPMN + XSD. Use whenever the user wants to document a BAW application, generate technical or functional documentation, understand what a BAW process app contains, or keep documentation synchronized with an application. Trigger phrases include \"document this BAW app\", \"generate documentation for\", \"what does this process app do\", \"document my TWX file\", \"generate a README for my BAW process\", \"summarize my BAW project\", \"document this BPMN\"."
+license: Apache-2.0
 metadata:
   version: "1.0.0"
 ---

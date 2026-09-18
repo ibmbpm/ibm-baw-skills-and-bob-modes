@@ -5,6 +5,7 @@ permissions:
   - file_write    # write_file — used in Step 5 to write the endpoint validation report
   - execute_command    # execute_command — used in Steps B1–B5 (BPMConfig discovery/export) and Step 4c (scan script)
   - shell    # shell — used for cross-platform discovery commands (Get-ChildItem, find)
+license: Apache-2.0
 metadata:
   version: 1.0.0
 ---
