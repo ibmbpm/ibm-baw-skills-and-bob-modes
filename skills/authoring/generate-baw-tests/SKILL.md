@@ -1,14 +1,17 @@
 ---
 name: generate-baw-tests
-description: "Use when a BAW developer wants to generate or execute automated tests for an IBM BAW process app, case application, or service flow. Covers two phases: Phase A analyses artifacts and generates a structured test suite file (processes and coaches); Phase B executes process tests end-to-end (start instance, claim tasks, update task data, complete tasks, assert each step and final state). Use when the user says 'generate tests for my process', 'run my test suite', 'test this service', 'test all paths', 'create edge case tests', 'test my case', 'test coach validation', or 'test with invalid data'. Also use proactively when a user shares a BAW process app and asks if it works, wants to validate a workflow, or asks how to test before going to production. Do not use for authoring new processes (generate-baw-bpmn), inspecting running instances (inspect-baw-processes), or creating coach UIs (create-baw-widget)."
+description: "Use when a BAW developer wants to generate or execute automated tests for an IBM BAW process app, case application, or service flow. Covers two phases: Phase A analyzes artifacts and generates a structured test suite file (processes and coaches); Phase B executes process tests end-to-end (start instance, claim tasks, update task data, complete tasks, assert each step and final state). Use when the user says 'generate tests for my process', 'run my test suite', 'test this service', 'test all paths', 'create edge case tests', 'test my case', 'test coach validation', or 'test with invalid data'. Also use proactively when a user shares a BAW process app and asks if it works, wants to validate a workflow, or asks how to test before going to production. Do not use for authoring new processes (generate-baw-bpmn), inspecting running instances (inspect-baw-processes), creating coach widgets (create-baw-widget), or building custom portals (create-baw-portal)."
 license: Apache-2.0
+compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
 allowed-tools:
-  - execute
-  - write
-  - read
-  - fetch
+  - Read
+  - Edit
+  - Bash
 metadata:
   version: "1.0.0"
+  display_name: Generate BAW Tests
+  short_description: Generate and execute end-to-end automated test suites for IBM BAW process apps, case applications, and service flows.
+  author: IBM BAW Team
 ---
 
 # Generate BAW Tests
@@ -19,7 +22,7 @@ This skill has two distinct phases. Run them in order for the full workflow, or 
 
 | Phase | What it does |
 |---|---|
-| **A — Generation** | Fetch the process app artifacts, analyse them, and produce a test suite JSON file covering happy path, alternative paths, and edge cases for Processes and Coaches. |
+| **A — Generation** | Fetch the process app artifacts, analyze them, and produce a test suite JSON file covering happy path, alternative paths, and edge cases for Processes and Coaches. |
 | **B — Execution** | Take a test suite file and drive it against a live BAW environment: start a process, claim each user task, supply test data, complete it, and report pass/fail in plain language. |
 
 ---
@@ -94,7 +97,7 @@ This determines whether to chain directly into Phase B or stop after the file is
    > *"If you already have the `.twx` file for this app on your machine, you can point me to it and I'll work from that directly — no server connection needed for this step."*
    If the user provides a file path, read the file from disk, treat it as a ZIP, extract and parse the XML files exactly as in Path 1. Do not ask for the file path pre-emptively — only after a real failure.
 
-2. **Analyse.** Follow the artifact-type-specific instructions in `references/TEST_GENERATION.md`. The goal is to map every flow path, gateway decision, user task sequence, coach field, and boundary condition before writing a single test case.
+2. **Analyze.** Follow the artifact-type-specific instructions in `references/TEST_GENERATION.md`. The goal is to map every flow path, gateway decision, user task sequence, coach field, and boundary condition before writing a single test case.
 
 3. **Generate the test suite.** Use the format in `references/TEST_SUITE_FORMAT.md` exactly. Every test case must have a clear ID, human-readable name, a type label (`process` or `coach`), preconditions, step sequence with data, and expected outcomes. Produce at minimum: one happy-path test, at least one alternative/error path per gateway or decision point, and relevant boundary/edge cases.
 
@@ -176,8 +179,9 @@ Both formats are fully specified in `references/TEST_SUITE_FORMAT.md` and `refer
 In scope: Process test generation (BPMN paths, gateways, user tasks, business data), Coach test generation (fields, validation, required conditions), process test execution (start / claim / complete), result reporting.
 
 Out of scope — do not attempt:
-- **Service Flow test generation or execution** — covered by a separate skill.
+- **Service Flow test generation or execution** — covered by the `test-baw-service-flows` skill.
 - **Case application testing** — out of scope for this version.
 - **Federated multi-system test orchestration** — each test targets a single BAW system.
 - **Authoring or modifying process definitions** — use `generate-baw-bpmn`.
 - **UI rendering or screenshot capture of Coaches** — static artifact analysis only.
+- **Creating coach widgets or task portals** — use `create-baw-widget` or `create-baw-portal`.

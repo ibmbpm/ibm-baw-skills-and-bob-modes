@@ -1,0 +1,40 @@
+{
+  "description": "BAW (Business Automation Workflow) Type Mappings - Maps simple type names to BAW type IDs (without dependency prefix)",
+  "version": "2.0.0",
+  "note": "Dependency IDs are now extracted dynamically from the template at runtime. Only type IDs are stored here.",
+  "mappings": {
+    "ANY": "12.c09c9b6e-aabd-4897-bef2-ed61db106297",
+    "Boolean": "12.83ff975e-8dbc-42e5-b738-fa8bc08274a2",
+    "Date": "12.68474ab0-d56f-47ee-b7e9-510b45a2a8be",
+    "Decimal": "12.536b2aa5-a30f-4eca-87fa-3a28066753ee",
+    "Integer": "12.3fa0d7a0-828a-4d60-99cc-db5ed143fc2d",
+    "String": "12.db884a3c-c533-44b7-bb2d-47bec8ad4022",
+    "Time": "12.20fdb1a2-f6ec-462e-8627-d49859ba42ae",
+    "NameValuePair": "12.d2e5a15a-ea53-4793-9e93-29af5bd80b13",
+    "Visibility": "12.78a1a772-7c41-42ed-b78a-98a9eed21542"
+  },
+  "aliases": {
+    "any": "ANY",
+    "boolean": "Boolean",
+    "date": "Date",
+    "decimal": "Decimal",
+    "number": "Decimal",
+    "Number": "Decimal",
+    "integer": "Integer",
+    "string": "String",
+    "time": "Time",
+    "namevaluepair": "NameValuePair",
+    "visibility": "Visibility"
+  },
+  "notes": {
+    "ANY": "Generic type that can hold any value",
+    "Boolean": "True/false boolean value",
+    "Date": "Date and datetime values (uses Decimal internally)",
+    "Decimal": "Floating point numbers and dates",
+    "Integer": "Whole numbers",
+    "String": "Text strings",
+    "Time": "Time values",
+    "NameValuePair": "Key-value pair structure",
+    "Visibility": "UI visibility control type"
+  }
+}

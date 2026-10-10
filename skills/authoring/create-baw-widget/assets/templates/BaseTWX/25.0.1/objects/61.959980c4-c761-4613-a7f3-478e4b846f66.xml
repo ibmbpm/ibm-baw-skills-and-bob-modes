@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <managedAsset id="61.959980c4-c761-4613-a7f3-478e4b846f66" name="993e03e9-2574-40fc-807c-65b06be378fd.zip">
+        <lastModified>1778703345168</lastModified>
+        <lastModifiedBy>cpmanager</lastModifiedBy>
+        <tenantId isNull="true" />
+        <managedAssetId>61.959980c4-c761-4613-a7f3-478e4b846f66</managedAssetId>
+        <assetUuid>9c19cf8e-1cbc-47a9-a5ab-95eae3440b78</assetUuid>
+        <mimeType>application/zip</mimeType>
+        <charEncoding isNull="true" />
+        <assetTypeCode>T</assetTypeCode>
+        <length>198186</length>
+        <localLastModification>0</localLastModification>
+        <description isNull="true" />
+        <isDocumentationFile>false</isDocumentationFile>
+        <guid>guid:959980c4-c761-4613-a7f3-478e4b846f66</guid>
+        <versionId>2f67ca2b-b38f-403b-b120-24dbad29bdc6</versionId>
+    </managedAsset>
+</teamworks>
+

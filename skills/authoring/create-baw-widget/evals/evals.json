@@ -1,0 +1,41 @@
+{
+  "skill_name": "create-baw-widget",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need a new BAW coach widget called StatusBadge that shows a colored pill (green/yellow/red) with a text label, bound to a simple status string like 'ON_TRACK', 'AT_RISK', or 'DELAYED'. No business object needed, keep it simple. Put it under widgets/StatusBadge/.",
+      "expected_output": "A widgets/StatusBadge/ folder with widget/Layout.html, widget/InlineCSS.css, and widget/inlineJavascript.js. CSS uses hardcoded Carbon color values with inline comments naming the corresponding theme variables (not @bpm-* LESS references). JS reads this.getData() directly (not .items, since this isn't a list binding) and maps the status string to a color class. Since the widget is simple and has no interactive behavior beyond initial render, either no event handlers or just change.js, with the choice explained. A 120x120 StatusBadge.svg palette icon. No packaging steps performed — Phase 2 is only run when explicitly requested.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Our TasksList widget's preview isn't showing up correctly in BAW Designer - can you check widgets/TasksList/AdvancePreview/ and fix it so it follows the proper BAW preview pattern?",
+      "expected_output": "Inspects the existing AdvancePreview files, checks whether they implement the mixObject pattern (createPreview, getLabelDomElement, generateSampleData, propertyChanged, modelChanged) using Dojo modules (dojo/dom-construct, dojo/dom-class, dojo/dom-attr) and BPMExt-Controls.preview.js, rather than vanilla DOM manipulation or hardcoded preview HTML. Fixes whichever part is missing/wrong, referencing the bundled TasksList/DateOutput examples as the correct pattern. Does not attempt packaging.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Create a widget called ApprovalHistory that renders a list of approval events (approver name, date, decision, comment) bound to a list of business objects. It should re-render whenever the bound data changes.",
+      "expected_output": "Creates widgets/ApprovalHistory/ with widget/Layout.html, InlineCSS.css, inlineJavascript.js, a config.json with bindingType.isList: true and changeFunction: false referencing an ApprovalEvent business object, and an ApprovalEvent.json business object file. The business object JSON has BOTH a 'name' field (e.g. 'ApprovalEvent') AND 'type': 'businessObject' — not just a type field. config.json's businessObjects is an array of objects with {name, file} — NOT a string array. inlineJavascript.js uses binding.addDataChangeListener to re-render when data changes (no standalone change.js — adding both causes double-renders). Reads this.getData().items (not this.getData() directly) inside the listener since it's a list binding. Does NOT include a standalone events/change.js. Creates a palette icon and datamodel.md/eventHandler.md.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Add a load.js and change.js event handler to my existing MultiSelect widget so it registers a custom BAW event on load and re-renders when the selection changes.",
+      "expected_output": "Hand-writes widgets/MultiSelect/widget/events/load.js and change.js following the var _this = this; convention (load.js registers a custom handler via bpmext.ui.registerEventHandlingFunction, change.js re-renders from this.getData()). Does not touch packaging or any other widget.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "I've just created a ProgressBar widget. Now package it into a TWX file I can import into BAW.",
+      "expected_output": "Checks whether the widget has any business objects; if so, runs register_business_objects.py first. Runs python3 scripts/package_baw.py from the project root (no manual widget list to update — the packager auto-discovers all widgets under widgets/). Reports the output .twx path, version number, and that it is ready to import via BAW Process Admin Console → Toolkits → Import. Does NOT attempt server deployment via API or MCP.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Create a new BAW widget called RatingStars that shows a 1-5 star rating bound to an integer, then package it into a TWX.",
+      "expected_output": "Phase 1: Creates widgets/RatingStars/ with Layout.html (role=img, aria-label), InlineCSS.css using hardcoded Carbon hex values with LESS variable comments (not @bpm-* syntax directly), inlineJavascript.js reading this.getData() as a scalar (no .items), RatingStars.svg palette icon, and datamodel.md. Skips config.json/business object and event handlers (plain integer binding, no interactivity) — notes both as explicit decisions. Phase 2: Runs python3 scripts/package_baw.py (no manual widget list to update — the packager auto-discovers all widgets under widgets/), and reports the output .twx path with import instructions.",
+      "files": []
+    }
+  ]
+}

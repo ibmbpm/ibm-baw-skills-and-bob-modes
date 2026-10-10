@@ -1,0 +1,50 @@
+<svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="120" height="120" fill="#ffffff"/>
+  
+  <!-- Tasks list container -->
+  <g transform="translate(15, 20)">
+    
+    <!-- List container -->
+    <rect x="0" y="0" width="90" height="80" rx="4" fill="#ffffff" stroke="#8d8d8d" stroke-width="1.5"/>
+    
+    <!-- Task 1 - Completed -->
+    <g transform="translate(8, 10)">
+      <circle cx="6" cy="6" r="6" fill="#24a148" stroke="#24a148" stroke-width="1"/>
+      <path d="M 3 6 L 5 8 L 9 4" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <text x="18" y="9" font-family="IBM Plex Sans, Arial, sans-serif" font-size="9" fill="#161616">Complete project setup</text>
+      <line x1="18" y1="10" x2="70" y2="10" stroke="#525252" stroke-width="0.5" opacity="0.5"/>
+    </g>
+    
+    <!-- Task 2 - In Progress -->
+    <g transform="translate(8, 28)">
+      <circle cx="6" cy="6" r="6" fill="#0f62fe" stroke="#0f62fe" stroke-width="1">
+        <animate attributeName="opacity" values="1;0.6;1" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="6" cy="6" r="2" fill="#ffffff"/>
+      <text x="18" y="9" font-family="IBM Plex Sans, Arial, sans-serif" font-size="9" fill="#161616" font-weight="500">Review documentation</text>
+    </g>
+    
+    <!-- Task 3 - Pending -->
+    <g transform="translate(8, 46)">
+      <circle cx="6" cy="6" r="6" fill="#ffffff" stroke="#8d8d8d" stroke-width="1.5"/>
+      <text x="18" y="9" font-family="IBM Plex Sans, Arial, sans-serif" font-size="9" fill="#525252">Deploy to production</text>
+    </g>
+    
+    <!-- Task 4 - Pending -->
+    <g transform="translate(8, 64)">
+      <circle cx="6" cy="6" r="6" fill="#ffffff" stroke="#8d8d8d" stroke-width="1.5"/>
+      <text x="18" y="9" font-family="IBM Plex Sans, Arial, sans-serif" font-size="9" fill="#525252">Final testing</text>
+    </g>
+    
+  </g>
+  
+  <!-- Status indicators -->
+  <g transform="translate(25, 105)">
+    <circle cx="5" cy="5" r="4" fill="#24a148"/>
+    <circle cx="30" cy="5" r="4" fill="#0f62fe"/>
+    <circle cx="55" cy="5" r="4" fill="#ffffff" stroke="#8d8d8d" stroke-width="1"/>
+  </g>
+</svg>
+
+<!-- Made with Bob -->

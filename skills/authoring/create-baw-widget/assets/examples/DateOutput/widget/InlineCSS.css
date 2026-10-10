@@ -1,0 +1,42 @@
+/* DateOutput Widget Styles - Carbon Design System */
+/* Colors and typography aligned with themes/Carbon.less */
+
+.date-output-container {
+    display: inline-block;
+    font-family: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif; /* @bpm-font-family-sans-serif */
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    background-color: #f4f4f4; /* Gray 10 */
+    border: 1px solid #e0e0e0; /* Gray 20 */
+}
+
+.date-output-value {
+    font-size: 14px; /* @bpm-font-size-base */
+    color: #161616; /* @bpm-text-color */
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Hover effect */
+.date-output-container:hover {
+    background-color: #e0e0e0; /* Gray 20 */
+    border-color: #c6c6c6; /* Gray 30 / @bpm-link-text-color-disabled */
+}
+
+/* Different styles for different date types */
+.date-output-container.date-past {
+    background-color: #fff3e0; /* Warning light background */
+    border-color: #fdd13a; /* @bpm-color-warning */
+}
+
+.date-output-container.date-today {
+    background-color: #defbe6; /* Success light background */
+    border-color: #24a148; /* Success green 50 */
+}
+
+.date-output-container.date-future {
+    background-color: #e5f6ff; /* Info light background */
+    border-color: #0f62fe; /* @bpm-color-primary */
+}
+
+/* Made with Bob */

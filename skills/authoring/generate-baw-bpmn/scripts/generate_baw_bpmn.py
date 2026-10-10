@@ -47,6 +47,7 @@ ID_NAMESPACE = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 BPMN_NS = "http://www.omg.org/spec/BPMN/20100524/MODEL"
 XMI_NS = "http://www.omg.org/XMI"
 XSD_NS = "http://www.w3.org/2001/XMLSchema"
+ICP_NS = "http://www.ibm.com/xmlns/prod/websphere/ibmbpm/pal/bpmnextension"
 
 EXPORTER = "generate-baw-bpmn"
 EXPORTER_VERSION = "1.0.0"
@@ -411,6 +412,12 @@ def build_xml(config: dict, xsd_filename: str = None) -> str:
     definitions.set("xmlns:xmi", XMI_NS)
     definitions.set("xmlns:bpmn", BPMN_NS)
     definitions.set("xmlns:xsd", XSD_NS)
+    # ICP namespace required whenever serviceTask elements are present — BAW needs
+    # icp:serviceType="ServiceFlow" on those elements to auto-generate service flows.
+    has_service_tasks = any(e.get("type") == "serviceTask"
+                            for e in config.get("elements", []))
+    if has_service_tasks:
+        definitions.set("xmlns:icp", ICP_NS)
     # BAW's own exports bind a prefix to the targetNamespace and use it to
     # qualify attachedToRef (a QName, unlike the plain-IDREF sourceRef/targetRef).
     definitions.set("xmlns:tns", target_ns)
@@ -468,46 +475,48 @@ def build_xml(config: dict, xsd_filename: str = None) -> str:
 
 
 def _emit_laneset(parent: Element, proc_name: str, elements: list, roles: list):
-    """Emit a laneSet grouping elements by their assigned role.
+    """Emit a laneSet grouping flow nodes by their assigned role.
 
     BAW reads lane membership from two sources on import:
       1. <performer> child elements on tasks (semantic — preferred by BAW).
       2. <laneSet>/<lane>/<flowNodeRef> membership (visual fallback).
     Both are emitted so the import is robust regardless of BAW version behaviour.
-    Elements with no role land in an implicit default lane (BAW creates one).
+
+    A System lane is always present (injected if not defined in the config) so
+    that unassigned elements — start/end events, gateways, and any task without
+    an explicit role — have a well-defined home and no "Unassigned" lane is
+    ever created. boundaryEvents are excluded from the laneSet; BAW positions
+    them automatically from their attachedToRef.
     """
-    roles_by_id = {r["id"]: r for r in roles}
-    # Build role_id -> [element_ids] map for all flow nodes (tasks, gateways, events).
-    lane_members: dict[str, list] = {r["id"]: [] for r in roles}
-    unassigned = []
+    # Guarantee a system lane exists; inject one if the config doesn't define it.
+    system_role = next(
+        (r for r in roles if r.get("type") == "system" or r["id"] == "system"),
+        None,
+    )
+    if system_role is None:
+        system_role = {"id": "system", "name": "System", "type": "system"}
+        roles = list(roles) + [system_role]
+
+    role_ids = {r["id"] for r in roles}
+
+    lane_members: dict = {r["id"]: [] for r in roles}
     for el in elements:
-        if el.get("type") in ANNOTATION_TYPES:
+        el_type = el.get("type")
+        if el_type in ANNOTATION_TYPES or el_type == "boundaryEvent":
             continue
         role_id = el.get("role")
-        if role_id and role_id in lane_members:
-            lane_members[role_id].append(el["id"])
-        else:
-            unassigned.append(el["id"])
+        lane_members[role_id if role_id in role_ids else system_role["id"]].append(el["id"])
 
-    # Only emit the laneSet if at least one role has members.
     if not any(lane_members.values()):
         return
 
     laneset = SubElement(parent, "bpmn:laneSet")
     laneset.set("id", stable_id(proc_name, "laneSet"))
     for role in roles:
-        members = lane_members.get(role["id"], [])
         lane = SubElement(laneset, "bpmn:lane")
         lane.set("id", stable_id(proc_name, f"lane/{role['id']}"))
         lane.set("name", role["name"])
-        for eid in members:
-            SubElement(lane, "bpmn:flowNodeRef").text = stable_id(proc_name, eid)
-    # Unassigned elements go in a catch-all lane so no flowNodeRef is orphaned.
-    if unassigned:
-        lane = SubElement(laneset, "bpmn:lane")
-        lane.set("id", stable_id(proc_name, "lane/unassigned"))
-        lane.set("name", "Unassigned")
-        for eid in unassigned:
+        for eid in lane_members.get(role["id"], []):
             SubElement(lane, "bpmn:flowNodeRef").text = stable_id(proc_name, eid)
 
 
@@ -519,6 +528,23 @@ def _emit_scope(parent: Element, proc_name: str, elements, flows, variables, ite
 
     for el in elements:
         el_type = el["type"]
+        # serviceTask elements are emitted as plain <task> with IBM extension
+        # attributes so BAW auto-generates a Service Flow on import.
+        # Using <bpmn:serviceTask> without these attributes causes BAW to import
+        # the task with no implementation set; adding icp:serviceType="ServiceFlow"
+        # on a <task> (no performer) is what triggers service flow generation.
+        if el_type == "serviceTask":
+            xml_el = SubElement(parent, "bpmn:task")
+            xml_el.set("id", stable_id(proc_name, el["id"]))
+            if el.get("name"):
+                xml_el.set("name", el["name"])
+            xml_el.set("implementation", "##unspecified")
+            xml_el.set("icp:serviceType", "ServiceFlow")
+            if el.get("documentation"):
+                SubElement(xml_el, "bpmn:documentation").text = el["documentation"]
+            if variables:
+                _emit_io_spec(xml_el, proc_name, el["id"], variables, item_ids)
+            continue
         xml_el = SubElement(parent, f"bpmn:{el_type}")
         xml_el.set("id", stable_id(proc_name, el["id"]))
         if el_type == "textAnnotation":
@@ -548,6 +574,8 @@ def _emit_scope(parent: Element, proc_name: str, elements, flows, variables, ite
             script.text = el["script"]
         # Emit <performer> on tasks that have a role — BAW uses this as the
         # primary signal for lane assignment and team/role binding on import.
+        # Note: serviceTask elements are handled by the early-continue block above
+        # and never reach this point.
         if el_type in TASK_TYPES and el.get("role") and el["role"] in roles_by_id:
             perf = SubElement(xml_el, "bpmn:performer")
             perf.set("id", stable_id(proc_name, f"{el['id']}/performer"))

@@ -9,10 +9,15 @@ description: >
   a new portal or full application. Carbon is the default design system where appropriate.
   Does NOT generate BAW process diagrams (BPMN) or internal BAW XML artifacts.
 license: Apache-2.0
+compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+allowed-tools:
+  - Read
+  - Edit
 metadata:
-  version: 1.0.0
+  version: "1.0.0"
   display_name: BAW Portal Builder
   short_description: Build IBM BAW task portals — API guidance, portal generation, and existing-app integration for non-federated and PFS environments.
+  author: IBM BAW Team
   example_prompts:
     - "Generate a personal task dashboard portal for BAW"
     - "Which API do I call to get the current user's name in my BAW portal?"

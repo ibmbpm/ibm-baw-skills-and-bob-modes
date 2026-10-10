@@ -27,8 +27,8 @@ class sf_validate system
 ```
 
 **Fake swimlanes — use with judgment.** `subgraph "Role Name" ... end` around a role's
-nodes visually groups them like a swimlane, with no effect on the generated BPMN
-(lanes are never emitted — see [BAW_BPMN_DIALECT.md](BAW_BPMN_DIALECT.md)). This helps when a
+nodes visually groups them like a swimlane, with zero effect on the generated BPMN
+(diagram layout is ignored by BAW on import — see `references/BAW_BPMN_DIALECT.md`). This helps when a
 process has clear blocks of same-actor work (e.g., all of intake is the agent, then all
 of review is underwriting). It hurts when actors interleave tightly (approve → reject →
 re-review → approve), because Mermaid clusters each subgraph spatially and the
@@ -74,8 +74,8 @@ three separate chat blocks:
    filename is the artifact's title. Include: the flowchart, the role table, and (from
    Phase 3 onward) the business-object `erDiagram` and YAML.
 3. Publish it with the `Artifact` tool. Use a consistent favicon across this skill's
-   artifacts (a process-flow icon works well) and a one-line description ("Process flow
-   and data model review for <Process Name>").
+   artifacts (🔀 works well) and a one-line description ("Process flow and data model
+   review for <Process Name>").
 4. On every later revision (plan changes, Phase 3's data model, or the confirmed final
    version in step 6), overwrite the same scratch file and call `Artifact` again with
    the same `file_path` — this redeploys to the same URL, so the user keeps one stable

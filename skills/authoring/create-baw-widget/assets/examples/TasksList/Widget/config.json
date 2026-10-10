@@ -1,0 +1,17 @@
+{
+  "name": "TasksList",
+  "description": "A widget to display a list of tasks with status indicators for IBM Business Automation Workflow",
+  "bindingType": {
+    "name": "TasksListData",
+    "isList": true,
+    "type": "TaskItem"
+  },
+  "configOptions": [],
+  "businessObjects": [
+    {
+      "name": "TaskItem",
+      "file": "TaskItem.json"
+    }
+  ],
+  "changeFunction": true
+}

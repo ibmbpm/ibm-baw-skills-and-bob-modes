@@ -1,18 +1,41 @@
 ---
 name: generate-baw-business-objects
-description: Generates and modifies BAW Business Object import files -- valid OpenAPI 3.0 JSON that IBM BAW WebPD imports via the "Import business objects" option in the Data menu. Use when the user wants to generate Business Objects or BOs for a BAW process app, or when the user wants to modify an existing Business Object or BO .json file (whether pasted inline or referenced via @file). Always use this skill for BO modifications -- even simple field additions, removals, or renames -- because the output must comply with BAW's specific OpenAPI format rules, include import instructions, and surface safety warnings when fields are removed or renamed (removing or renaming a field breaks consumers immediately on re-import). Do not edit BO JSON files directly without this skill. This skill covers ONLY the Business Objects import artifact -- for BPMN process generation use generate-baw-bpmn instead.
+description: "Generates and modifies BAW Business Object import files — individual .bo.json files, a combined OpenAPI 3.0 JSON, a discovery report, and an optional toolkit TWX. Use when the user wants to generate Business Objects or BOs for a BAW process app or toolkit, modify an existing BO .json file, handle enum-to-Selection-BO conversion, or package BOs into a reusable TWX toolkit. Always use this skill for BO modifications — even simple field additions, removals, or renames — because the output must comply with BAW's specific OpenAPI format rules, include import instructions, and surface safety warnings when fields are removed or renamed. Three delivery options are available: WebPD UI import, new toolkit TWX, or updating an existing toolkit TWX. This skill covers ONLY Business Object artifacts — for BPMN process generation use generate-baw-bpmn instead."
 license: Apache-2.0
+compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+allowed-tools:
+  - Read
+  - Edit
+  - Bash
 metadata:
-  version: 1.0.0
+  version: "1.0.0"
+  display_name: Generate BAW Business Objects
+  short_description: Generate and modify importable BAW Business Object files (OpenAPI JSON, TWX toolkit) from any data model description.
+  author: IBM BAW Team
 ---
 
 # Generate BAW Business Objects
 
-Produce an OpenAPI 3.0 JSON file that IBM BAW WebPD imports successfully as Business Objects, first time, every time.
+Produce importable BAW Business Objects from any data-model description, generating structured output files and helping the user choose how to deliver them into BAW.
 
-The core contract is simple: everything the user's data model needs lives under `components.schemas`. Each schema becomes one Business Object in WebPD. Nested objects use `$ref` to point at a sibling schema in the same file. The result is a single JSON file the user drops into the WebPD import dialog — no server access required on Bob's side.
+**One important note about imported BOs:** they appear as read-only in WebPD after import. The correct workflow is: finalize all BO specs with Bob before importing, then import once. If changes are needed later, update the files with Bob and re-import — re-importing overrides the previous BOs.
 
-**One important note about imported BOs:** they appear as read-only in WebPD after import. The correct workflow is: finalize all BO specs with Bob before importing, then import once. If changes are needed later, update the JSON file with Bob's help and re-import — re-importing overrides the previous BOs.
+## Output folder structure
+
+All files are written under `business-objects/` at the workspace root:
+
+```
+business-objects/<domain-slug>/
+├── generated_bos/      ← one <BOName>.bo.json per BO (complex + selection)
+├── reports/            ← <domain-slug>.discovery-report.md
+└── output/
+    ├── <domain-slug>.json   ← combined OpenAPI 3.0 import file
+    └── twx/                 ← *.twx files (options 2 and 3 only)
+```
+
+- `<domain-slug>` is derived from the BO domain, slugified to kebab-case (e.g. `invoice-management`, `life-insurance`).
+- **Collision Avoidance (CRITICAL):** Before writing any files, you MUST check if `business-objects/<domain-slug>/` already exists in the workspace. If the folder exists, you MUST append an incrementing suffix (e.g., `<domain-slug>_1`, `<domain-slug>_2`) and write to that new directory instead. Never overwrite or merge files into an existing folder from a previous run.
+- Always finish by listing every generated file path.
 
 ## Steps
 
@@ -24,185 +47,253 @@ Read the user's input carefully. Accept any of:
 - A pasted document (Word export, PDF text, markdown, meeting notes)
 - An existing OpenAPI 3.0 BO JSON the user wants to modify
 
-Extract every distinct "thing" from the description. Each distinct thing — an order, a customer, an address, a line item — becomes its own schema under `components.schemas`.
+Extract every distinct "thing" from the description. Each distinct thing — an order, a customer, an address, a line item — becomes its own schema.
 
-Before writing the JSON, do a quick mental pass:
+Before writing files, do a quick mental pass:
 
 **Completeness check:**
 - Did you find ALL the distinct objects? Walk the description once more and look for nouns that carry data (not just action verbs).
 - Did you expand each object to its natural fields? If the user said "Customer," they probably want name, email, phone, and an address — not just an id.
-- Are there any list relationships? If an order has multiple line items, model `OrderItem` separately and make the `Order.items` field an array of `$ref` to `OrderItem`.
-- Are enum-like fields documented? If `status` has specific values, put them in the field's `description`.
+- Are there any list relationships? If an order has multiple line items, model `OrderItem` separately and make `Order.items` an array referencing `OrderItem`.
+- Are there fields with a fixed set of values (described as an enum, dropdown, or controlled list)? Note each one — each becomes a Selection BO.
+
+**Task list planning (update_todo_list):**
+- When initializing the checklist, keep it clean and condensed.
+- Group the generation of all individual `.bo.json` files into a single task item (e.g., `[ ] Write generated_bos/ files (<Count> BOs)`).
+- Do NOT list each individual `.bo.json` file as its own separate checklist item. This avoids excessive tool calls and clutter without impacting output quality.
+- Keep high-level deliverables (writing the combined OpenAPI JSON, writing the discovery report, and presenting import options) as separate checklist items.
 
 **For modifications:** If the user provided an existing JSON, load it mentally as the base. Apply only the changes asked for. Preserve all existing fields and schemas the user did not mention. Document what changed.
 
-If the request involves removing or renaming any field or schema, include a warning in the output — placed after the "What changed" section, just before the save offer, so the user sees it at the point they are about to act. Name each affected field explicitly:
+If the request involves removing or renaming any field or schema, include a warning — placed after the "What changed" section, just before the save offer, so the user sees it at the point they are about to act. Name each affected field explicitly:
 
 > ⚠️ **Warning:** Removing or renaming `<fieldName>` takes effect immediately on re-import. Any services, processes, or coaches that reference this field will need to be updated.
 
 Adding new fields is safe and does not affect existing consumers.
 
-### 2. Write the JSON
+### 2. Write the files
 
-Follow the format in `references/BAW_BO_OPENAPI_RULES.md` exactly. The key rules:
+**Pre-write check (MANDATORY):**
+- Before writing any files or initializing your task list, you MUST run a `list_files` tool call on the `business-objects/` directory to check for collisions. **Never assume or state that the directory is empty without executing this tool call first.**
+- Look carefully at the returned listing. If you see `<domain-slug>` in the list (e.g., `book-store`), you MUST immediately increment the slug suffix (e.g., `<domain-slug>_1`, `<domain-slug>_2`) and write all output files into that new suffixed directory.
+- You are strictly forbidden from overwriting or merging files into a folder that already exists from a previous run.
 
-- Root keys: `openapi` (must be `"3.0.3"`), `info`, `components`
-- All schemas go under `components.schemas`
-- Schema names → PascalCase (these become the BO names in WebPD)
-- Field names → camelCase
-- No `paths`, `servers`, `security`, or other OpenAPI operation-level keys — BAW's importer only reads `components.schemas`
-- Primitive types: `string`, `integer`, `number`, `boolean`
-- Arrays: `"type": "array"` with `"items": { "$ref": "..." }` or `"items": { "type": "string" }` etc.
-- Nested object references: `"$ref": "#/components/schemas/OtherObjectName"`
-- Add `"description"` to each schema and to any field whose meaning isn't obvious from its name
-- Add `"required": [...]` for fields that must be present
-- For string fields with controlled values, document the values in `"description"` (BAW doesn't enforce enums from OpenAPI, but the documentation is preserved and visible in WebPD)
+#### 2a. Write `.bo.json` files
 
-**Present the JSON in a code block.** Never produce a file path and tell the user to write it themselves — put the complete JSON inline so they can copy it.
+Write one `<BOName>.bo.json` file per Business Object to `generated_bos/`. See `references/TWX_BO_TOOLS_README.md` for the full format spec. Two kinds:
 
-### 3. Validate the JSON mentally before presenting it
+**Complex BO** (`"kind": "complex"`) — a record with named typed properties:
 
-Read `references/BAW_BO_OPENAPI_RULES.md` for the rules, then do a quick check:
-
-- Every `$ref` in the file points to a schema that actually exists in `components.schemas`
-- All `$ref` paths are exactly `#/components/schemas/<SchemaName>` and point to a schema that exists in the file
-- No top-level keys other than `openapi`, `info`, `components`
-- `openapi` value is exactly `"3.0.3"` (string, not a number)
-- All schema names are PascalCase
-
-If you spot a problem, fix it before presenting.
-
-Optionally, if the user has Python available, you can also run `scripts/validate_bo_json.py` against the generated JSON to catch structural issues programmatically:
-```bash
-python <path-to-this-skill>/scripts/validate_bo_json.py <path-to-output.json>
+```json
+{
+  "kind": "complex",
+  "description": "A customer record.",
+  "properties": [
+    { "name": "customerId", "type": "String" },
+    { "name": "name",       "type": "String" },
+    { "name": "email",      "type": "String" },
+    { "name": "status",     "type": "CustomerStatus" }
+  ]
+}
 ```
 
-### 4. Present the output
+**Selection BO** (`"kind": "selection"`) — an enumeration of value/display pairs:
 
-Give the user:
+```json
+{
+  "kind": "selection",
+  "description": "Customer account status.",
+  "options": [
+    { "value": "ACTIVE",   "display": "ACTIVE"   },
+    { "value": "INACTIVE", "display": "INACTIVE" }
+  ]
+}
+```
 
-1. **The complete JSON** in a fenced code block (language: `json`)
-2. **A summary table** of the schemas produced:
+**Enum → Selection BO rule:** when a field has a fixed set of values (expressed as an `enum` or described as a dropdown), auto-generate a Selection BO for it:
+- Name: PascalCase the field name (e.g. `status` → `Status`, `policyType` → `PolicyType`).
+- Display values equal the value strings exactly (no transformation).
+- The parent BO property type becomes the Selection BO name.
+- The Selection BO gets its own `.bo.json` file.
 
-   | Schema (BO name) | Fields | Notes |
-   |---|---|---|
-   | `Customer` | customerId, firstName, lastName, email, phone, address | `address` → `Address` |
-   | `Address` | street, city, postalCode, country | Required: city |
+**BO authoring rules:**
+- BO names must be PascalCase with no spaces — the name is the data type name.
+- Property names must be camelCase with no spaces.
+- Primitive type names (`String`, `Integer`, `Boolean`, `Decimal`, `Date`, `Time`) always resolve to System Data primitives — never to a local BO of the same name.
+- For Selection BOs: `value` is the stored value that flows through process data; `display` is the UI label. Do not swap them.
+- A single-field BO that just aliases a primitive is not worth creating — use the primitive directly.
 
-3. **The import steps** — copy them from `references/IMPORT_STEPS.md` and paste them directly into your reply (don't tell the user to go read a file).
+**Property type reference:**
 
-4. **If modifying an existing file**, add a brief "What changed" section listing the additions, removals, and renames you made.
+| Value | Resolves to |
+|---|---|
+| `"String"` | System Data String |
+| `"Integer"` | System Data Integer |
+| `"Boolean"` | System Data Boolean |
+| `"Decimal"` | System Data Decimal |
+| `"Date"` | System Data Date |
+| `"Time"` | System Data Time |
+| `"SomeName"` | Another local BO in the same run or existing TWX |
 
-5. **Offer to save the file.** After the import steps, ask:
+#### 2b. Write the combined OpenAPI import file
 
-   > "Would you like me to save this as a `.json` file? I can save it to the current directory, or tell me a path and I'll save it there."
+Write `output/<domain-slug>.json` — a valid OpenAPI 3.0 file importable via the WebPD "Import business objects" dialog. Follow the full rules in `references/BAW_BO_OPENAPI_RULES.md`. Key points:
 
-   When the user confirms (or gives a path), write the file using the exact JSON from step 1. Use a descriptive filename derived from the `info.title` value, kebab-cased — e.g. `invoice-management-business-objects.json`. If the user gives a specific path, use it; otherwise save to the current working directory. Confirm the full saved path in your reply so the user knows exactly where to find it for step 1 of the import instructions.
+- Root keys: `openapi` (emit `"3.0.3"`; any `"3.0.x"` value is accepted by BAW), `info`, `components`
+- All schemas go under `components.schemas`
+- Schema names → PascalCase (become the BO names in WebPD)
+- Field names → camelCase
+- No `paths`, `servers`, `security`, or other OpenAPI operation-level keys
+- Primitive types: `string`, `integer`, `number`, `boolean`
+- Arrays: `"type": "array"` with an `"items"` key
+- Nested object references: `"$ref": "#/components/schemas/OtherObjectName"`
+- Enum fields: use an inline `"enum": [...]` array on the Selection BO schema; the parent property uses `$ref` to the Selection BO
+
+Include all complex BOs and all Selection BOs as schemas.
+
+**Validate before writing:** every `$ref` points to a schema that exists in the file; all schema names are PascalCase; no extra top-level keys.
+
+### 3. Write the discovery report
+
+Write `reports/<domain-slug>.discovery-report.md`. The report documents the analysis behind the generated artifacts. Include these sections:
+
+1. **Header metadata** — Generated by (Bob), Source Documents (all inputs the user provided), Context/domain. Do not include a date or timestamp — omit it entirely.
+2. **Entities Discovered** — table: #, Business Object, Source, Role.
+3. **Entity Relationship Map** — A Mermaid `erDiagram` visualizing the entity relationships (using standard Mermaid cardinality notation, e.g., `||--|{`, `||--||`) + Relationship Details table (Entity A, Relationship, Entity B, Cardinality). Ensure relationships are accurate and match the generated business object properties exactly.
+4. **Enumerations Extracted** — table: Enumeration (Selection BO name), Values, Used By.
+5. **Normalization Decisions** — table: Decision, Reasoning.
+6. **Assumptions & Ambiguities** — numbered table: #, Ambiguity, Assumption Applied.
+7. **Generated Artifacts Summary** — file tree of everything written.
+
+Detail scales with complexity: a simple two-BO domain warrants a concise report; a complex domain with many BOs and relationships warrants full tables.
+
+### 4. Ask how to import
+
+After all files are written:
+
+1. List every generated file path.
+2. Direct the user to the generated discovery report (e.g. `reports/<domain-slug>.discovery-report.md`) so they can review the design choices, entities, and assumptions before importing.
+3. Ask the user which import option they want. Remind them that after they proceed with one delivery option, they can still request to try other options (e.g., generating a toolkit TWX if they started with WebPD UI import) at any time in the conversation.
+
+---
+
+**Option 1 — Import via WebPD UI** *(BOs will be read-only in the designer)*
+
+BOs imported this way are **read-only** in the BAW designer — you cannot edit their fields directly in the tool after import. To change them later, update the files with Bob and re-import.
+
+Copy the import steps from `references/IMPORT_STEPS.md` and paste them directly.
+
+**Option 2 — Create a new toolkit TWX** *(BOs will be fully editable)*
+
+Suggest defaults for the toolkit metadata (derived from the domain) using clean, user-friendly names instead of command-line arguments:
+- **Toolkit Name** (maps to `--name`): e.g. `"Invoice Management BOs"`
+- **Toolkit Acronym** (maps to `--acronym`): e.g. `IMBO` (short uppercase slug)
+- **Snapshot Version** (maps to `--snapshot`): `"1.0.0.0"`
+
+Do NOT mention script flags/args (such as `--name`, `--acronym`, `--snapshot`) directly to the user. Simply ask them to confirm or customize these user-friendly fields, and apply them to the command flags behind the scenes. Produce a toolkit; do not use `--process-app`.
+
+**Script paths:** The paths shown below are relative to this skill's own folder. Resolve them to their full path before executing — the scripts live at `scripts/twx-bo-tools/` inside the skill directory (e.g. `.bob/skills/generate-baw-business-objects/scripts/twx-bo-tools/`). All other paths (`--out`, `--source`, the generated_bos directory) are relative to the workspace root.
+
+Steps:
+1. ```bash
+   python scripts/twx-bo-tools/create_empty_twx.py \
+     --name "NAME" --acronym ACRONYM --snapshot VERSION \
+     --out business-objects/<domain-slug>/output/twx/ACRONYM.twx
+   ```
+2. ```bash
+   python scripts/twx-bo-tools/apply_bos.py \
+     --source business-objects/<domain-slug>/output/twx/ACRONYM.twx \
+     --version VERSION \
+     --out business-objects/<domain-slug>/output/twx/ACRONYM-VERSION.twx \
+     business-objects/<domain-slug>/generated_bos
+   ```
+3. **Delete the intermediate empty TWX file** (the one at `business-objects/<domain-slug>/output/twx/ACRONYM.twx`) immediately after creating the applied version. Only keep the final populated `ACRONYM-VERSION.twx` toolkit in the output directory.
+
+See `references/TWX_BO_TOOLS_README.md` for full argument reference.
+
+**Option 3 — Update an existing toolkit TWX** *(BOs will be fully editable)*
+
+Ask for the path to the existing `.twx`. Then:
+
+1. Run `python scripts/twx-bo-tools/list_bos.py <twx> --json` to read existing BOs.
+2. Compare existing BO names against the generated BO names.
+3. If conflicts exist, show a conflict table (BO name, existing definition vs. generated definition) and ask the user: overwrite each conflicting BO, or rename the generated BO (user provides the new name). Wait for resolution before proceeding.
+4. Suggest a new snapshot version by incrementing the patch of the existing snapshot name (e.g. `1.0.0.0` → `1.0.0.1`). Ask the user to confirm or provide their own value.
+5. Run:
+   ```bash
+   python scripts/twx-bo-tools/apply_bos.py \
+     --source <existing.twx> \
+     --version <version> \
+     --out business-objects/<domain-slug>/output/twx/<name>-<version>.twx \
+     business-objects/<domain-slug>/generated_bos
+   ```
+
+See `references/TWX_BO_TOOLS_README.md` for full argument reference.
+
+### Future Updates & Script Abstraction Rules (IMPORTANT)
+
+- **Do NOT expose internal implementation details, file structures, or scripts to the user.** The Python scripts (`create_empty_twx.py`, `apply_bos.py`, `list_bos.py`) and the `.bo.json` files are backend details of this skill, not developer tools for the end user.
+- **Do NOT instruct the user to run any Python scripts, modify, or regenerate `.bo.json` files themselves.**
+- **For future updates**, instruct the user: *"For future updates or modifications, simply provide Bob (this skill) with your updated requirements. Bob will automatically apply the changes and generate a new TWX toolkit snapshot or updated OpenAPI JSON file for you to import."*
+
+---
 
 ## Boundaries
 
 **In scope:**
-- Generating a new BO import file from any description, document, table, or natural language
-- Modifying an existing BO import file (JSON) and producing an updated importable JSON
+- Generating a new BO set from any description, document, table, or natural language
+- Modifying an existing BO import file (JSON) and producing an updated importable set
 - Explaining the BAW BO data model, field type constraints, and import behavior
-- Walking the user through the WebPD manual import steps
+- Walking the user through WebPD manual import steps
+- Generating toolkit TWX files via the bundled Python scripts
 
 **Out of scope — redirect clearly:**
-- **Auto-importing into BAW:** there is currently no public API for programmatic Business Object import in BAW WebPD. This skill generates the JSON; the import is a manual step the user performs in the WebPD UI. If a public API becomes available (e.g., via an MCP server), this skill should be updated — for now, guided manual import is the only path. Tell the user this directly if they ask.
+- **Auto-importing into BAW:** there is no public API for programmatic Business Object import in BAW WebPD. This skill generates the files; the import is a manual step the user performs in the WebPD UI. Tell the user this directly if they ask.
 - **Making imported BOs editable after import:** imported BOs are read-only in BAW WebPD. The correct workflow is finalize → import → re-import if changes are needed.
-- **Generating BPMN processes or service flows:** that is `generate-baw-bpmn`. If the user asks for both BOs and a process in the same request, generate the BO import file first, then suggest they also use `generate-baw-bpmn` for the process.
-- **Packaging TWX toolkits** or deploying to a BAW server.
+- **Generating BPMN processes or service flows:** that is `generate-baw-bpmn`. If the user asks for both BOs and a process in the same request, generate the BO files first, then suggest `generate-baw-bpmn` for the process.
+  - **Do NOT proactively ask or prompt the user** if they want to generate BPMN processes or service flows to go with the Business Objects. BPMN generation is strictly out of scope. Suggest `generate-baw-bpmn` ONLY if the user explicitly asks how to build process workflows for these BOs.
 
 ## Output format
 
 Always produce (in this order):
 
-1. **Complete JSON** — the full importable file, in a `json` code block
-2. **Schema summary table** — one row per schema, with field names and any `$ref` notes
-3. **Import instructions** — the 6-step sequence from `references/IMPORT_STEPS.md`
-4. **What changed** (modification requests only) — a brief changelog
-5. **Removal/rename warning** (modification requests only, if applicable) — the ⚠️ warning naming each affected field
-6. **Save offer** — a short follow-up question offering to save the file (see step 4 above)
+1. Write `generated_bos/<BOName>.bo.json` for every BO (complex and selection).
+2. Write `output/<domain-slug>.json` — the combined OpenAPI import file.
+3. Write `reports/<domain-slug>.discovery-report.md` — the discovery report.
+4. List all generated file paths.
+5. Ask the user which import option they want (1, 2, or 3).
+6. If option 1: paste import steps and offer to save.
+7. If option 2: suggest toolkit metadata, confirm with user, run the two scripts.
+8. If option 3: inspect existing TWX, resolve conflicts, confirm version, run `apply_bos.py`.
+
+For modifications of existing files, also include:
+- **What changed** — a brief changelog of additions, removals, and renames
+- **Removal/rename warning** (if applicable) — the ⚠️ warning naming each affected field
 
 ## Example
 
-**Input:** "I need Business Objects for an invoice management process: Invoice (number, date, due date, status, total amount, a reference to a Customer, and a list of line items), LineItem (product name, quantity, unit price), Customer (name, email, and billing address), Address (street, city, postal code, country)."
+**Input:** "I need Business Objects for an invoice management process: Invoice (number, date, due date, status — one of DRAFT, SENT, PAID, OVERDUE, CANCELLED — total amount, a reference to a Customer, and a list of line items), LineItem (product name, quantity, unit price), Customer (name, email, and billing address), Address (street, city, postal code, country)."
 
 **Output walkthrough:**
 
-Four schemas: `Invoice`, `LineItem`, `Customer`, `Address`. `Invoice.customer` is a `$ref` to `Customer`. `Invoice.lineItems` is an array with `items.$ref` to `LineItem`. `Customer.billingAddress` is a `$ref` to `Address`. `Invoice.status` has its typical values documented. Required fields set on the primary identifiers.
+Five schemas: `Invoice`, `LineItem`, `Customer`, `Address`, and `Status` (Selection BO extracted from the `status` enum field). The `status` field on `Invoice` becomes a `$ref` to `Status`.
 
-```json
-{
-  "openapi": "3.0.3",
-  "info": {
-    "title": "Invoice Management Business Objects",
-    "description": "Business objects for the invoice management process.",
-    "version": "1.0.0"
-  },
-  "components": {
-    "schemas": {
-      "Address": {
-        "type": "object",
-        "description": "A postal address.",
-        "properties": {
-          "street":     { "type": "string" },
-          "city":       { "type": "string" },
-          "postalCode": { "type": "string" },
-          "country":    { "type": "string" }
-        },
-        "required": ["city"]
-      },
-      "Customer": {
-        "type": "object",
-        "description": "A customer.",
-        "properties": {
-          "customerId":      { "type": "string" },
-          "name":            { "type": "string" },
-          "email":           { "type": "string" },
-          "billingAddress":  { "$ref": "#/components/schemas/Address" }
-        },
-        "required": ["customerId", "name"]
-      },
-      "LineItem": {
-        "type": "object",
-        "description": "A single line item on an invoice.",
-        "properties": {
-          "productName": { "type": "string" },
-          "quantity":    { "type": "integer" },
-          "unitPrice":   { "type": "number" }
-        },
-        "required": ["productName", "quantity", "unitPrice"]
-      },
-      "Invoice": {
-        "type": "object",
-        "description": "An invoice sent to a customer.",
-        "properties": {
-          "invoiceNumber": { "type": "string" },
-          "invoiceDate":   { "type": "string", "format": "date" },
-          "dueDate":       { "type": "string", "format": "date" },
-          "status": {
-            "type": "string",
-            "description": "Invoice status. Values: DRAFT, SENT, PAID, OVERDUE, CANCELLED"
-          },
-          "totalAmount":   { "type": "number" },
-          "customer":      { "$ref": "#/components/schemas/Customer" },
-          "lineItems": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/LineItem" }
-          }
-        },
-        "required": ["invoiceNumber", "status"]
-      }
-    }
-  }
-}
-```
+Files written:
+- `business-objects/invoice-management/generated_bos/Address.bo.json`
+- `business-objects/invoice-management/generated_bos/Customer.bo.json`
+- `business-objects/invoice-management/generated_bos/LineItem.bo.json`
+- `business-objects/invoice-management/generated_bos/Invoice.bo.json`
+- `business-objects/invoice-management/generated_bos/Status.bo.json`
+- `business-objects/invoice-management/output/invoice-management.json`
+- `business-objects/invoice-management/reports/invoice-management.discovery-report.md`
 
-Then the schema summary table, then the import steps from `references/IMPORT_STEPS.md`.
+Then the import option prompt.
 
 ## Reference files
 
-- **`references/BAW_BO_OPENAPI_RULES.md`** — the full import format rules, derived from the verified test import file. Read this whenever you need to check a specific rule (array syntax, `$ref` path format, what keys BAW ignores, etc.).
-- **`references/IMPORT_STEPS.md`** — the exact 7-step manual import sequence to paste into every response. Always include these; do not paraphrase or shorten them.
-- **`scripts/validate_bo_json.py`** — lightweight Python validator that checks structural rules programmatically. Run it if you want to double-check a generated file before presenting it to the user.
+- **`references/BAW_BO_OPENAPI_RULES.md`** — full import format rules. Read whenever you need to check a specific rule (array syntax, `$ref` path format, what keys BAW ignores, enum-to-Selection-BO mapping, etc.).
+- **`references/IMPORT_STEPS.md`** — the manual WebPD import sequence. Paste verbatim for Option 1.
+- **`references/TWX_BO_TOOLS_README.md`** — full argument reference for all three twx-bo-tools scripts (`apply_bos.py`, `create_empty_twx.py`, `list_bos.py`).
+- **`scripts/twx-bo-tools/apply_bos.py`** — adds or overwrites BOs in an existing TWX.
+- **`scripts/twx-bo-tools/create_empty_twx.py`** — creates a new empty toolkit TWX from the bundled template.
+- **`scripts/twx-bo-tools/list_bos.py`** — lists existing BOs in a TWX; used for conflict detection in Option 3.

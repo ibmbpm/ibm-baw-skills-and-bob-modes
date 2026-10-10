@@ -1,4 +1,4 @@
-# Extracting a process from business requirements documents
+# Extracting a Process From Business Requirements Documents
 
 Read this when the input isn't a chat description but a document — a requirements
 spec, a blueprint, an SOP, meeting notes, a BRD. The goal is unchanged: produce the
@@ -18,7 +18,7 @@ Scan for process boundaries before extracting anything:
 A document often describes several processes. Each one becomes its **own config and
 its own .bpmn** — never merge them into a mega-process. If the document mixes process
 description with pure data-model content (entity/field definitions with no workflow),
-the data-model-only parts are `parse-business-blueprint` territory; only pull in what
+the data-model-only parts are `generate-baw-business-objects` territory; only pull in what
 the process actually touches.
 
 ## 2. Map document language to config constructs
@@ -74,8 +74,8 @@ captures the object. Set `inputTo` to every task that reads or updates it — no
 last consumer. Skipping intermediate wiring means BAW won't generate data mappings for
 those tasks.
 
-**`xsd:anyType` is a last resort**, not a default. Use it only when the document provides
-no field-level information and the domain doesn't suggest obvious fields. A real
+**`xsd:anyType` is a last resort**, not a default. Use it only when the document gives
+zero field-level information and the domain doesn't suggest obvious fields. A real
 process about hiring, food ordering, insurance claims, or expense reports will always
 have enough domain knowledge to model at least a 5-field primary object.
 
@@ -96,7 +96,7 @@ Documents are always incomplete somewhere. Rules of thumb:
   truly no field-level information.
 
 Every assumption goes in two places: the element's `documentation` field, and the
-**Assumptions** list in your final report. A reviewer must be able to check your
+**Assumptions** list of your final report. A reviewer must be able to check your
 inferences without rereading the source document.
 
 ## 5. Then proceed as normal
