@@ -1,0 +1,41 @@
+{
+  "name": "DateOutput",
+  "description": "Date display widget with customizable formatting for IBM Business Automation Workflow",
+  "bindingType": {
+    "name": "DateValue",
+    "isList": false,
+    "type": "Date"
+  },
+  "configOptions": [
+    {
+      "name": "format",
+      "type": "String",
+      "label": "Date Format",
+      "description": "Date format string using tokens (YYYY, MM, DD, HH, mm, ss). Examples: 'MM/DD/YYYY', 'DD/MM/YYYY HH:mm'",
+      "default": "MM/DD/YYYY"
+    },
+    {
+      "name": "locale",
+      "type": "String",
+      "label": "Locale",
+      "description": "Locale identifier for internationalization (future enhancement)",
+      "default": "en-US"
+    },
+    {
+      "name": "showTime",
+      "type": "Boolean",
+      "label": "Show Time",
+      "description": "Append time to the date if not already in format string",
+      "default": false
+    },
+    {
+      "name": "timeZone",
+      "type": "String",
+      "label": "Time Zone",
+      "description": "Time zone identifier (future enhancement, e.g., 'America/New_York')",
+      "default": ""
+    }
+  ],
+  "businessObjects": [],
+  "changeFunction": false
+}

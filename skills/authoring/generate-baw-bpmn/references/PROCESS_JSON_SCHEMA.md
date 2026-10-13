@@ -32,7 +32,9 @@ uses these to:
 - **Emit a `<performer>` on every task** that references a role — BAW's primary signal
   for lane assignment and team binding.
 
-Assign a `"role"` to every task. Elements with no role land in an "Unassigned" lane.
+Assign a `"role"` to every task. Control-flow elements (start/end events, gateways)
+and any task without an explicit role are placed in the System lane automatically — a
+System lane is always guaranteed even if not defined in the config.
 
 ```json
 {
@@ -75,7 +77,7 @@ Then on tasks:
 }
 ```
 
-Avoid `< > & " \ / : * ? |` in the name — BAW rejects these characters in artifact names.
+Avoid `< > & " \ / : * ? |` in the name — BAW rejects them in artifact names.
 
 ## `elements`
 
@@ -172,7 +174,7 @@ object). The `.xsd` travels inside the same .zip as the `.bpmn` — never separa
 Field types: `String`, `Integer`, `Decimal`, `Boolean`, `Date`, `Time`, `DateTime`
 (BAW's business-object primitive set), or the name of another business object defined
 in the same config. `required: true` → `minOccurs="1"`; `list: true` →
-`maxOccurs="unbounded"`. The generator orders the XSD so that referenced types appear first.
+`maxOccurs="unbounded"`. The generator orders the XSD so referenced types come first.
 There is no enum construct — document a closed value set in the field-owning object's
 `description`.
 
@@ -246,8 +248,11 @@ service flow named "Service flow1".
 
 ### 2. Approval with roles, decision, default path, and escalation timer
 
-This example shows the full `roles` section. Role names appear in the README's
-"Performed by" column and role table — zero effect on the BPMN XML.
+This example shows the full `roles` section and correct escalation modeling.
+The non-interrupting timer escalation (`timer-escalate`) notifies a supervisor
+in parallel and then **rejoins the main decision gateway** — it does not dead-end
+at its own end event. The supervisor notification runs alongside the original
+review task, which continues until the underwriter completes it normally.
 
 ```json
 {
@@ -272,10 +277,9 @@ This example shows the full `roles` section. Role names appear in the README's
     {"id": "sf-notify-denied",   "type": "serviceTask", "name": "Notify Customer Denied",   "role": "system"},
     {"id": "timer-escalate", "type": "boundaryEvent", "eventDefinition": "timer",
      "name": "Review Overdue", "attachedToRef": "task-review", "interrupting": false},
-    {"id": "task-escalate", "type": "userTask", "name": "Escalate Review", "role": "supervisor"},
+    {"id": "sf-notify-supervisor", "type": "serviceTask", "name": "Notify Supervisor of Overdue Review", "role": "system"},
     {"id": "end-approved",  "type": "endEvent", "name": "Approved"},
-    {"id": "end-denied",    "type": "endEvent", "name": "Denied"},
-    {"id": "end-escalated", "type": "endEvent", "name": "Escalated"}
+    {"id": "end-denied",    "type": "endEvent", "name": "Denied"}
   ],
   "flows": [
     {"id": "f1", "sourceRef": "start",         "targetRef": "task-submit"},
@@ -288,8 +292,8 @@ This example shows the full `roles` section. Role names appear in the README's
      "name": "Denied", "isDefault": true},
     {"id": "f7", "sourceRef": "sf-notify-approved", "targetRef": "end-approved"},
     {"id": "f8", "sourceRef": "sf-notify-denied",   "targetRef": "end-denied"},
-    {"id": "f9", "sourceRef": "timer-escalate", "targetRef": "task-escalate"},
-    {"id": "f10", "sourceRef": "task-escalate", "targetRef": "end-escalated"}
+    {"id": "f9", "sourceRef": "timer-escalate",       "targetRef": "sf-notify-supervisor"},
+    {"id": "f10", "sourceRef": "sf-notify-supervisor", "targetRef": "gw-decision"}
   ],
   "variables": [
     {"name": "claim", "type": "xsd:anyType", "description": "The claim under review",

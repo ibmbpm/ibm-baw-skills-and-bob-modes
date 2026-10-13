@@ -20,8 +20,10 @@ two signals, in priority order:
 2. `<laneSet>/<lane>/<flowNodeRef>` membership — visual/structural fallback.
 
 The generator emits both when the config has a `roles` section and tasks reference
-roles via `"role": "<roleId>"`. Assign a role to every task; unassigned elements land
-in an "Unassigned" catch-all lane BAW creates automatically.
+roles via `"role": "<roleId>"`. Assign a role to every task. Control-flow elements
+(start/end events, gateways) and any element without an explicit role are placed in the
+System lane. A System lane is always guaranteed — if none is defined in the config the
+generator injects one automatically, so no "Unassigned" lane is ever created.
 
 **Pools are not emitted** — a pool in BPMN 2.0 represents a separate participant
 (a different organisation), not a swim-lane within one process. BAW's own exports
@@ -69,10 +71,10 @@ for `businessObjects` becomes real BAW business objects — see
 Both routes want a **.zip** (the generator writes one next to the `.bpmn`, including
 the business-object `.xsd` when one was generated — never strip it out):
 
-- **New process app:** Workflow Center → Process Apps tab → **Import Process App** →
-  choose the .zip. BAW creates the app, generates the artifacts, and auto-snapshots it.
-  (An "Import Toolkit" equivalent exists on the Toolkits tab.)
-- **Existing process app:** Process Designer → open the app → **File > Import** →
+- **New process app:**
+  - **Traditional BAW (Workflow Center):** Workflow Center → Process Apps tab → **Import Process App** → choose the .zip. BAW creates the app, generates the artifacts, and auto-snapshots it. (An "Import Toolkit" equivalent exists on the Toolkits tab.)
+  - **CP4BA containerized (Business Automation Studio):** Business Automation Studio → Business automations → Workflow → **Import** → choose the .zip.
+- **Existing process app:** Process Designer (traditional BAW) or Business Automation Studio (CP4BA) → open the app → **File > Import** →
   choose the .zip. Imported artifacts get an "Imported" tag. Re-importing the same
   file creates duplicate copies — it never overwrites a previous import.
 

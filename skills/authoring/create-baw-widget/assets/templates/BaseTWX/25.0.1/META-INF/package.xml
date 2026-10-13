@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:package buildId="BPM8600-20260427-190847" buildVersion="8.6.10" buildDescription="IBM Business Process Manager V8.6.10.25010 - 20260427_2123 - BPM8600-20260427-190847" fixPack="25010" containsECM="false" containsBPMN2="false" xmlns:p="http://lombardisoftware.com/schema/teamworks/7.0.0/package.xsd">
+    <target>
+        <project id="2066.1e80ac7c-5b74-4bd4-a87f-edf932173abe" name="base" description="" shortName="BA" isToolkit="true" isHidden="false" isSystem="false" solutionID="" solutionServerName="" solutionPrefix="" type="" isTemplate="false" isIconSet="false" caseDisplayName=""/>
+        <branch id="2063.41ffc06f-114e-4d97-84fb-4dd530d95fff" name="Main" acronym="Main" description=""/>
+        <snapshot id="2064.38a7173c-9e2f-45e6-9cb6-2a9bdf49a72a" name="1" acronym="1" originalCreationDate="2026-05-13T20:15:58.380Z" description=""/>
+    </target>
+    <dependencies>
+        <dependency rank="1" isManaged="false" id="2069.1a9b167f-fac5-4196-92f0-99ba493ec77c">
+            <project id="2066.ec5973da-aebe-40f6-aa02-a77962288f52" name="UI Toolkit" shortName="SYSBPMUI" isToolkit="true" isHidden="false" isSystem="true"/>
+            <branch id="2063.83ee2bb2-72b4-4a4d-b8ae-37ecd983c05e" name="Main"/>
+            <snapshot id="2064.304ac881-16c3-47d2-97d5-6e4c4a893177" name="8.6.0.0" originalCreationDate="2017-05-24T23:23:53.574Z"/>
+        </dependency>
+        <dependency rank="0" isManaged="false" id="2069.cf3f1815-aea7-43ed-ab46-f113df9c91a7">
+            <project id="2066.1b351583-e5cb-43b7-baee-340a63130ea7" name="System Data" shortName="TWSYS" isToolkit="true" isHidden="false" isSystem="true"/>
+            <branch id="2063.0798815e-0346-4ef4-8946-ab4301c9f340" name="Main"/>
+            <snapshot id="2064.1080ded6-d153-4654-947c-2d16fce170db" name="8.6.0.0_TC" originalCreationDate="2015-08-25T00:00:00.000Z"/>
+        </dependency>
+    </dependencies>
+    <objects>
+        <object id="1.9e6200f5-e09b-4ed0-9c29-e5675151edcb" versionId="6ecc920b-1201-40fd-a0af-a66aabc22e97" name="Deployment service flow" type="process"/>
+        <object id="61.959980c4-c761-4613-a7f3-478e4b846f66" versionId="2f67ca2b-b38f-403b-b120-24dbad29bdc6" name="993e03e9-2574-40fc-807c-65b06be378fd.zip" type="managedAsset"/>
+        <object id="62.7ff4028f-8539-42cd-83b3-ccb0d0373180" versionId="509c05e7-2e1d-4052-8c39-9f4d18dcda9d" name="Environment Variables" type="environmentVariableSet"/>
+        <object id="63.16da6deb-ba5f-4f5e-bbaf-cd5ff2e3c4b1" versionId="a33a1697-fe76-446a-97a9-2497ca776591" name="Toolkit Settings" type="projectDefaults"/>
+    </objects>
+    <files>
+        <file path="9c19cf8e-1cbc-47a9-a5ab-95eae3440b78" id="61.959980c4-c761-4613-a7f3-478e4b846f66"/>
+    </files>
+    <migrationPolicies/>
+</p:package>

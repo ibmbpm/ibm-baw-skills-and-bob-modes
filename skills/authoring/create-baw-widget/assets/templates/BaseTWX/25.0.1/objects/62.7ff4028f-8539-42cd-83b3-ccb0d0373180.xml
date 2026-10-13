@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <environmentVariableSet id="62.7ff4028f-8539-42cd-83b3-ccb0d0373180" name="Environment Variables">
+        <lastModified>1778703344935</lastModified>
+        <lastModifiedBy>cpmanager</lastModifiedBy>
+        <tenantId isNull="true" />
+        <envVarSetId>62.7ff4028f-8539-42cd-83b3-ccb0d0373180</envVarSetId>
+        <description isNull="true" />
+        <guid>guid:7ff4028f-8539-42cd-83b3-ccb0d0373180</guid>
+        <versionId>509c05e7-2e1d-4052-8c39-9f4d18dcda9d</versionId>
+    </environmentVariableSet>
+</teamworks>
+

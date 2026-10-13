@@ -1,6 +1,6 @@
 # BAW Business Object Import — OpenAPI 3.0 Format Rules
 
-These rules are derived from a verified BAW WebPD import test.
+These rules are verified by manual test.
 
 ---
 
@@ -18,7 +18,7 @@ The file must be valid JSON with exactly these top-level keys:
 }
 ```
 
-- `openapi` — must be the string `"3.0.3"`. Do NOT use `"3.0.0"` or `"3.1.0"`.
+- `openapi` — must be a `"3.0.x"` string (e.g. `"3.0.0"`, `"3.0.1"`, `"3.0.3"`). Emit `"3.0.3"` by default — it is a real published patch that has been verified to import. Do NOT use `"3.1.0"` or any `4.x` value.
 - `info.title` — required. Use a descriptive name (e.g. `"Order Management Business Objects"`).
 - `info.version` — required. Use `"1.0.0"` unless the user specifies otherwise.
 - `info.description` — optional but recommended.
@@ -91,7 +91,7 @@ Add a description on every schema. Keep it to one sentence. This description is 
 
 OpenAPI `format` values on `string` fields control the BAW BO field type created on import:
 
-| OpenAPI `format` | BAW BO field type | Coach view behavior |
+| OpenAPI `format` | BAW BO field type | Coach view behaviour |
 |---|---|---|
 | `"date"` | `Date` | Shows **date only** (no time component rendered) |
 | `"date-time"` | `Time` | Shows **date and time** |
@@ -133,16 +133,63 @@ OpenAPI `format` values on `string` fields control the BAW BO field type created
 
 ### Field descriptions
 
-Add `"description"` to a field when its meaning is not obvious from its name, or when it has a controlled set of values:
+Add `"description"` to a field when its meaning is not obvious from its name.
+
+BAW preserves field descriptions and surfaces them in the WebPD BO designer.
+
+---
+
+## Enumerations (`enum`)
+
+`enum` arrays on string properties are supported and should be used whenever a field has a fixed set of allowed values.
+
+**Auto-generation rule:** every field with an inline `enum` array automatically produces a **Selection BO** named by PascalCasing the field name:
+
+| Field name | Selection BO name |
+|---|---|
+| `status` | `Status` |
+| `policyType` | `PolicyType` |
+| `gender` | `Gender` |
+
+- Display values in the Selection BO equal the value strings exactly (no transformation).
+- The parent property in the combined OpenAPI file uses a `$ref` to the Selection BO schema instead of an inline `enum`.
+- The Selection BO gets its own `.bo.json` file with `"kind": "selection"`.
+
+### Worked example
+
+**Field declaration in the parent BO:**
 
 ```json
-"status": {
+"status": { "$ref": "#/components/schemas/Status" }
+```
+
+**Selection BO schema in `components.schemas`:**
+
+```json
+"Status": {
   "type": "string",
-  "description": "Order status. Values: PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED"
+  "description": "Lifecycle status.",
+  "enum": ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"]
 }
 ```
 
-BAW preserves field descriptions and surfaces them in the WebPD BO designer.
+**Corresponding `Status.bo.json`:**
+
+```json
+{
+  "kind": "selection",
+  "description": "Lifecycle status.",
+  "options": [
+    { "value": "DRAFT",      "display": "DRAFT"      },
+    { "value": "SENT",       "display": "SENT"       },
+    { "value": "PAID",       "display": "PAID"       },
+    { "value": "OVERDUE",    "display": "OVERDUE"    },
+    { "value": "CANCELLED",  "display": "CANCELLED"  }
+  ]
+}
+```
+
+BAW preserves the `enum` values for human readability; runtime enforcement is handled by the Selection BO type itself.
 
 ---
 
@@ -161,7 +208,7 @@ BAW preserves field descriptions and surfaces them in the WebPD BO designer.
 
 BAW **does** support self-referential BOs — a schema that contains a `$ref` to itself imports without errors. For example, an `Employee` with a `manager` field of type `$ref: Employee` is valid.
 
-At runtime, a recursive structure must bottom out somewhere (the top-level manager's `manager` field will simply be null/unset). This is normal BAW behavior, not a defect.
+At runtime, a recursive structure must bottom out somewhere (the top-level manager's `manager` field will simply be null/unset). This is normal BAW behaviour, not a defect.
 
 A flat alternative (storing `managerId` as a string rather than a nested object) is sometimes simpler to work with in process data mappings, but it is a design choice — not a requirement. Use whichever fits the process better.
 
@@ -183,7 +230,7 @@ The following keys are outside the scope of the BO import and should be omitted 
 - `tags`
 - `externalDocs`
 - OpenAPI `format` keywords (preserved as metadata but not enforced)
-- OpenAPI `enum` keywords (preserved as metadata but not enforced — document allowed values in `description` instead)
+- OpenAPI `enum` keywords used standalone without a corresponding Selection BO (use the enum-to-Selection BO rule above instead)
 
 ---
 
@@ -243,4 +290,4 @@ The following keys are outside the scope of the BO import and should be omitted 
 }
 ```
 
-This structure has been verified to import into BAW WebPD without errors.
+Verified by manual test to import into BAW WebPD without errors.

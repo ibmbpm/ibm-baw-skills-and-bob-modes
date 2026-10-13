@@ -1,14 +1,17 @@
 ---
 name: generate-baw-bpmn
-description: Generates BPMN 2.0 XML that imports cleanly into IBM Business Automation Workflow (BAW) -- processes and complex business object variables (via a bundled XSD) -- by writing a process JSON and running a bundled deterministic generator that emits BAW's own export dialect and packages the .zip the import wizards expect. Use whenever the user wants a BPMN file for BAW, asks to "generate BPMN," "create a .bpmn I can import," "turn this workflow into a BAW process/service flow," mentions BPMN import errors or elements disappearing on import, or has a process source in any form -- a chat description, a requirements/BRD/blueprint document, an SOP, meeting notes, or an earlier blueprint parse -- and needs the importable XML. Also triggers on conversational process descriptions like "I want to model a workflow for…" or "help me design a process for…".
-allowed-tools:
-  - execute
-  - write
-  - read
-  - fetch
+description: Generates BPMN 2.0 XML that imports cleanly into IBM Business Automation Workflow (BAW) -- processes and complex business object variables (via a bundled XSD) -- by writing a process JSON and running a bundled deterministic generator that emits BAW's own export dialect and packages the .zip the import wizards expect. Use whenever the user wants a BPMN file for BAW, asks to "generate BPMN," "create a .bpmn I can import," "turn this workflow into a BAW process/service flow," mentions BPMN import errors or elements disappearing on import, or has a process source in any form -- a chat description, a requirements/BRD/blueprint document, an SOP, meeting notes, or an earlier blueprint parse -- and needs the importable XML. Also triggers on conversational process descriptions like "I want to model a workflow for…" or "help me design a process for…". When the process includes serviceTask elements, coordinate with generate-baw-service-flow to produce the matching importable TWX for each service flow.
 license: Apache-2.0
+compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+allowed-tools:
+  - Read
+  - Edit
+  - Bash
 metadata:
   version: "1.0.0"
+  display_name: Generate BAW BPMN
+  short_description: Generate importable BPMN 2.0 XML files and bundled XSD for IBM BAW from any process description, document, or chat input.
+  author: IBM BAW Team
 ---
 
 # Generate BAW BPMN
@@ -22,9 +25,9 @@ The reliability comes from three deliberate choices:
    hand-write BPMN XML: ids, references, and namespace details are exactly the kind of
    fussy output that must come from a generator, not a fresh guess.
 2. **The XML is BAW's own dialect.** The generator reproduces the format BAW itself
-   exports -- `bpmnid-` UUID ids, `processType="None"`, named flows, no diagram
-   section, no lanes (see `references/BAW_BPMN_DIALECT.md` for why). What BAW
-   writes, BAW reads.
+   exports -- `bpmnid-` UUID ids, `processType="None"`, named flows, a `laneSet` when
+   roles are defined, no diagram section (see `references/BAW_BPMN_DIALECT.md`). What
+   BAW writes, BAW reads.
 3. **Only mappable constructs exist.** Every element type the config schema allows maps
    1:1 to a row in IBM's documented import mapping. Anything BAW would silently drop or
    lossily convert is rejected at validation time, where it's cheap to fix.
@@ -166,7 +169,13 @@ and render a short visible checklist beneath the diagram, e.g.:
 ✅ 2 outcomes on "Approved?"
 ❌ No SLA timer — description says "within 3 business days"
 ✅ Distinct end event per outcome
+✅ Escalation paths modeled correctly (notifications end; action tasks rejoin)
 ```
+Check escalations explicitly: if the plan includes a non-interrupting boundary timer
+leading to a human task, verify that human task routes to a meaningful continuation
+rather than a dead-end end event. Flag it as ❌ with a note explaining the correct
+pattern (see `references/MODELING_COMPLETENESS.md` SLA and escalation section).
+
 If anything is ❌, ask about the flagged gaps in one question before moving on — a
 multiSelect `AskUserQuestion` listing each gap as an option (plus "none of these, this
 is fine as is") when available, otherwise one plain question listing them. If
@@ -303,12 +312,31 @@ If no → ask:
       emits one swim-lane per role (`<laneSet>/<lane>`) plus a `<performer>` on each
       task — BAW uses these to create swim-lanes and bind teams on import. Roles also
       drive the README's role table and "Performed by" column. Assign a role to every
-      task; unassigned elements land in an "Unassigned" lane. Do not model pools
-      (separate participants). See `references/BAW_BPMN_DIALECT.md`.
+      task; control-flow elements and any task without an explicit role go to the
+      System lane automatically. Do not model pools (separate participants). See
+      `references/BAW_BPMN_DIALECT.md`.
+   - **Service flows for serviceTasks:** name each `serviceTask` exactly what its
+     callable service flow should be named. After generating the BPMN, coordinate
+     with `generate-baw-service-flow` to produce a TWX for those service flows (see
+     step 5a below).
 
 4. **Write the config** to `business-processes/configs/[Domain]/[ProcessName].bpmn.json`
    (create the folders if needed; follow existing folder conventions if the project
    already has some).
+
+5a. **Generate service flow TWX for serviceTasks (if any).** If the config contains
+    any `serviceTask` elements, activate `generate-baw-service-flow` to generate the
+    matching importable TWX alongside the BPMN. Pass the service task names and their
+    associated variable types (from the `variables` and `businessObjects` already
+    defined) as the input. The service flow skill will produce
+    `output/<ProjectName>_services.twx`. Include the TWX path in the final output
+    report and post-import checklist.
+
+    **How to pass context to `generate-baw-service-flow`:**
+    - List the `serviceTask` names from the config (these become flow `name` values).
+    - Provide the input/output variable types from the process `variables` array for
+      each task — the service flow skill maps them to its BO definitions.
+    - The service flow skill runs its own generator and reports its TWX path back.
 
 5. **Validate, then generate — into a dedicated folder per process.** Every process
    gets its own output directory (kebab-case process name), because each run produces
@@ -378,7 +406,7 @@ If no → ask:
 
    ## Out of scope / deferred
    Data-model-only content (entity/field definitions with no workflow) → note it here
-   and point to `parse-business-blueprint` for that work.
+   and point to `generate-baw-business-objects` for that work.
    ```
 
 ## Boundaries
@@ -392,15 +420,13 @@ as variables. When the input was a document, also a process extraction report at
 `business-processes/reports/[context]/[ProcessName].extraction-report.md`.
 
 Out of scope -- hand off instead:
-- **Producing business object JSON artifacts/catalogs from documents** →
-  `parse-business-blueprint`. (Reading a document to extract the *workflow* is in
-  scope here; building the standalone data-model artifact set is not.)
-- **Business object JSON, OpenAPI specs, class-ID registration, Mermaid docs** → that's
-  `generate-bpmn-process`'s wider pipeline; this skill deliberately generates BPMN only.
-- **Packaging a TWX toolkit** → `package-baw-toolkit`. **Deployment to a server is not
+- **Producing business object JSON artifacts, OpenAPI specs, or standalone data-model files from documents** →
+  `generate-baw-business-objects`. (Reading a document to extract the *workflow* is in
+  scope here; building standalone Business Object artifacts is handled by `generate-baw-business-objects`.)
+- **Packaging or managing TWX toolkits and deployments** → `generate-baw-business-objects` (for BO toolkits), `baw-deployment-manager`, or `version-lifecycle-manager`. **Deployment to a server is not
   part of this skill under any prompt** -- the deliverable is the .bpmn/.zip, which the
   user imports through BAW's own UI.
-- **Coach/widget work** → `create-baw-coach` / `create-baw-widget`.
+- **Coach widgets, UI components, or custom portals** → `create-baw-widget` or `create-baw-portal`.
 - **Hand-writing or hand-editing BPMN XML.** Change the config and regenerate --
   deterministic ids mean regeneration is always safe and diffs stay clean.
 
@@ -410,6 +436,9 @@ Report back:
 - **Process:** name, pattern (linear / approval / parallel / combination), element and
   flow counts.
 - **Service flows BAW will generate:** the serviceTask names (one flow each).
+- **Service flow TWX (if generated):** path to `output/<ProjectName>_services.twx` and
+  confirmation it was produced by `generate-baw-service-flow`. This TWX must be imported
+  **in addition to** the BPMN zip — it delivers the callable service flow artifacts.
 - **Business objects (if any):** names and where they're used, noting the `.xsd` rides
   inside the zip.
 - **Config:** path, and confirmation it validated (mention any warnings and why they're
@@ -419,9 +448,15 @@ Report back:
 - **Extraction report (document-sourced runs only):** path to
   `business-processes/reports/[context]/[ProcessName].extraction-report.md`, and a
   one-line summary of how many assumptions were logged.
-- **Import route:** Workflow Center → Process Apps → Import Process App" or
-  Business Automation Studio → Business automations → Workflow → Import
+- **Import route:**
+  - **Traditional BAW (Workflow Center):** Workflow Center → Process Apps → Import Process App
+  - **CP4BA containerized (Business Automation Studio):** Business Automation Studio → Business automations → Workflow → Import
+  When a service flow TWX was generated, note both imports:
+  1. Import the `.zip` (BPMN process)
+  2. Import `<ProjectName>_services.twx` (service flows)
 - **Post-import checklist:** the short list from `references/BAW_BPMN_DIALECT.md`.
+  When service flows were generated, add: "Wire each service task in Process Designer
+  to the matching service flow from the imported TWX."
 - **Review page (if published):** the artifact link, now showing the final round-tripped
   diagram and documentation.
 

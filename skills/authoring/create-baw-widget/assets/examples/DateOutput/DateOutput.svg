@@ -1,0 +1,31 @@
+<svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="120" height="120" fill="#ffffff"/>
+  
+  <!-- Calendar icon -->
+  <g transform="translate(30, 25)">
+    <!-- Calendar frame -->
+    <rect x="0" y="5" width="60" height="50" rx="4" fill="none" stroke="#0f62fe" stroke-width="2"/>
+    <rect x="0" y="5" width="60" height="12" rx="4" fill="#0f62fe"/>
+    
+    <!-- Calendar rings -->
+    <rect x="12" y="2" width="4" height="8" rx="2" fill="#525252"/>
+    <rect x="44" y="2" width="4" height="8" rx="2" fill="#525252"/>
+    
+    <!-- Date number -->
+    <text x="30" y="42" font-family="IBM Plex Sans, Arial, sans-serif" font-size="20" font-weight="600" fill="#161616" text-anchor="middle">22</text>
+  </g>
+  
+  <!-- Formatted date display -->
+  <rect x="15" y="75" width="90" height="24" rx="4" fill="#e3f2fd"/>
+  <text x="60" y="91" font-family="IBM Plex Sans, Arial, sans-serif" font-size="11" fill="#0043ce" text-anchor="middle">12/22/2025</text>
+  
+  <!-- Color indicators (past/today/future) -->
+  <g transform="translate(25, 105)">
+    <rect x="0" y="0" width="8" height="8" rx="2" fill="#fff3e0"/>
+    <rect x="34" y="0" width="8" height="8" rx="2" fill="#e8f5e9"/>
+    <rect x="62" y="0" width="8" height="8" rx="2" fill="#e3f2fd"/>
+  </g>
+</svg>
+
+<!-- Made with Bob -->

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <projectDefaults id="63.16da6deb-ba5f-4f5e-bbaf-cd5ff2e3c4b1" name="Toolkit Settings">
+        <lastModified>1778703345236</lastModified>
+        <lastModifiedBy>cpmanager</lastModifiedBy>
+        <tenantId isNull="true" />
+        <projectDefaultsId>63.16da6deb-ba5f-4f5e-bbaf-cd5ff2e3c4b1</projectDefaultsId>
+        <description isNull="true" />
+        <guid>guid:16da6deb-ba5f-4f5e-bbaf-cd5ff2e3c4b1</guid>
+        <versionId>a33a1697-fe76-446a-97a9-2497ca776591</versionId>
+        <participantRef isNull="true" />
+        <defaultXslRef isNull="true" />
+        <defaultCssRef isNull="true" />
+        <defaultTheme>cf3f1815-aea7-43ed-ab46-f113df9c91a7/72.993e03e9-2574-40fc-807c-65b06be378fd</defaultTheme>
+        <themeVersion isNull="true" />
+        <defaultJsRefs isNull="true" />
+        <isWbmEnabled>false</isWbmEnabled>
+        <namespace isNull="true" />
+        <isIidOptimized>false</isIidOptimized>
+        <isQueueBypass isNull="true" />
+        <templateAcronymReference isNull="true" />
+        <templateSnapshotReference isNull="true" />
+        <targetEnvironment>BAW_CP4A</targetEnvironment>
+        <subtype isNull="true" />
+        <capability isNull="true" />
+        <solutionTargetStore isNull="true" />
+    </projectDefaults>
+</teamworks>

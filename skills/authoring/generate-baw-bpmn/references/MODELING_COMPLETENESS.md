@@ -12,9 +12,12 @@ Mentally walk through the process from every angle before writing the config:
 
 **Roles and actors.** Who does each step — a specific person, a team, or the system?
 Different actors suggest distinct work areas. Capture this in a `roles` section (see
-`references/PROCESS_JSON_SCHEMA.md`) and reference each role from its tasks; the
-generator uses role names in the README's "Performed by" column and role table so
-teams can be assigned in Process Designer after import.
+`references/PROCESS_JSON_SCHEMA.md`) and reference each role from its tasks with
+`"role": "<roleId>"`. Assign a role to every task — user tasks especially must have an
+explicit role so BAW creates the correct human swimlane on import. Always include a
+system role (`"type": "system"`) for service tasks and automated steps; if none is
+defined the generator adds one automatically, but naming it explicitly keeps the
+config self-documenting.
 
 **Decision points.** Every question in the process needs an `exclusiveGateway`. For
 every gateway, ask: what are ALL the realistic outcomes? Common ones to not omit:
@@ -30,8 +33,28 @@ every gateway, ask: what are ALL the realistic outcomes? Common ones to not omit
 Don't model these as single happy-path lines — model the loop explicitly.
 
 **SLA and escalation.** Whenever a human task has a time expectation ("within 2 days",
-"must respond before deadline"), add a non-interrupting timer `boundaryEvent` on that
-task. The boundary event should lead to an escalation task and its own end event.
+"must respond before deadline"), add a timer `boundaryEvent` on that task. Model the
+escalation path based on what should actually happen when the timer fires:
+
+- **Pure notification (non-interrupting timer):** Use `"interrupting": false`. The
+  original task stays active. The escalation branch sends a notification (service task)
+  and ends with its own end event — this is correct because the main task token is still
+  alive and will complete normally. The notification is a side effect; the process
+  continues through the original task path as normal.
+
+- **Escalation action whose outcome affects the process (non-interrupting timer):** Use
+  `"interrupting": false`. The escalation path runs a human task (e.g., an escalation
+  handler reviews and acts). Because that action should influence the process outcome,
+  the human task must route to a meaningful continuation — typically the same decision
+  gateway the original task feeds into — not dead-end at its own end event. A
+  dead-end here means the escalation handler's work has no effect on the process.
+
+- **Timeout cancellation or takeover (interrupting timer):** Use the default
+  (`"interrupting": true` or omit the field). The original task is cancelled when the
+  timer fires. The timeout path should either route to an explicit resolution (a
+  handling task, a notification, or a named end event such as "Timed Out"), or rejoin
+  the main flow at a downstream gateway if the timeout handler makes the equivalent
+  decision the original task would have produced.
 
 **Multiple end states.** A well-modeled process has a named end event for each
 meaningfully different outcome: Approved, Rejected, Cancelled, Escalated, Error.
@@ -41,7 +64,7 @@ A single "End" is almost always a sign the process is underspecified.
 provisioning and desk assignment during onboarding), use a `parallelGateway` fork/join.
 Do not serialize steps that the real world does concurrently.
 
-A good rule of thumb: if your process has fewer than 8 elements or only one or two end events
+A good rule of thumb: if your process has fewer than 8 elements or only 1-2 end events
 for anything beyond a trivial workflow, stop and ask whether you've modeled all the
 decision branches, exception paths, and rework loops the real process contains.
 
@@ -90,8 +113,8 @@ carry the outcome, the actor who made it, and the timestamp — not just a boole
 Every business object must be reachable from at least one variable. That variable must
 have `outputFrom` set to the task that creates/captures it (usually the first userTask
 or the start of data entry) and `inputTo` set to every task that reads or updates it.
-A business object that no variable references triggers a generator warning and imports
-as a disconnected type that is hard to use in Process Designer.
+An orphan business object that no variable references will trigger a generator warning
+and import as a disconnected type that is hard to use in Process Designer.
 
 **Minimum bar for a real process:**
 - At least one complex `businessObject` with 5+ fields for the primary entity

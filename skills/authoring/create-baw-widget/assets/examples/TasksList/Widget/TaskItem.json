@@ -1,0 +1,19 @@
+{
+  "name": "TaskItem",
+  "type": "businessObject",
+  "description": "Business object representing a task item with label and status",
+  "properties": [
+    {
+      "name": "label",
+      "type": "String",
+      "required": true,
+      "description": "The task label or description"
+    },
+    {
+      "name": "status",
+      "type": "String",
+      "required": true,
+      "description": "The current status of the task: 'pending', 'processing', 'complete', or 'failed'"
+    }
+  ]
+}

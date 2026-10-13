@@ -1,0 +1,31 @@
+{
+  "toolkit": {
+    "name": "Custom Widgets",
+    "shortName": "CW",
+    "description": "Custom widget toolkit for BAW",
+    "version": "1.0.0",
+    "bawVersion": "25.0.1",
+    "id": "2066.cebc1c06-68a5-4d2e-986a-aaae3072cefb"
+  },
+  "dependencies": {
+    "systemData": {
+      "snapshotId": "2064.1080ded6-d153-4654-947c-2d16fce170db",
+      "name": "8.6.0.0_TC"
+    },
+    "uiToolkit": {
+      "snapshotId": "2064.304ac881-16c3-47d2-97d5-6e4c4a893177",
+      "name": "8.6.0.0"
+    }
+  },
+  "output": {
+    "directory": "output",
+    "filename": "Custom_Widgets_{version}.twx"
+  },
+  "widgets": {
+    "include": [
+      "*"
+    ],
+    "exclude": [],
+    "source_directory": "widgets"
+  }
+}
