@@ -26,8 +26,8 @@ If you already have a `.twx` file on disk, provide its path — the skill uses i
 ## Compatibility
 
 - Verified against **BAW 8.6.x** TWX exports (confirmed XML structure). Works with both standalone IBM Business Automation Workflow and IBM Cloud Pak for Business Automation (CP4BA) deployments.
-- Tip snapshot detection relies on the snapshot name string — a snapshot named `"Tip"` (case-insensitive) is flagged. References to the live branch under a custom name will not be detected.
-- For environments with self-signed certificates (typical in CP4BA on-prem), TLS verification is disabled automatically during download.
+- Tip snapshot detection relies on the snapshot name string — the skill flags any snapshot named `"Tip"` (case-insensitive) as a live-branch reference. The skill does not detect references to the live branch under a custom name.
+- For environments with self-signed certificates (typical in CP4BA on-prem), the skill disables TLS verification automatically during download.
 
 ## Prompt examples
 
@@ -100,8 +100,8 @@ If you already have a `.twx` file on disk, provide its path — the skill uses i
 | Missing dependency | ❌ | An artifact references a toolkit item not declared as a dependency |
 | Snapshot conflict | ⚠️ | Two direct dependencies pull in different snapshots of the same transitive toolkit |
 | Circular dependency | ⚠️ | A dependency chain loops back to a toolkit already in the chain |
-| Tip snapshot | ⚠️ | A toolkit is referenced at the `Tip` (live) snapshot rather than a frozen named snapshot |
-| Unused (no refs found) | 🔍 | A toolkit is declared but no artifact references any of its exported items — verify before removing |
+| Tip snapshot | ⚠️ | The process app references a toolkit at the `Tip` (live) snapshot rather than a frozen named snapshot |
+| Unused (no refs found) | 🔍 | The process app declares a toolkit but no artifact references any of its exported items — verify before removing |
 | Dangling reference | ⚠️ | An artifact references a toolkit item whose toolkit is no longer declared |
 
 ## Report outputs

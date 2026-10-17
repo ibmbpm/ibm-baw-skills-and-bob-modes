@@ -1,11 +1,11 @@
-# Audience-Specific Output Formats
+# Audience-specific output formats
 
 This reference defines the four output structures for `baw-project-doc`.
 Select the structure that matches the audience the user chose at startup.
 
 ---
 
-## 1. Executive Summary
+## 1. Executive summary
 
 **Intended reader:** Business stakeholder, executive, or product owner who needs to understand what the application does and why it exists — not how it is built.
 
@@ -73,7 +73,7 @@ stakeholder should be aware of.
 
 ---
 
-## 2. Knowledge Transfer (KT)
+## 2. Knowledge transfer (KT)
 
 **Intended reader:** Developer or team inheriting ownership of this application who needs enough detail to maintain, extend, and troubleshoot it.
 
@@ -183,7 +183,7 @@ team should be aware of.
 
 ---
 
-## 3. Partner Handoff
+## 3. Partner handoff
 
 **Intended reader:** External partner or client receiving ownership or a copy of the application. Needs both a clear understanding of what they are receiving and actionable guidance on what could be improved.
 
@@ -280,7 +280,7 @@ handling, overly complex flows that could be simplified, deprecated service type
 
 ---
 
-## 4. Technical Reference
+## 4. Technical reference
 
 **Intended reader:** Developer, architect, or technical lead who needs a complete and precise technical record of the application.
 

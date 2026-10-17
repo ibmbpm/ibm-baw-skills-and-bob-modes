@@ -14,31 +14,38 @@ metadata:
   author: IBM BAW Team
 ---
 
-# Generate BAW Tests
+# Generate BAW tests
 
-Generate comprehensive, structured test suites from IBM BAW process application artifacts and execute them end-to-end against a live environment.
+Generate comprehensive, structured test suites from IBM Business Automation Workflow (BAW) process application artifacts, and run them end-to-end against a live environment.
 
 This skill has two distinct phases. Run them in order for the full workflow, or enter at the phase that matches what the user needs.
 
 | Phase | What it does |
 |---|---|
-| **A — Generation** | Fetch the process app artifacts, analyze them, and produce a test suite JSON file covering happy path, alternative paths, and edge cases for Processes and Coaches. |
-| **B — Execution** | Take a test suite file and drive it against a live BAW environment: start a process, claim each user task, supply test data, complete it, and report pass/fail in plain language. |
+| A: Generation | Fetch the process app artifacts, analyze them, and produce a test suite JSON file that covers the happy path, alternative paths, and edge cases for Processes and Coaches. |
+| B: Execution | Take a test suite file and drive it against a live BAW environment: start a process, claim each user task, supply test data, complete the task, and report pass or fail in plain language. |
 
 ---
 
 ## Execution mode
 
-Check the tool list at the start of each phase independently. MCP is always used when the relevant tools are present — REST is a fallback for when they are absent.
+Check the tool list at the start of each phase independently. Always use MCP when the relevant tools are present. Use REST as a fallback when they are absent.
 
-- **Phase A:** If process authoring MCP tools are present → use MCP. If absent → use REST (`references/baw-rest.md`).
-- **Phase B:** If process execution MCP tools are present → use MCP. If absent → use REST (`references/baw-rest.md`). The Phase A login session (if it exists) is still valid — do not ask for credentials again.
+- Phase A: If process authoring MCP tools are present, use MCP. If they are absent, use REST (`references/baw-rest.md`).
+- Phase B: If process execution MCP tools are present, use MCP. If they are absent, use REST (`references/baw-rest.md`).
 
-Each phase is decided independently. A failed tool call is not evidence of absence — only absence from the tool list counts.
+Decide each phase independently. A failed tool call is not evidence of absence. Only absence from the tool list counts.
 
 ---
 
-> **⚠️ Hard rule — TWX download is always REST, never MCP.** The Authoring MCP tool list includes a solution-export tool. Do not call it — ever — for this skill. It is not production-ready. The TWX must always be downloaded via `GET {BAW_BASE_URL}/ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true`. This applies even when the Authoring MCP is fully connected. Ignore the MCP export tool silently — do not mention it to the user.
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+
+---
+
+> Hard rule: always download the TWX through REST, never through MCP. The Authoring MCP tool list includes a solution-export tool. Never call it for this skill, because it is not production-ready. Always download the TWX with `GET {BAW_BASE_URL}/ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true`. This rule applies even when the Authoring MCP is fully connected. Ignore the MCP export tool silently, and do not mention it to the user.
 
 ---
 
@@ -48,7 +55,7 @@ Each phase is decided independently. A failed tool call is not evidence of absen
 |---|---|---|---|
 | `get_process_apps` | A | MCP / REST fallback | List all process apps and their acronyms |
 | `get_process_app` | A | MCP / REST fallback | Get snapshots for a specific process app |
-| `export solution` | A | **REST always — not MCP** | `GET /ops/std/bpm/containers/{container}/versions/{version}/export` |
+| `export solution` | A | REST always, not MCP | `GET /ops/std/bpm/containers/{container}/versions/{version}/export` |
 | `start_process` | B | MCP / REST fallback | Start a new process instance |
 | `get_task_list` | B | MCP / REST fallback | List open user tasks for an instance |
 | `get_task_details` | B | MCP / REST fallback | Task model and current business data |
@@ -58,107 +65,100 @@ Each phase is decided independently. A failed tool call is not evidence of absen
 
 ---
 
-## Phase A — Test Suite Generation
+## Phase A: test suite generation
 
-Read `references/TEST_GENERATION.md` before proceeding. It contains the full analysis and authoring instructions split by artifact type (Process, Coach). Come back here once you understand the analysis protocol.
+Read `references/TEST_GENERATION.md` before proceeding. It contains the full analysis and authoring instructions, split by artifact type (Process, Coach). Come back here once you understand the analysis protocol.
 
-Before generating any tests, resolve unknowns in this order. Do not announce step names or protocol labels to the user — just ask each question naturally.
+Before generating any tests, resolve unknowns in this order. Do not announce step names or protocol labels to the user. Ask each question naturally.
 
-If the user gave a full app name but no acronym, call `get_process_apps` (Authoring MCP) to find it. Present the match or a short list if ambiguous and confirm before proceeding. Never guess an acronym.
+If the user gave a full app name but no acronym, call `get_process_apps` (Authoring MCP) to find it. Present the match, or a short list if the match is ambiguous, and confirm before proceeding. Never guess an acronym.
 
-Call `get_process_app` to get available snapshots. If only one exists, use it and mention it. If multiple, present them and ask which to test against. Default to the most recently activated if the user says "latest" or "current".
+Call `get_process_app` to get available snapshots. If only one exists, use it and mention it. If multiple exist, present them and ask which to test against. Default to the most recently activated snapshot if the user says "latest" or "current".
 
 Once the app and snapshot are resolved, ask:
-> *"I found [app name] ([acronym]) — snapshot [snapshot]. What would you like me to test?*
+> *"I found [app name] ([acronym]) - snapshot [snapshot]. What would you like me to test?*
 > *- (A) Processes only*
 > *- (B) Coaches only*
 > *- (C) Both Processes and Coaches*
 > *Are there any specific paths, edge cases, or boundary values you especially want covered?"*
 
 Also ask:
-> *"Once the test suite is ready, would you like me to run it against your BAW server straight away, or just generate the file for review first?"*
+> *"Once the test suite is ready, would you like me to run it against your BAW server immediately, or just generate the file for review first?"*
 
-This determines whether to chain directly into Phase B or stop after the file is written.
+The answer determines whether to chain directly into Phase B or stop after writing the file.
 
-**Generating the tests:**
+Generate the tests as follows:
 
-1. **Acquire artifacts.** The TWX export is the only source for test generation — it contains the full process model, coach definitions, business objects, and all variable bindings needed for thorough test coverage. Use the first path that succeeds:
+1. Acquire artifacts. The TWX export is the only source for test generation, because it contains the full process model, coach definitions, business objects, and all variable bindings that thorough test coverage needs. Use the first path that succeeds:
 
-   **Path 1 — REST TWX export.** The TWX download always requires REST. Ask for the server URL and credentials only at this point, immediately before making the login call — do not ask earlier:
-   > *"To export the app artifacts I'll need your BAW server URL and credentials — these are only used to get a session token for this conversation and are not stored."*
+   Path 1: REST TWX export. The TWX download always requires REST. Read credentials from `references/CREDENTIAL_HANDLING.md` (already resolved earlier in this session if a REST call was made in Phase A — do not resolve again). Then call `GET {BAW_BASE_URL}/ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true`. The response is a binary `.twx` file (a ZIP). Extract it and read the XML files for the process model, coach definitions, and business object details.
 
-   Call `POST {BAW_BASE_URL}/ops/system/login` with `Authorization: Basic <base64(user:pass)>`, `Content-Type: application/json`, body `{"refresh_groups": false}`. On HTTP 201 store `csrf_token` as `{BAW_CSRF}` and the `LtpaToken2`/`JSESSIONID` cookies as `{BAW_SESSION}` — send both on all subsequent REST calls.
+   Path 2: local TWX file (offer only after Path 1 visibly fails). If the REST export fails or errors more than once, offer this option without making it feel like a demotion:
+   > *"If you already have the `.twx` file for this app on your machine, you can point me to it and I can work from that directly. No server connection is needed for this step."*
+   If the user provides a file path, read the file from disk, treat it as a ZIP, and extract and parse the XML files exactly as in Path 1. Do not ask for the file path preemptively. Ask only after a real failure.
 
-   Then call `GET {BAW_BASE_URL}/ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true`. The response is a binary `.twx` file (a ZIP) — extract it and read the XML files for process model, coach definitions, and business object details.
+2. Analyze. Follow the artifact-type-specific instructions in `references/TEST_GENERATION.md`. Map every flow path, gateway decision, user task sequence, coach field, and boundary condition before writing a single test case.
 
-   If login returns 401/400, ask the user to re-enter credentials. Do not fall back to MCP tools — the export is REST-only.
+3. Generate the test suite. Use the format in `references/TEST_SUITE_FORMAT.md` exactly. Every test case must have a clear ID, a human-readable name, a type label (`process` or `coach`), preconditions, a step sequence with data, and expected outcomes. Produce at minimum one happy-path test, at least one alternative or error path per gateway or decision point, and relevant boundary and edge cases.
 
-   **Path 2 — local TWX file (offer only after Path 1 has visibly failed).** If the REST export fails or errors more than once, offer this without making it feel like a demotion:
-   > *"If you already have the `.twx` file for this app on your machine, you can point me to it and I'll work from that directly — no server connection needed for this step."*
-   If the user provides a file path, read the file from disk, treat it as a ZIP, extract and parse the XML files exactly as in Path 1. Do not ask for the file path pre-emptively — only after a real failure.
-
-2. **Analyze.** Follow the artifact-type-specific instructions in `references/TEST_GENERATION.md`. The goal is to map every flow path, gateway decision, user task sequence, coach field, and boundary condition before writing a single test case.
-
-3. **Generate the test suite.** Use the format in `references/TEST_SUITE_FORMAT.md` exactly. Every test case must have a clear ID, human-readable name, a type label (`process` or `coach`), preconditions, step sequence with data, and expected outcomes. Produce at minimum: one happy-path test, at least one alternative/error path per gateway or decision point, and relevant boundary/edge cases.
-
-4. **Output.** Write two files:
-   - `<app-acronym>-test-suite.json` — the machine-executable test suite (used by Phase B).
-   - `<app-acronym>-test-suite.md` — a human-readable version for review. Follow the format in `references/TEST_SUITE_FORMAT.md` (Human-readable output format section).
+4. Write the output. Write two files:
+   - `<app-acronym>-test-suite.json`: the machine-executable test suite that Phase B uses.
+   - `<app-acronym>-test-suite.md`: a human-readable version for review. Follow the format in `references/TEST_SUITE_FORMAT.md` (Human-readable output format section).
 
    Show the user the summary table from the markdown file (test ID, name, type, path covered) and ask if they want to adjust anything before proceeding to execution.
 
 ---
 
-## Phase B — Test Execution
+## Phase B: test execution
 
 Read `references/TEST_EXECUTION.md` before proceeding. It has the step-by-step execution protocol and assertion rules.
 
-> **Isolation guarantee.** Phase B **only ever creates new process instances** for testing — it never touches, modifies, suspends, retries, or terminates any pre-existing instance in the environment. Every test case starts a fresh instance via `start_process` with clearly labelled test data and drives only that instance to completion. No existing business data, running processes, or production records are touched at any point.
+> Isolation guarantee: Phase B only ever creates new process instances for testing. It never touches, modifies, suspends, retries, or terminates any pre-existing instance in the environment. Every test case starts a fresh instance through `start_process` with clearly labeled test data and drives only that instance to completion. Phase B does not touch existing business data, running processes, or production records at any point.
 
-**Phase B entry — confirm these in order before starting:**
+Phase B entry: confirm these items in order before starting.
 
-1. **Resolve transport.** Check the tool list for process execution MCP tools (start process, search tasks, claim task, complete task).
-   - Present → use MCP for all Phase B steps. Do not ask for a server URL or credentials — MCP handles authentication internally.
-   - Absent → use REST. Defer the credentials ask to step 4 below (after the env confirmation), immediately before the first REST call.
-2. Is there a test suite file to run? If not, offer to go back to Phase A.
-3. Which tests should run — all, a specific subset, or just the happy path first?
-4. **Confirm the environment is non-production.** Tell the user:
-   > *"⚠️ Running these tests will create real process instances on your BAW server. It is strongly recommended to run against an **authoring or non-production environment** to avoid polluting task lists, reporting dashboards, and audit logs with test data. Do you want to continue? (yes / no)"*
+1. Resolve transport. Check the tool list for process execution MCP tools (start process, search tasks, claim task, complete task).
+   - If present, use MCP for all Phase B steps. Do not ask for a server URL or credentials, because MCP handles authentication internally.
+   - If absent, use REST. Defer the credentials request to step 5 below (after the environment confirmation), immediately before the first REST call.
+2. Check whether a test suite file exists to run. If not, offer to go back to Phase A.
+3. Ask which tests to run: all, a specific subset, or just the happy path first.
+4. Confirm the environment is nonproduction. Tell the user:
+   > *"Running these tests creates real process instances on your BAW server. Run them against an authoring or nonproduction environment to avoid polluting task lists, reporting dashboards, and audit logs with test data. Do you want to continue? (yes / no)"*
    Wait for an explicit "yes" before starting. If the user answers "no", stop and suggest they point to a test environment first.
-5. **REST only — ask for server URL and credentials** (skip entirely if using MCP): *"What is your BAW server URL, and what credentials should I use? These are only used to get a session token and are not stored."* If credentials were already obtained during Phase A, reuse that session — do not ask again. Call `POST {BAW_BASE_URL}/ops/system/login` as described in the Phase A credential flow and store `{BAW_CSRF}` and `{BAW_SESSION}`.
-6. **If the server is production** (URL contains `prod`, user says so, or matches a known production hostname), add a second warning: *"This appears to be a production server. Running tests here creates real process instances that will appear in your users' task lists and may affect reporting and SLAs. Consider running against a staging or authoring environment instead. Are you sure you want to continue on production?"* Wait for explicit confirmation before continuing.
+5. REST only (skip entirely if using MCP): resolve credentials via `references/CREDENTIAL_HANDLING.md` — credentials are read from `.env` automatically and the session from Phase A is reused if already established. No prompt to the user unless `.env` is incomplete.
+6. If the server is production (the URL contains `prod`, the user says so, or the URL matches a known production hostname), add a second warning: *"This appears to be a production server. Running tests here creates real process instances that appear in your users' task lists and might affect reporting and SLAs. Consider running against a staging or authoring environment instead. Are you sure you want to continue on production?"* Wait for explicit confirmation before continuing.
 
-**Phase B steps — for each test case in sequence:**
+Phase B steps (for each test case, in sequence):
 
-1. **Start the process.** Use `start_process` (MCP) or `POST /bpm/processes` (REST fallback) with the initial data from the test case `input` block. Capture the returned `process_id`.
+1. Start the process. Use `start_process` (MCP) or `POST /bpm/processes` (REST fallback) with the initial data from the test case `input` block. Capture the returned `process_id`.
 
-2. **Drive the task sequence.** For each expected task in the test case:
-   a. Use `search_tasks` (MCP) or `GET /bpm/user-tasks?process_id=…` (REST fallback) and confirm the expected task name is present. If a different task appears, record a `FAIL` with the divergence.
+2. Drive the task sequence. For each expected task in the test case:
+   a. Use `search_tasks` (MCP) or `GET /bpm/user-tasks?process_id=…` (REST fallback) and confirm that the expected task name is present. If a different task appears, record a `FAIL` with the divergence.
    b. Use `claim_task` (MCP) or `POST /bpm/user-tasks/{task_id}/claim` (REST fallback).
-   c. Use `get_task_details` (MCP) or `GET /bpm/user-tasks/{task_id}?optional_parts=data` (REST fallback) and verify the business data matches what the test case expects at this step. Record any mismatches.
+   c. Use `get_task_details` (MCP) or `GET /bpm/user-tasks/{task_id}?optional_parts=data` (REST fallback) and verify that the business data matches what the test case expects at this step. Record any mismatches.
    d. Use `complete_task` (MCP) or `POST /bpm/user-tasks/{task_id}/complete` (REST fallback) with the data from the test case step's `output` block.
 
-3. **Assert final state.** After all tasks are complete, use `get_process_details` (MCP) or `GET /bpm/processes/{process_id}?optional_parts=data,variables` (REST fallback). Verify the final status and any output variables match the test case's `expected_outcome` block.
+3. Assert the final state. After all tasks are complete, use `get_process_details` (MCP) or `GET /bpm/processes/{process_id}?optional_parts=data,variables` (REST fallback). Verify that the final status and any output variables match the test case's `expected_outcome` block.
 
-4. **Record the result.** Follow the format in `references/TEST_RESULT_FORMAT.md`. A test passes only when every step assertion and the final state assertion both pass.
+4. Record the result. Follow the format in `references/TEST_RESULT_FORMAT.md`. A test passes only when every step assertion and the final state assertion both pass.
 
-5. **Present the report.** After all tests complete, present a summary table (test ID, name, result, duration) followed by the full result details for any FAIL or ERROR cases. Express failures in plain language — never show raw stack traces or JSON blobs to the user.
+5. Present the report. After all tests complete, present a summary table (test ID, name, result, duration), followed by the full result details for any FAIL or ERROR cases. Express failures in plain language. Never show raw stack traces or JSON blobs to the user.
 
-**Execution rules:**
+Execution rules:
 - Run tests in the order they appear in the test suite unless the user specifies otherwise.
-- If a `start_process` call fails with a 4xx error, mark that test `ERROR` and continue with the next test — do not abort the whole suite.
-- If a task assertion fails mid-sequence, mark the test `FAIL`, record the step where it diverged, and stop driving that test instance (do not complete the remaining tasks on a failed instance).
-- After an unexpected gateway branch, log the actual branch taken and continue driving the instance to its natural end — this is useful diagnostic information even on a failing test.
+- If a `start_process` call fails with a 4xx error, mark that test `ERROR` and continue with the next test. Do not abort the whole suite.
+- If a task assertion fails mid-sequence, mark the test `FAIL`, record the step where it diverged, and stop driving that test instance. Do not complete the remaining tasks on a failed instance.
+- After an unexpected gateway branch, log the actual branch taken and continue driving the instance to its natural end. This is useful diagnostic information even on a failing test.
 
 ---
 
 ## Disambiguation
 
-**Phase A vs Phase B:** If the user says "test my process" with no prior test suite, start at Phase A. If they provide a test suite file, go to Phase B directly.
+Phase A or Phase B: If the user says "test my process" with no prior test suite, start at Phase A. If they provide a test suite file, go to Phase B directly.
 
-**Process tests vs Coach tests:** Process tests drive full end-to-end execution via the process API. Coach tests validate UI field behaviour and validation rules from the artifact definitions — they do not require a live execution context and are part of Phase A output only; the skill does not currently execute Coach tests programmatically (mark them `manual` in the result file and explain what to check).
+Process tests or Coach tests: Process tests drive full end-to-end execution through the process API. Coach tests validate UI field behavior and validation rules from the artifact definitions. They do not require a live execution context and are part of the Phase A output only. The skill does not currently execute Coach tests programmatically. Mark them `manual` in the result file and explain what to check.
 
-**Transport per phase:** Transport is decided independently per phase by checking the tool list at the start of that phase — before asking the user anything. MCP is always used when the relevant tools are present. REST is only used when they are absent.
+Transport per phase: Decide the transport independently for each phase by checking the tool list at the start of that phase, before asking the user anything. Use MCP whenever the relevant tools are present. Use REST only when they are absent.
 
 ---
 
@@ -170,18 +170,18 @@ Read `references/TEST_EXECUTION.md` before proceeding. It has the step-by-step e
 | `<acronym>-test-suite.md` | End of Phase A | Human-readable version for review and sign-off |
 | `<acronym>-test-results.json` | End of Phase B | Pass/fail results for each test case |
 
-Both formats are fully specified in `references/TEST_SUITE_FORMAT.md` and `references/TEST_RESULT_FORMAT.md`.
+`references/TEST_SUITE_FORMAT.md` and `references/TEST_RESULT_FORMAT.md` fully specify these formats.
 
 ---
 
 ## Boundaries
 
-In scope: Process test generation (BPMN paths, gateways, user tasks, business data), Coach test generation (fields, validation, required conditions), process test execution (start / claim / complete), result reporting.
+In scope: Process test generation (BPMN paths, gateways, user tasks, business data), Coach test generation (fields, validation, required conditions), process test execution (start, claim, complete), and result reporting.
 
-Out of scope — do not attempt:
-- **Service Flow test generation or execution** — covered by the `test-baw-service-flows` skill.
-- **Case application testing** — out of scope for this version.
-- **Federated multi-system test orchestration** — each test targets a single BAW system.
-- **Authoring or modifying process definitions** — use `generate-baw-bpmn`.
-- **UI rendering or screenshot capture of Coaches** — static artifact analysis only.
-- **Creating coach widgets or task portals** — use `create-baw-widget` or `create-baw-portal`.
+Out of scope. Do not attempt:
+- Service Flow test generation or execution: use the `test-baw-service-flows` skill.
+- Case application testing: out of scope for this version.
+- Federated multi-system test orchestration: each test targets a single BAW system.
+- Authoring or modifying process definitions: use `generate-baw-bpmn`.
+- UI rendering or screenshot capture of Coaches: this skill performs static artifact analysis only.
+- Creating coach widgets or task portals: use `create-baw-widget` or `create-baw-portal`.

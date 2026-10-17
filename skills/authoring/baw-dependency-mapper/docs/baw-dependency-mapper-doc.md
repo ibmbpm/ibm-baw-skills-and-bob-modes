@@ -1,6 +1,6 @@
 # BAW Dependency Mapper — Documentation
 
-> Maps all usages and dependencies of a specified variable or Business Object (BO) across an entire IBM BAW process application by analyzing the TWX export.
+> This skill maps all usages and dependencies of a specified variable or Business Object (BO) across an entire IBM BAW process application by analyzing the TWX export.
 
 ## Purpose
 
@@ -14,10 +14,10 @@ This skill takes a BAW process application TWX export and a target variable or B
 
 ## TWX acquisition
 
-When you provide a server URL, the skill will:
+When you provide a server URL, the skill:
 
 1. Probe for the active context root (`/ops`, `/bas/ops`, `/baw/ops`, `/bpm/ops`) to handle both standalone BAW and CP4BA deployments automatically.
-2. Authenticate via `POST .../ops/system/login` — credentials are used only to obtain a session token and are not stored beyond the current conversation.
+2. Authenticate via `POST .../ops/system/login` — the skill uses credentials only to obtain a session token and does not store them beyond the current conversation.
 3. List containers and versions if you do not know the app acronym or snapshot.
 4. Download the TWX via `GET .../ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true` and save it to a system temp directory.
 
@@ -26,7 +26,7 @@ If you already have a `.twx` file on disk, provide its path — the skill uses i
 ## Compatibility
 
 - Works with both standalone IBM Business Automation Workflow and IBM Cloud Pak for Business Automation (CP4BA) deployments. The TWX format is consistent across both.
-- Cross-toolkit usages are **not** analyzed — only artifacts inside the current process app's `objects/` folder are scanned. If the target BO is defined in a toolkit dependency, run a separate analysis against that toolkit's TWX.
+- The skill analyzes only artifacts inside the current process app's `objects/` folder; cross-toolkit usages are excluded. If the target BO is defined in a toolkit dependency, run a separate analysis against that toolkit's TWX.
 - IBM does not publish a formal XML schema for TWX internals; the script uses heuristics validated against real exports. Confirm findings against the actual artifacts before acting on them.
 - For environments with self-signed certificates (typical in CP4BA on-prem), TLS verification is disabled automatically during download.
 
@@ -41,7 +41,7 @@ If you already have a `.twx` file on disk, provide its path — the skill uses i
 
 ---
 
-### Full dependency map for a named Business Object
+### Full dependency map for a named business object
 
 **Prompt:**
 > On my BAW server at https://baw.example.com:9443, map every place the `ClaimRequest` business object is declared, read, written, used as a service parameter, or bound to a coach UI control in the ClaimsProcessing app. Also flag any circular BO references.
@@ -101,7 +101,7 @@ Every analysis produces the following sections in this order:
 
 | # | Section | Description |
 |---|---|---|
-| 1 | Summary | One-paragraph description of what was found |
+| 1 | Summary | One-paragraph description of findings |
 | 2 | Dependency graph | Mermaid `flowchart LR` diagram (capped at 20 nodes for large apps) |
 | 3 | Declarations | Where and how the target is declared |
 | 4 | Read usages | Artifacts that read the target |
@@ -122,9 +122,9 @@ Every analysis produces the following sections in this order:
 | 🔍 | Orphaned variable | Declared but never read or written via script in the same artifact |
 | ⚠️ | Write-only variable | Written by at least one service but never read downstream |
 | ⚠️ | Missing output mapping | Service activity accepts the BO as input but has no output mapping back to the caller |
-| ⚠️ | Unused BO type | BO is defined but no variable or service parameter uses it as a type |
+| ⚠️ | Unused BO type | The BO is defined, but no variable or service parameter uses it as a type |
 | ⚠️ | Stale coach binding | Coach binds to a field path that does not exist in the BO definition |
-| ⚠️/🔍 | Read before write | Activity reads the target before any writing activity has been reached on every inbound flow path |
+| ⚠️/🔍 | Read before write | An activity reads the target before any writing activity reaches it on every inbound flow path |
 
 ## Diagram node conventions
 

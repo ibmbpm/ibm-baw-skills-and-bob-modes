@@ -26,8 +26,8 @@ A TWX is a ZIP archive. Modern BAW (≥ 8.6.x / CP4A) uses a **flat objects layo
 
 ### Flat layout: numeric prefix → artifact type
 
-The numeric prefix in the filename (`1.`, `2051.`, `61.`, etc.) is **not reliable** as
-a type discriminator — use the XML root-child tag instead. The `package.xml` `<objects>`
+Do not rely on the numeric prefix in the filename (`1.`, `2051.`, `61.`, etc.) as a
+type discriminator — use the XML root-child tag instead. The `package.xml` `<objects>`
 section provides the definitive `type` attribute for every object ID.
 
 ---

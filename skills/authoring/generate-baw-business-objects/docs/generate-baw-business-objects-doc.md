@@ -8,10 +8,10 @@ This skill produces importable IBM Business Automation Workflow (BAW) Business O
 
 ## Setup and configuration
 
-- You need Python 3.9+ to generate toolkit TWX files (Options 2 and 3). The scripts require no third-party packages — all use the Python standard library only.
-- The bundled `empty-project.twx` template (located alongside the scripts) is required by `create_empty_twx.py` to scaffold a new toolkit. The skill folder includes it — no separate download required.
+- You need Python 3.9+ to generate toolkit TWX files (Options 2 and 3). The scripts require no third-party packages — they all use the Python standard library only.
+- You do not need to download the `empty-project.twx` template separately — it is bundled in the skill folder alongside the scripts, and `create_empty_twx.py` uses it automatically to scaffold a new toolkit.
 - You do not need an MCP server, API key, or environment variable for the default WebPD import path (Option 1).
-- Python is not required if you only need the OpenAPI JSON for manual WebPD import.
+- You do not need Python if you only want the OpenAPI JSON for manual WebPD import.
 
 ## Compatibility
 

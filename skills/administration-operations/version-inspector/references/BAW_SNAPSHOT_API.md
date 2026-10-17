@@ -90,15 +90,15 @@ curl -sk -X POST "https://cpd.example.com/bas/ops/system/login" \
 
 Pass the returned `csrf_token` value as the `BPMCSRFToken` header on every subsequent Operations API call. The token is valid for up to `expiration` seconds (default 7200 / 2 hours). Re-run this call if a `CWTBG0651E` error is received after a long pause.
 
-> **Optional lifetime:** To request a shorter-lived token, add `"requested_lifetime": <seconds>` to the POST body. Must be ≤ 7200.
+> **Note:** To request a shorter-lived token, add `"requested_lifetime": <seconds>` to the POST body. Must be ≤ 7200.
 
-> **WLE API note:** The WLE endpoints (`/bpm/wle/v1/...`) do **not** appear in the Operations API spec and have separate CSRF handling. On some CP4BA clusters they also enforce `BPMCSRFToken`. If a WLE call returns `CWTBG0651E`, re-use the same token obtained from `POST /ops/system/login`.
+> **Note:** The WLE endpoints (`/bpm/wle/v1/...`) do **not** appear in the Operations API spec and have separate CSRF handling. On some CP4BA clusters they also enforce `BPMCSRFToken`. If a WLE call returns `CWTBG0651E`, re-use the same token obtained from `POST /ops/system/login`.
 
 ---
 
 ## 3. List all containers (Operations API)
 
-Use this when the user doesn't know which Process App or Toolkit to inspect, or wants to see everything deployed.
+Use this when the user does not know which Process App or Toolkit to inspect, or wants to see everything deployed.
 
 **Method:** `GET`  
 **Path:** `/ops/std/bpm/containers`
@@ -153,7 +153,7 @@ curl -sk -X GET \
 | `container_name` | Human-readable display name |
 | `toolkit` | `true` = Toolkit, `false` = Process App |
 | `archived` | `true` = archived (hidden from normal views) |
-| `branches[].versions[]` | Snapshot list — only present when `optional_parts=versions` is passed |
+| `branches[].versions[]` | Snapshot list — only present when you pass `optional_parts=versions` |
 
 > Use `optional_parts=versions` to retrieve container list **and** all their snapshots in a single call, avoiding a separate list-snapshots call.
 
@@ -263,7 +263,7 @@ Use this endpoint for:
 **Method:** `GET`
 **Path:** `/bpm/wle/v1/processApps?includeToolkitProcessApps=true`
 
-> **Base URL note:** The WLE context root prefix (e.g. `/rest`) may differ from the Ops API prefix on on-premises installs. Once resolved for a session, reuse `<WLE_BASE_URL>` directly without re-probing.
+> **Note:** The WLE context root prefix (e.g. `/rest`) may differ from the Ops API prefix on on-premises installs. Once resolved for a session, reuse `<WLE_BASE_URL>` directly without re-probing.
 
 ```bash
 curl -sk -X GET \
@@ -273,7 +273,7 @@ curl -sk -X GET \
   -H "BPMCSRFToken: <csrf_token>"
 ```
 
-> **CSRF note:** On CP4BA clusters, this WLE endpoint also enforces `BPMCSRFToken`. Reuse the token obtained from `POST /ops/system/login`.
+> **Note:** On CP4BA clusters, this WLE endpoint also enforces `BPMCSRFToken`. Reuse the token obtained from `POST /ops/system/login`.
 
 **Response (excerpt):**
 ```json

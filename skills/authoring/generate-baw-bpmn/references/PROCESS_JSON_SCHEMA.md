@@ -207,7 +207,7 @@ Is there a status or routing outcome that drives a gateway decision?
 
 For the completeness bar a real process needs to clear (primary entity, nested party,
 nested line items, decision/review object) and the field-set table by entity type, see
-`references/MODELING_COMPLETENESS.md` -- read it before finalizing this section.
+[MODELING_COMPLETENESS.md](MODELING_COMPLETENESS.md) — read it before finalizing this section.
 
 ## Structural rules the generator enforces
 

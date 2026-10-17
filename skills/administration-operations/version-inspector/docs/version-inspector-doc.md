@@ -20,7 +20,7 @@ This skill retrieves and presents read-only snapshot metadata from a BAW server 
 ## Compatibility
 
 - **BAW 18.0.0.0 or later required.** IBM BPM 8.x does not support the Operations REST API (`/ops/std/bpm/...`) used for snapshot inspection. If the server returns `404` on the Operations path, this skill cannot retrieve snapshot metadata — use the Process Admin Console instead.
-- Every Operations API call requires a `BPMCSRFToken` header obtained from `POST .../ops/system/login`. The skill handles this automatically, but if `CWTBG0651E` is returned after a pause the token has expired — re-authenticate to refresh it.
+- Every Operations API call requires a `BPMCSRFToken` header obtained from `POST .../ops/system/login`. The skill handles this automatically, but if the server returns `CWTBG0651E` after a pause the token has expired — re-authenticate to refresh it.
 - Container and snapshot acronyms are **case-sensitive** — a mismatch returns `CWTBG0624E` (container not found) or `CWTBG0646E` (snapshot not found).
 - Supported deployment types: BAW on-premises (root-mount or prefixed context root), BAW on Cloud, and CP4BA (Zen runtime).
 
@@ -31,7 +31,7 @@ This skill retrieves and presents read-only snapshot metadata from a BAW server 
 ### Inspect a specific snapshot — process app
 
 **Prompt:**
-> Show me the details for snapshot v3.1 of the CLAIMSAPP process app on https://baw.claims.example.com/bas. Credentials: admin / Welcome1.
+> Show me the details for snapshot v3.1 of the CLAIMSAPP process app on https://baw.claims.example.com/bas. Credentials: <username> / <password>.
 
 **What to expect:** A Snapshot Summary block showing container type, snapshot name, snapshot ID, active/inactive status, creation date, branch, default flag, lifecycle state, and a toolkit dependencies table (or a "no dependencies" note), followed by an offer to use `version-lifecycle-manager` for any follow-on actions.
 
@@ -40,7 +40,7 @@ This skill retrieves and presents read-only snapshot metadata from a BAW server 
 ### Inspect a specific snapshot — toolkit
 
 **Prompt:**
-> Get the metadata for snapshot 2.0 of the SHAREDUTILS toolkit on https://baw.example.com/bas. admin / pass.
+> Get the metadata for snapshot 2.0 of the SHAREDUTILS toolkit on https://baw.example.com/bas. <username> / <password>.
 
 **What to expect:** A Snapshot Summary block identical in structure to a process app inspection, with the container type clearly shown as "Toolkit", and toolkit dependency data that the skill retrieves from the WLE toolkit endpoint.
 
@@ -49,7 +49,7 @@ This skill retrieves and presents read-only snapshot metadata from a BAW server 
 ### Known container, unknown snapshot — snapshot picker
 
 **Prompt:**
-> I want to check the status of the ORDERSMGMT process app before activating the new version, but I don't remember the snapshot acronym. Server: https://baw.ops.example.com/bas, admin / opspass.
+> I want to check the status of the ORDERSMGMT process app before activating the new version, but I don't remember the snapshot acronym. Server: https://baw.ops.example.com/bas, <username> / <password>.
 
 **What to expect:** The skill displays a table of all snapshots for ORDERSMGMT (acronym, name, status, created date) and asks which one you want to inspect in detail.
 
@@ -58,7 +58,7 @@ This skill retrieves and presents read-only snapshot metadata from a BAW server 
 ### Unknown container — browse everything on the server
 
 **Prompt:**
-> I don't know what process apps and toolkits are deployed on https://baw.corp.example.com/bas. Can you list them all? admin / corp123.
+> I do not know what process apps and toolkits are deployed on https://baw.corp.example.com/bas. Can you list them all? <username> / <password>.
 
 **What to expect:** Two labelled tables — Process Apps first, Toolkits second — each listing name, acronym, and creation date, followed by a prompt asking which container you'd like to drill into.
 
@@ -67,16 +67,16 @@ This skill retrieves and presents read-only snapshot metadata from a BAW server 
 ### Find which snapshot is currently active
 
 **Prompt:**
-> Which snapshot of INVOICING is currently active on https://baw.finance.example.com/bas? Credentials: svc_baw / Finpass1.
+> Which snapshot of INVOICING is currently active on https://baw.finance.example.com/bas? Credentials: <username> / <password>.
 
-**What to expect:** The snapshots for INVOICING are listed with their active/inactive status highlighted, so you can immediately see which version is live.
+**What to expect:** The skill lists INVOICING snapshots with their active/inactive status highlighted, so you can immediately see which version is live.
 
 ---
 
 ### Inspect on a CP4BA cluster
 
 **Prompt:**
-> Inspect snapshot v4.0 of LOANAPP on our CP4BA cluster at https://cpd.openshift.myorg.com/bas. Username: CEAdmin, password: Genius1.
+> Inspect snapshot v4.0 of LOANAPP on our CP4BA cluster at https://cpd.openshift.myorg.com/bas. Username: <username>, password: <password>.
 
 **What to expect:** The skill exchanges credentials for a Bearer token via the CP4BA authorize endpoint, obtains the CSRF token, then retrieves and presents the Snapshot Summary block for LOANAPP v4.0.
 
@@ -94,7 +94,7 @@ This skill retrieves and presents read-only snapshot metadata from a BAW server 
 ### Diagnose an API error — server may be BPM 8.x
 
 **Prompt:**
-> I'm getting a 404 when trying to inspect snapshots on https://baw-legacy.corp.example.com:9443. The server is pretty old.
+> I'm getting a 404 when trying to inspect snapshots on https://baw-legacy.corp.example.com:9443. The server is running an older version that predates BAW 18.0.
 
 **What to expect:** An explanation that the Operations REST API is not present on this server (likely IBM BPM 8.x, which predates BAW 18.0), and a recommendation to use the Process Admin Console to inspect snapshots manually instead.
 
@@ -105,4 +105,4 @@ This skill retrieves and presents read-only snapshot metadata from a BAW server 
 **Prompt:**
 > Now that I can see snapshot v3.1 of CLAIMSAPP is active, please deactivate it.
 
-**What to expect:** The skill explains that lifecycle actions (deactivate, activate, delete, env var management) are handled by the `version-lifecycle-manager` skill, and offers to hand off to it immediately.
+**What to expect:** The skill explains that the `version-lifecycle-manager` skill handles lifecycle actions (deactivate, activate, delete, env var management), and offers to hand off to it immediately.

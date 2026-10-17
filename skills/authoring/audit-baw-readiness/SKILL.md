@@ -1,6 +1,6 @@
 ---
 name: audit-baw-readiness
-description: "Evaluates an IBM BAW process application's design for compliance and audit readiness — scores six internal design-time control domains (traceability, separation of duties, access control, SLA/timeliness, data completeness, error handling) and produces a Markdown scorecard with specific gaps and remediation steps. Use when someone asks if a process application is ready for an audit, checks internal control design readiness, or wants to score design-time controls. This skill inspects process design — not running instances and not external regulatory policies. For evaluating process models against external policies and regulations (SOX, GDPR, ISO) with remediation paths, use process-compliance-violation-detection. Do not use for live process instances (inspect-baw-processes) or authoring processes (generate-baw-bpmn)."
+description: "Evaluates an IBM Business Automation Workflow (BAW) process application's design for compliance and audit readiness — scores six internal design-time control domains (traceability, separation of duties, access control, SLA/timeliness, data completeness, error handling) and produces a Markdown scorecard with specific gaps and remediation steps. Use when someone asks if a process application is ready for an audit, checks internal control design readiness, or wants to score design-time controls. This skill inspects process design — not running instances and not external regulatory policies. For evaluating process models against external policies and regulations (SOX, GDPR, ISO) with remediation paths, use process-compliance-violation-detection. Do not use for live process instances (inspect-baw-processes) or authoring processes (generate-baw-bpmn)."
 license: Apache-2.0
 compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
 allowed-tools:
@@ -13,12 +13,11 @@ metadata:
   short_description: Score a BAW process application across six compliance domains and produce a gap-and-remediation scorecard.
   author: IBM BAW Team
 ---
-
 > **⚠️ REST only — MCP is not supported by this skill.** All BAW interactions use the BAW REST API exclusively via HTTP calls to `{BAW_BASE_URL}`. Do not call any MCP tools at any point — regardless of whether an MCP server is connected or not. This skill has no MCP dependency. If you find yourself reaching for an MCP tool, stop and use the REST equivalent from `references/baw-rest.md` instead.
 
 > **⚠️ Hard rule — TWX export is always REST, never MCP.** Even if an Authoring MCP server is connected and its `export_solution` tool is visible in your tool list, do not call it — ever — for this skill. The TWX must always be downloaded via `GET {BAW_BASE_URL}/ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true`. This applies even when MCP is fully connected. Do not mention the MCP export tool to the user. Do not reason that MCP is "more reliable" — REST is the required transport for this operation, always.
 
-# Audit BAW Readiness
+# Audit BAW readiness
 
 Inspect an IBM BAW process application's exported TWX artifact and produce an **audit readiness scorecard** — a scored gap analysis across six compliance domains that tells the user exactly what needs to be fixed before an audit begins.
 
@@ -29,11 +28,6 @@ This skill is **read-only**. It exports and analyzes — it never imports, modif
 ## Execution mode
 
 This skill operates in **REST mode only**. All calls use the BAW REST API documented in `references/baw-rest.md`.
-
-Before taking any action, confirm `{BAW_BASE_URL}` is known for this session. If not, ask:
-> *"What is your BAW server URL? (e.g. `https://baw.example.com:9443`)"*
-
-Store it and never ask again within the same session.
 
 ---
 
@@ -65,27 +59,14 @@ The six domains are:
 
 ---
 
-## Steps
+## Credentials
 
-### Step 0 — Establish the BAW connection
-
-Ask for the server URL and credentials together in a single turn:
-> *"Before I get started, I need two things:*
-> *1. Your BAW server URL (e.g. `https://baw.example.com:9443`)*
-> *2. Your BAW username and password*
->
-> *Your credentials are only used to obtain a session token for this conversation — they are not stored anywhere."*
-
-Call `POST {BAW_BASE_URL}/ops/system/login` with:
-- `Authorization: Basic <base64(username:password)>`
-- `Content-Type: application/json`
-- Body: `{"refresh_groups": false}`
-
-On success (HTTP 201): store `csrf_token` from the JSON body as `{BAW_CSRF}`, and the session cookies as `{BAW_SESSION}`. Send `BPMCSRFToken: {BAW_CSRF}` and the session cookie on every subsequent call. Discard the raw credentials immediately.
-
-If login returns 401 or 400, tell the user their credentials were not accepted and ask them to re-enter. Do not proceed until login succeeds.
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
 
 ---
+
+## Steps
 
 ### Step 1 — Identify the process application
 

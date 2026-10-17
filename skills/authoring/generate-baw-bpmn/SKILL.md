@@ -1,6 +1,6 @@
 ---
 name: generate-baw-bpmn
-description: Generates BPMN 2.0 XML that imports cleanly into IBM Business Automation Workflow (BAW) -- processes and complex business object variables (via a bundled XSD) -- by writing a process JSON and running a bundled deterministic generator that emits BAW's own export dialect and packages the .zip the import wizards expect. Use whenever the user wants a BPMN file for BAW, asks to "generate BPMN," "create a .bpmn I can import," "turn this workflow into a BAW process/service flow," mentions BPMN import errors or elements disappearing on import, or has a process source in any form -- a chat description, a requirements/BRD/blueprint document, an SOP, meeting notes, or an earlier blueprint parse -- and needs the importable XML. Also triggers on conversational process descriptions like "I want to model a workflow for…" or "help me design a process for…". When the process includes serviceTask elements, coordinate with generate-baw-service-flow to produce the matching importable TWX for each service flow.
+description: Generates BPMN 2.0 XML that imports cleanly into IBM Business Automation Workflow (BAW) — processes and complex business object variables (via a bundled XSD) — by writing a process JSON and running a bundled deterministic generator that emits BAW's own export dialect and packages the .zip the import wizards expect. Use whenever the user wants a BPMN file for BAW, asks to "generate BPMN," "create a .bpmn I can import," "turn this workflow into a BAW process/service flow," mentions BPMN import errors or elements disappearing on import, or has a process source in any form — a chat description, a requirements/BRD/blueprint document, an SOP, meeting notes, or an earlier blueprint parse — and needs the importable XML. Also triggers on conversational process descriptions like "I want to model a workflow for…" or "help me design a process for…".
 license: Apache-2.0
 compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
 allowed-tools:
@@ -20,17 +20,16 @@ Produce a BPMN 2.0 file that imports successfully into IBM BAW on the first atte
 The reliability comes from three deliberate choices:
 
 1. **You decide, the tool writes.** You read the user's process description and capture
-   your judgment -- steps, decisions, branching, data -- as a small process JSON. The
+   your judgment — steps, decisions, branching, data — as a small process JSON. The
    bundled `scripts/generate_baw_bpmn.py` deterministically converts it to XML. Never
    hand-write BPMN XML: ids, references, and namespace details are exactly the kind of
    fussy output that must come from a generator, not a fresh guess.
 2. **The XML is BAW's own dialect.** The generator reproduces the format BAW itself
-   exports -- `bpmnid-` UUID ids, `processType="None"`, named flows, a `laneSet` when
-   roles are defined, no diagram section (see `references/BAW_BPMN_DIALECT.md`). What
+   exports — `bpmnid-` UUID ids, `processType="None"`, named flows, a `laneSet` when
+   roles are defined, no diagram section (see [references/BAW_BPMN_DIALECT.md](references/BAW_BPMN_DIALECT.md)). What
    BAW writes, BAW reads.
 3. **Only mappable constructs exist.** Every element type the config schema allows maps
-   1:1 to a row in IBM's documented import mapping. Anything BAW would silently drop or
-   lossily convert is rejected at validation time, where it's cheap to fix.
+   1:1 to a row in IBM's documented import mapping. The generator rejects at validation time anything BAW would silently drop or lossily convert, where it's cheap to fix.
 
 Ids are derived deterministically (uuid5) from the config, so regenerating the same
 config yields byte-identical XML and every `sourceRef`/`targetRef` is guaranteed to
@@ -39,8 +38,8 @@ resolve.
 ## Model completeness
 
 A short linear happy-path with one flat business object is almost always
-under-modeling. Before writing the config, read `references/MODELING_COMPLETENESS.md`
--- it covers what to check for on the process side (roles, decision-point outcomes,
+under-modeling. Before writing the config, read [references/MODELING_COMPLETENESS.md](references/MODELING_COMPLETENESS.md)
+— it covers what to check for on the process side (roles, decision-point outcomes,
 exception/rework loops, SLA/escalation timers, multiple end states, parallel work) and
 on the data side (expanding each business object to its natural fields, nested/list
 objects, status fields, and wiring variables to every task that touches them). Match
@@ -61,7 +60,7 @@ concrete options instead of leaving it open-ended.
 
 ---
 
-#### Phase 1 — Purpose and source discovery
+#### Phase 1 — purpose and source discovery
 
 **When to ask about the process:** If the user has NOT already stated what process they want to model.
 
@@ -81,7 +80,7 @@ Once you know the process name and rough goal, **immediately ask about supportin
 
 Always ask the documentation question for any other case — including short conversational descriptions like "make a process for an orange juice stand." A brief description does not imply the user has no supporting material; ask before assuming.
 
-If the user provides a document, read `references/EXTRACTING_FROM_DOCUMENTS.md` first — it maps document language to config constructs and requires each distinct process in the document to become its own config/BPMN. The document is the source of truth: extract, don't invent.
+If the user provides a document, read [references/EXTRACTING_FROM_DOCUMENTS.md](references/EXTRACTING_FROM_DOCUMENTS.md) first — it maps document language to config constructs and requires each distinct process in the document to become its own config/BPMN. The document is the source of truth: extract, don't invent.
 
 Then move to Phase 2. Do not ask for anything else yet.
 
@@ -142,14 +141,14 @@ Mermaid rules:
 - Gateways: `{"Label?"}` — diamonds
 - Non-interrupting timer boundary events: dashed arrow from the task `task_a -.-> timer_node`
 - Label every gateway branch with `-->|"branch name"|`
-- Loop-back edges (e.g. retry) are allowed — Mermaid handles them
-- Keep node ids short and snake_case (e.g. `gw_payment`, `task_submit`)
-- Read `references/VISUAL_REVIEW.md` for the legend/color/swimlane conventions and
+- Loop-back edges (for example, retry) are allowed — Mermaid handles them
+- Keep node ids short and snake_case (for example, `gw_payment`, `task_submit`)
+- Read [references/VISUAL_REVIEW.md](references/VISUAL_REVIEW.md) for the legend/color/swimlane conventions and
   apply them here: a one-time legend on the first diagram, `classDef` color-coding by
   role, and swimlane subgraphs only where the process actually has contiguous
   same-actor blocks
 - If the user asks to change the plan, re-present the full updated numbered plan with
-  removed steps struck through and new steps bolded (see `references/VISUAL_REVIEW.md`
+  removed steps struck through and new steps bolded (see [references/VISUAL_REVIEW.md](references/VISUAL_REVIEW.md)
   for the exact convention), plus a clean re-rendered diagram
 
 Rules for the numbered plan:
@@ -159,10 +158,10 @@ Rules for the numbered plan:
 - `[Actor] [verb] [object]` — concise, action-oriented
 - Do NOT nest decisions inside other decision branches
 - Do NOT write any config JSON during this phase
-- Note any assumptions inline (e.g., *"Assuming manager approval is required before payment"*)
+- Note any assumptions inline (for example, *"Assuming manager approval is required before payment"*)
 
-**Completeness check.** Pattern-match the plan against `references/MODELING_COMPLETENESS.md`
-and render a short visible checklist beneath the diagram, e.g.:
+**Completeness check.** Pattern-match the plan against [references/MODELING_COMPLETENESS.md](references/MODELING_COMPLETENESS.md)
+and render a short visible checklist beneath the diagram, for example:
 ```
 ### Completeness check:
 ✅ Roles assigned to every step
@@ -174,7 +173,7 @@ and render a short visible checklist beneath the diagram, e.g.:
 Check escalations explicitly: if the plan includes a non-interrupting boundary timer
 leading to a human task, verify that human task routes to a meaningful continuation
 rather than a dead-end end event. Flag it as ❌ with a note explaining the correct
-pattern (see `references/MODELING_COMPLETENESS.md` SLA and escalation section).
+pattern (see [references/MODELING_COMPLETENESS.md](references/MODELING_COMPLETENESS.md) SLA and escalation section).
 
 If anything is ❌, ask about the flagged gaps in one question before moving on — a
 multiSelect `AskUserQuestion` listing each gap as an option (plus "none of these, this
@@ -182,7 +181,7 @@ is fine as is") when available, otherwise one plain question listing them. If
 everything is ✅, skip straight to the closing question below.
 
 **Publish the review artifact.** If the `Artifact` tool is available, publish the plan
-and diagram together per `references/VISUAL_REVIEW.md` and share the link. Update the
+and diagram together per [references/VISUAL_REVIEW.md](references/VISUAL_REVIEW.md) and share the link. Update the
 same artifact (same file path, same URL) on every later revision instead of publishing
 a new one each turn.
 
@@ -248,7 +247,7 @@ Rules for the data model:
 - Do NOT generate JSON config yet
 
 Alongside the YAML, render an `erDiagram` of the business objects (nested/list fields
-become relationships — see `references/VISUAL_REVIEW.md` for the exact syntax and
+become relationships — see [references/VISUAL_REVIEW.md](references/VISUAL_REVIEW.md) for the exact syntax and
 cardinality convention), and if the review artifact from Phase 2 was published, update
 it (same file path) to include the data model and ER diagram.
 
@@ -261,7 +260,7 @@ If the user wants to refine: re-present the **complete** updated YAML block — 
 
 #### Phase 4 — Generation confirmation
 
-**Skip this phase entirely if the user just confirmed at the end of Phase 3** (i.e., they responded to "Would you like to refine these business objects, or shall I create the importable BPMN for you?" with "proceed" or equivalent). That response is already the confirmation — asking again is redundant.
+**Skip this phase entirely if the user just confirmed at the end of Phase 3** (that is, they responded to "Would you like to refine these business objects, or shall I create the importable BPMN for you?" with "proceed" or equivalent). That response is already the confirmation — asking again is redundant.
 
 Only ask this question when arriving directly from Phase 2 (no data model was proposed):
 > Shall I go ahead and create the importable BPMN for you?
@@ -276,7 +275,7 @@ If no → ask:
 ---
 
 1. **Supporting documentation** was handled in Phase 1. If the user provided a document
-   there, read `references/EXTRACTING_FROM_DOCUMENTS.md` now — it maps document language
+   there, read [references/EXTRACTING_FROM_DOCUMENTS.md](references/EXTRACTING_FROM_DOCUMENTS.md) now — it maps document language
    to config constructs (action verbs → tasks, decision language → gateways, SLA phrasing
    → timer boundary events, described data → business objects), tells you how to handle
    gaps, and requires each distinct process in the document to become its own config/BPMN.
@@ -284,19 +283,19 @@ If no → ask:
    element documentation and your report.
 
 2. **Understand the process.** Get or infer from the confirmed plan: the process name,
-   the process app name (optional -- used in the targetNamespace, defaults are fine),
+   the process app name (optional — used in the targetNamespace, defaults are fine),
    the ordered activities, who/what performs each (human step vs automated step),
    decision points and their outcomes, and the business data moving between steps.
    The confirmed plan and data model from phases 2–3 are the source of truth here —
    do not re-derive from the original description if the user has refined it.
 
-3. **Read `references/PROCESS_JSON_SCHEMA.md`** -- the authoritative config schema with
+3. **Read [references/PROCESS_JSON_SCHEMA.md](references/PROCESS_JSON_SCHEMA.md)** — the authoritative config schema with
    five worked examples (linear, approval + escalation, parallel, service-flow-heavy
    with subprocess, and a full nested-business-object data model). Pattern-match the
    closest example instead of starting blank. The key modeling decisions:
    - Human step → `userTask` (BAW generates a client-side human service for it).
    - Automated step → `serviceTask`. **This is how service flows are generated:** BAW
-     creates one service flow per serviceTask, named after the task -- so name each
+     creates one service flow per serviceTask, named after the task — so name each
      serviceTask exactly what its service flow should be called, and put the intended
      logic in the element's `documentation`.
    - Decision → `exclusiveGateway` with named outgoing flows, a `condition` on each
@@ -314,29 +313,14 @@ If no → ask:
       drive the README's role table and "Performed by" column. Assign a role to every
       task; control-flow elements and any task without an explicit role go to the
       System lane automatically. Do not model pools (separate participants). See
-      `references/BAW_BPMN_DIALECT.md`.
+      [references/BAW_BPMN_DIALECT.md](references/BAW_BPMN_DIALECT.md).
    - **Service flows for serviceTasks:** name each `serviceTask` exactly what its
-     callable service flow should be named. After generating the BPMN, coordinate
-     with `generate-baw-service-flow` to produce a TWX for those service flows (see
-     step 5a below).
+     callable service flow should be named. BAW creates the (empty) service flows from
+     the serviceTask names on import; the user completes their logic in Process Designer.
 
 4. **Write the config** to `business-processes/configs/[Domain]/[ProcessName].bpmn.json`
    (create the folders if needed; follow existing folder conventions if the project
    already has some).
-
-5a. **Generate service flow TWX for serviceTasks (if any).** If the config contains
-    any `serviceTask` elements, activate `generate-baw-service-flow` to generate the
-    matching importable TWX alongside the BPMN. Pass the service task names and their
-    associated variable types (from the `variables` and `businessObjects` already
-    defined) as the input. The service flow skill will produce
-    `output/<ProjectName>_services.twx`. Include the TWX path in the final output
-    report and post-import checklist.
-
-    **How to pass context to `generate-baw-service-flow`:**
-    - List the `serviceTask` names from the config (these become flow `name` values).
-    - Provide the input/output variable types from the process `variables` array for
-      each task — the service flow skill maps them to its BO definitions.
-    - The service flow skill runs its own generator and reports its TWX path back.
 
 5. **Validate, then generate — into a dedicated folder per process.** Every process
    gets its own output directory (kebab-case process name), because each run produces
@@ -348,7 +332,7 @@ If no → ask:
      "business-processes/bpmn/[Domain]/[process-name]/[ProcessName].bpmn"
    ```
    The BAW script validates first (structure, references, reachability, gateway logic,
-   start/end rules) and refuses to generate on any error -- fix the config, don't route
+   start/end rules) and refuses to generate on any error — fix the config, don't route
    around it. Warnings are worth reading too: an unconditioned gateway branch or a
    do-nothing gateway usually means the process logic isn't what you intended. On
    success it writes into that folder: the `.bpmn`, a `.xsd` if business objects were
@@ -358,18 +342,18 @@ If no → ask:
    labeled branches) plus the documentation that mode captures: steps and their
    performers, decision logic with conditions, service flows, data/business objects,
    exception paths, and post-import instructions. Review the README after generation
-   -- it's built from the config, so if the diagram looks wrong, the config is wrong;
+   — it's built from the config, so if the diagram looks wrong, the config is wrong;
    fix the config and regenerate rather than editing the README. Add `--validate-only`
    to check a config without writing files. Standard library only; any Python 3 works.
 
 6. **Verify and report.** Confirm the generated files exist, then report per the Output format
-   below -- including the import route and the post-import checklist from
-   `references/BAW_BPMN_DIALECT.md` (service flow details, gateway conditions, coach
-   customization, and layout are completed in Process Designer after import; that's
+   below — including the import route and the post-import checklist from
+   [references/BAW_BPMN_DIALECT.md](references/BAW_BPMN_DIALECT.md) (complete service flow details, gateway conditions, coach
+   customization, and layout in Process Designer after import; that's
    IBM's documented workflow, not a defect). If the user hits an import warning later,
    that same reference explains what BAW does with each construct. If a review
    artifact was published during phases 2-3, round-trip it now per
-   `references/VISUAL_REVIEW.md`: copy the generated README's diagram and
+   [references/VISUAL_REVIEW.md](references/VISUAL_REVIEW.md): copy the generated README's diagram and
    documentation into it and republish at the same URL, so the link the user already
    has shows the final, generated version rather than the pre-generation draft.
 
@@ -411,23 +395,23 @@ If no → ask:
 
 ## Boundaries
 
-In scope: turning a process source -- a chat description, a business requirements
-document/blueprint/SOP (see `references/EXTRACTING_FROM_DOCUMENTS.md`), an earlier
-blueprint parse, or an existing config -- into a validated process JSON, BAW-dialect
+In scope: turning a process source — a chat description, a business requirements
+document/blueprint/SOP (see [references/EXTRACTING_FROM_DOCUMENTS.md](references/EXTRACTING_FROM_DOCUMENTS.md)), an earlier
+blueprint parse, or an existing config — into a validated process JSON, BAW-dialect
 BPMN 2.0 XML, and an import-ready .zip. Both business processes and the service flows
 BAW generates from their serviceTasks, plus the business objects the process carries
 as variables. When the input was a document, also a process extraction report at
 `business-processes/reports/[context]/[ProcessName].extraction-report.md`.
 
-Out of scope -- hand off instead:
+Out of scope — hand off instead:
 - **Producing business object JSON artifacts, OpenAPI specs, or standalone data-model files from documents** →
   `generate-baw-business-objects`. (Reading a document to extract the *workflow* is in
-  scope here; building standalone Business Object artifacts is handled by `generate-baw-business-objects`.)
+  scope here; `generate-baw-business-objects` handles standalone Business Object artifact generation.)
 - **Packaging or managing TWX toolkits and deployments** → `generate-baw-business-objects` (for BO toolkits), `baw-deployment-manager`, or `version-lifecycle-manager`. **Deployment to a server is not
-  part of this skill under any prompt** -- the deliverable is the .bpmn/.zip, which the
+  part of this skill under any prompt** — the deliverable is the .bpmn/.zip, which the
   user imports through BAW's own UI.
 - **Coach widgets, UI components, or custom portals** → `create-baw-widget` or `create-baw-portal`.
-- **Hand-writing or hand-editing BPMN XML.** Change the config and regenerate --
+- **Hand-writing or hand-editing BPMN XML.** Change the config and regenerate —
   deterministic ids mean regeneration is always safe and diffs stay clean.
 
 ## Output format
@@ -436,9 +420,6 @@ Report back:
 - **Process:** name, pattern (linear / approval / parallel / combination), element and
   flow counts.
 - **Service flows BAW will generate:** the serviceTask names (one flow each).
-- **Service flow TWX (if generated):** path to `output/<ProjectName>_services.twx` and
-  confirmation it was produced by `generate-baw-service-flow`. This TWX must be imported
-  **in addition to** the BPMN zip — it delivers the callable service flow artifacts.
 - **Business objects (if any):** names and where they're used, noting the `.xsd` rides
   inside the zip.
 - **Config:** path, and confirmation it validated (mention any warnings and why they're
@@ -451,12 +432,7 @@ Report back:
 - **Import route:**
   - **Traditional BAW (Workflow Center):** Workflow Center → Process Apps → Import Process App
   - **CP4BA containerized (Business Automation Studio):** Business Automation Studio → Business automations → Workflow → Import
-  When a service flow TWX was generated, note both imports:
-  1. Import the `.zip` (BPMN process)
-  2. Import `<ProjectName>_services.twx` (service flows)
-- **Post-import checklist:** the short list from `references/BAW_BPMN_DIALECT.md`.
-  When service flows were generated, add: "Wire each service task in Process Designer
-  to the matching service flow from the imported TWX."
+- **Post-import checklist:** the short list from [references/BAW_BPMN_DIALECT.md](references/BAW_BPMN_DIALECT.md).
 - **Review page (if published):** the artifact link, now showing the final round-tripped
   diagram and documentation.
 

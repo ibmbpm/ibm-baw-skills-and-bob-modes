@@ -6,9 +6,9 @@ from each BPMN construct on import and the post-import steps to hand the user.
 
 ## Supported constructs
 
-Only constructs in the import mapping below should be used. Elements outside that list
-— callActivity, signal/escalation/compensation events, data stores — should not be
-included (see `references/PROCESS_JSON_SCHEMA.md`).
+Only constructs in the import mapping below should be used. Do not include elements outside that list
+— callActivity, signal/escalation/compensation events, data stores
+(see [PROCESS_JSON_SCHEMA.md](PROCESS_JSON_SCHEMA.md)).
 
 ## How lanes work on import
 
@@ -64,17 +64,17 @@ Note the two rows this generator leans on most: **service task → a generated s
 flow named after the task** (so name each `serviceTask` exactly what its service flow
 should be called), and **item definition → business object** (how the sidecar `.xsd`
 for `businessObjects` becomes real BAW business objects — see
-`references/PROCESS_JSON_SCHEMA.md` for the mechanics).
+[PROCESS_JSON_SCHEMA.md](PROCESS_JSON_SCHEMA.md) for the mechanics).
 
 ## How to import (two supported routes)
 
 Both routes want a **.zip** (the generator writes one next to the `.bpmn`, including
 the business-object `.xsd` when one was generated — never strip it out):
 
-- **New process app:**
+- **New Process App:**
   - **Traditional BAW (Workflow Center):** Workflow Center → Process Apps tab → **Import Process App** → choose the .zip. BAW creates the app, generates the artifacts, and auto-snapshots it. (An "Import Toolkit" equivalent exists on the Toolkits tab.)
   - **CP4BA containerized (Business Automation Studio):** Business Automation Studio → Business automations → Workflow → **Import** → choose the .zip.
-- **Existing process app:** Process Designer (traditional BAW) or Business Automation Studio (CP4BA) → open the app → **File > Import** →
+- **Existing Process App:** Process Designer (traditional BAW) or Business Automation Studio (CP4BA) → open the app → **File > Import** →
   choose the .zip. Imported artifacts get an "Imported" tag. Re-importing the same
   file creates duplicate copies — it never overwrites a previous import.
 
@@ -85,7 +85,7 @@ Multiple `.bpmn` files can share one zip to import several processes at once.
 Import success ≠ done. Hand the user this list with the generated artifacts:
 
 1. Open every generated artifact and confirm it looks as expected; read any import
-   warnings — each one usually means an unsupported construct was dropped or converted.
+   warnings — each one usually indicates that BAW dropped or converted an unsupported construct.
 2. Complete the **service flow** details (connectors, scripts, data mapping).
 3. Customize the default generated **coaches** in the client-side human services.
 4. Finish the **conditional logic** on exclusive/IOR gateways (imported conditions are

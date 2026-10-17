@@ -17,7 +17,7 @@ This skill turns any process description into a validated, import-ready BAW arti
 - **BAW import wizards only** — the deliverable is a `.zip` for Workflow Center → **Import Process App** or Process Designer → **File > Import**. The skill does not deploy to a running BAW server.
 - **Single none start event per process** — BAW honors only one start event per process on import; multiple starts will be silently dropped.
 - **No BPMN DI / layout section** — BAW ignores incoming diagram layout and auto-arranges on import. Diagram layout is an expected post-import step in Process Designer.
-- **Supported constructs only** — elements outside IBM's documented import mapping (callActivity, signal/escalation/compensation events, data stores, pools) are rejected at validation time rather than being silently dropped by BAW at import time.
+- **Supported constructs only** — the generator rejects elements outside IBM's documented import mapping (callActivity, signal/escalation/compensation events, data stores, pools) at validation time rather than letting BAW silently drop them on import.
 - **Business objects require BAW 22.x or later** — the `.xsd` sidecar mechanism requires a BAW version that supports itemDefinition-based business object import.
 
 ## Prompt examples
@@ -56,7 +56,7 @@ This skill turns any process description into a validated, import-ready BAW arti
 **Prompt:**
 > My BPMN import into BAW keeps losing the swimlanes and one gateway always disappears on import. The process is a new employee onboarding: HR enters employee details, IT provisions accounts and orders equipment in parallel, then a welcome meeting is scheduled. Can you regenerate this properly so it imports cleanly?
 
-**What to expect:** The skill explains what BAW's import mapping does (and doesn't) support — lanes are replaced by role annotations and Process Designer team assignments, and only supported gateway/event types survive — then generates a clean `.bpmn`/`.zip` that imports without surprises.
+**What to expect:** The skill explains what BAW's import mapping does (and doesn't) support — the skill replaces lanes with role annotations and Process Designer team assignments, and only supported gateway/event types survive — then generates a clean `.bpmn`/`.zip` that imports without surprises.
 
 ---
 

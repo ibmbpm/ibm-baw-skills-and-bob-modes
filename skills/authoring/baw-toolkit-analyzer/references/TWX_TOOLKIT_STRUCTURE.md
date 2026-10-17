@@ -16,7 +16,7 @@ analysis are:
 | `META-INF/metadata.xml` | Minimal; rarely contains useful data (often empty) |
 | `META-INF/properties.json` | Flags like `{"twxWithoutToolkits":"false"}` |
 | `objects/<prefix>.<uuid>.xml` | One XML file per artifact (process, service, BO, coach, etc.) |
-| `toolkits/<snapshot-id>.zip` | Each declared toolkit dependency is embedded as a nested ZIP |
+| `toolkits/<snapshot-id>.zip` | BAW embeds each declared toolkit dependency as a nested ZIP |
 | `files/<asset-id>/<uuid>` | Binary managed assets (ignored by this skill) |
 
 ---
@@ -91,7 +91,7 @@ Key attributes extracted by the script:
 
 ## Embedded toolkit ZIPs (`toolkits/`)
 
-Each toolkit listed in `<dependencies>` is embedded as a nested ZIP:
+BAW embeds each toolkit listed in `<dependencies>` as a nested ZIP:
 
 ```
 toolkits/2064.1080ded6-d153-4654-947c-2d16fce170db.zip   ← System Data
@@ -109,7 +109,7 @@ transitive dependencies (the toolkit's own `<dependencies>` section).
 
 ## Artifact object files (`objects/`)
 
-Each artifact in the process app is serialised as an individual XML file with
+BAW serializes each artifact in the process app as an individual XML file with
 a numeric type prefix and UUID:
 
 | Prefix | Artifact type |
@@ -148,7 +148,7 @@ The script identifies the artifact type and name from the first child element of
 
 ### How toolkit types are referenced in artifact XML
 
-Cross-toolkit type references appear as `classRef` values that begin with
+Artifact XML represents cross-toolkit type references as `classRef` values that begin with
 the dependency's project UUID:
 
 ```xml

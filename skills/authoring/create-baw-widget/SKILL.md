@@ -22,13 +22,13 @@ Two real widgets are bundled as reference implementations in `assets/examples/`:
 - `assets/examples/DateOutput/` — a simple display-only widget (formats and shows a date, one `change.js` event handler, no business object)
 - `assets/examples/TasksList/` — a more complex widget with a business object (`TaskItem.json`), two event handlers (`load.js` + `change.js`), and a full preview
 
-Open the one structurally closer to what you're building and mirror its patterns rather than inventing structure from scratch.
+Open the one structurally closer to what you are building and mirror its patterns rather than inventing structure from scratch.
 
 ## Phase 1 — Widget Authoring
 
 ### Steps
 
-1. **Clarify the widget request.** Get the widget name (PascalCase, e.g. `ProgressBar` not `progress-bar` or `progressBar`) and what it should display or do. Figure out whether this is a new widget, a modification to an existing one, or just a preview/metadata/docs update — that determines which of the steps below actually apply.
+1. **Clarify the widget request.** Get the widget name (PascalCase, for example, `ProgressBar`, not `progress-bar` or `progressBar`) and what it should display or do. Figure out whether this is a new widget, a modification to an existing one, or just a preview/metadata/docs update — that determines which of the steps below actually apply.
 
 2. **Inspect before you build.** The two committed examples in `assets/examples/` are the **primary references** — they are always present after a clone and represent proven, working patterns:
    - `assets/examples/DateOutput/` — simple display widget, scalar binding, one `change.js`, no business object. Use as the base for any widget with a plain string/date/number/boolean binding.
@@ -39,7 +39,7 @@ Open the one structurally closer to what you're building and mirror its patterns
    If the project already has sibling widgets in `widgets/`, glance at 1–2 of them for any project-specific naming or layout conventions that differ from the examples, but treat the `assets/examples/` files as the source of truth for correct implementation patterns. Sibling widgets are references to read, not to edit — do not modify any widget other than the one requested unless the user explicitly asks.
 
 3. **Create the required files** under `widgets/{WidgetName}/widget/`:
-   - `Layout.html` — the outermost element **must** be `<div class="{widgetname}_maincontentbox">` (underscore before `maincontentbox`). This class is the scope anchor for both CSS and JS. Add ARIA roles/labels where the widget conveys state (e.g. `role="progressbar"` with `aria-valuenow`). Do **not** add `id` attributes — see the **DOM element lookup** gotcha below for why.
+   - `Layout.html` — the outermost element must be `<div class="{widgetname}_maincontentbox">` (underscore before `maincontentbox`). This class is the scope anchor for both CSS and JS. Add ARIA roles and labels where the widget conveys state (for example, `role="progressbar"` with `aria-valuenow`). Do not add `id` attributes. See the DOM element lookup gotcha below for the reason.
    - `InlineCSS.css` — every rule must be prefixed with `.{widgetname}_maincontentbox` to prevent collisions with BAW's own styles and other widgets. Read the **CSS scoping** and **Carbon theme** gotchas below before writing CSS.
    - `inlineJavascript.js` — look up DOM elements using `this.context.element.querySelector(".{widgetname}_maincontentbox")` then `.querySelector()` from that container. Never use `document.getElementById()` or `getElementsByTagName`. Read the **DOM element lookup** gotcha below before writing JS.
 
@@ -48,19 +48,19 @@ Open the one structurally closer to what you're building and mirror its patterns
 5. **Add event handlers only if the widget's behavior requires them.** Event handler files go in `widget/events/` and are entirely optional. Decide per-event:
    - `load.js` — one-time init or registering a custom BAW event handler
    - `change.js` — re-render when bound data changes; only use this when `"changeFunction": true` in `config.json` (see Business object format rules)
-   - `view.js` — refresh when the widget becomes visible (e.g. it's in a tab)
+   - `view.js` — refresh when the widget becomes visible (for example, when it is in a tab)
    - `validate.js` — custom validation beyond HTML5 (return `true`/`false`)
    - `unload.js` — clean up timers/listeners the widget created
 
-   Start event handler files with `var _this = this;` to capture the BAW widget context — `this` loses its binding inside nested callbacks (verified by manual test).
+   Start event handler files with `var _this = this;` to capture the BAW widget context — `this` loses its binding inside nested callbacks.
 
 6. **Always add a preview** under `AdvancePreview/{WidgetName}.html` + `AdvancePreview/{WidgetName}Snippet.js`. Every widget must have these two files or BAW Designer shows "Error loading helper JS or HTML snippet files" on the canvas. See **Preview rules** below before writing them — the `.html` file content rule is a common source of the doubled-widget bug.
 
-7. **Add a palette icon.** `widgets/{WidgetName}/{WidgetName}.svg`, 120×120px square, visually representing the widget so it's recognizable in the BAW Designer widget catalog. The packager auto-detects this file by name — naming must match exactly (case-sensitive).
+7. **Add a palette icon.** `widgets/{WidgetName}/{WidgetName}.svg`, 120×120px square, visually representing the widget so it is recognizable in the BAW Designer widget catalog. The packager auto-detects this file by name — naming must match exactly (case-sensitive).
 
 8. **Write or update widget-local docs.** `widget/datamodel.md` (what shape of data the widget expects) and, if it has events, `widget/eventHandler.md` (what each event does). Keep these in sync with the actual implementation — stale docs are worse than no docs.
 
-9. **Validate before moving to packaging.** Check naming is consistent across the widget folder, preview files, and config (a `WidgetNameSnippet.js` that doesn't match the folder name silently breaks BAW's preview loader). Check docs match the real inputs/options/events.
+9. **Validate before moving to packaging.** Check naming is consistent across the widget folder, preview files, and config (a `WidgetNameSnippet.js` that does not match the folder name silently breaks the BAW preview loader). Check docs match the real inputs/options/events.
 
 ### Optional: scaffold with the bundled script
 
@@ -80,34 +80,34 @@ After all widget files are complete and validated, package them into an importab
 
 ### Packaging steps
 
-All commands run from the skill root (the `create-baw-widget/` folder, for example `.bob/skills/create-baw-widget/`).
+All commands run from the skill root (the `create-baw-widget/` folder, for example `src/skills/create-baw-widget/` or `.bob/skills/create-baw-widget/`).
 
 **Step A — Register business objects** (skip if no widget has a business object):
 ```bash
 python scripts/register_business_objects.py
 ```
-This assigns stable BAW class IDs to all business object JSON files under `widgets/*/widget/` and writes them to `scripts/toolkit_packager/baw_custom_types.json`. Idempotent — safe to run multiple times.
+This assigns stable BAW class IDs to all business object JSON files under `widgets/*/widget/` and writes them to `scripts/toolkit_packager/baw_custom_types.json`. The script creates this file the first time it runs. Idempotent — safe to run multiple times.
 
-**Step B -- (no action needed)** The packager auto-discovers every subfolder inside `widgets/`. No manual widget list to maintain.
+**Step B — No action needed.** The packager discovers every subfolder inside `widgets/`. You do not maintain a widget list.
 
 **Step C — Run the packager:**
 ```bash
 python scripts/package_baw.py
 ```
-This auto-increments the patch version in `assets/toolkit.config.json`, builds the TWX, and writes it to `output/{ToolkitName}_{version}.twx`.
+This auto-increments the patch version in `assets/toolkit.config.json`, builds the TWX, and writes it to `output/{ToolkitName}_{version}.twx`. The `widgets/` and `output/` folders are created inside the skill root by the scaffold and packaging scripts, so they might not exist in a fresh clone.
 
 **Step D — Report the result.** Tell the user the output path, the version, which widgets were included, and that the file is ready to import into BAW:
-- **Traditional BAW (Workflow Center):** Workflow Center → Process Apps → Import (verified by manual test)
-- **CP4BA containerized (Business Automation Studio):** Business Automation Studio → Business automations → Toolkits → Import
+- **Traditional BAW (Workflow Center):** Workflow Center > Process Apps > Import
+- **CP4BA containerized (Business Automation Studio):** Business Automation Studio > Business automations > Toolkits > Import
 
 ### toolkit.config.json fields
 
 | Field | Purpose |
 |---|---|
-| `toolkit.name` | Display name in BAW (e.g. `"Custom Widgets"`) |
-| `toolkit.shortName` | Short alias (e.g. `"CW"`) |
-| `toolkit.version` | Auto-incremented by the packager each run |
-| `toolkit.bawVersion` | BAW template version — must match a folder under `assets/templates/BaseTWX/` (use `"25.0.1"` for CP4BA 25.x/26.x; verified by manual test) |
+| `toolkit.name` | Display name in BAW (for example, `"Custom Widgets"`) |
+| `toolkit.shortName` | Short alias (for example, `"CW"`) |
+| `toolkit.version` | The packager increments this value each run |
+| `toolkit.bawVersion` | BAW template version — must match a folder under `assets/templates/BaseTWX/` (use `"25.0.1"` for CP4BA 25.x/26.x) |
 | `toolkit.id` | Stable GUID for the toolkit — do not change after first import |
 
 ---
@@ -116,7 +116,7 @@ This auto-increments the patch version in `assets/toolkit.config.json`, builds t
 
 ### DOM element lookup — always use `this.context.element.querySelector()`
 
-BAW rewrites element `id` attributes at runtime when it inserts a coach view into the page, so `document.getElementById()` silently returns `null` (verified by manual test).
+BAW rewrites element `id` attributes at runtime when it inserts a coach view into the page, so `document.getElementById()` silently returns `null`.
 
 The legacy `getElementsByTagName("div").ElementName` pattern (using HTML `name=` attributes) may work inside BAW's embedded browser, but it is not portable to standard browsers and is fragile when elements are renamed. **The preferred pattern** is `querySelector` scoped to `this.context.element`, which is BAW's own reference to this widget's root node and is consistent across all environments:
 
@@ -149,7 +149,7 @@ The outer wrapper class (`mywidget_maincontentbox`) also serves as the CSS scope
 
 ### Always use `min-height`, not `height`
 
-BAW renders each widget inside a `<table>` cell (verified by manual test). Setting a CSS `height` on a `<div>` child of a `<td>` is unreliable — in some browser/BAW combinations the browser ignores it and the div collapses to zero. If the widget has no visible content on initial load (e.g. the binding hasn't resolved yet), the outer wrapper collapses and the widget disappears on the canvas. Use `min-height` throughout — browsers honour it reliably inside table cells.
+BAW renders each widget inside a `<table>` cell. Setting a CSS `height` on a `<div>` child of a `<td>` is unreliable — in some browser and BAW combinations the browser ignores it and the div collapses to zero. If the widget has no visible content on initial load (for example, the binding has not resolved yet), the outer wrapper collapses and the widget disappears on the canvas. Use `min-height` throughout — browsers honor it reliably inside table cells.
 
 Set `min-height` on `{widgetname}_maincontentbox` and on inner track elements:
 
@@ -178,15 +178,15 @@ A nested `<table>` layout is not necessary — `min-height` on plain `<div>` ele
 
 ### CSS scoping — prefix every rule with the outer wrapper class
 
-BAW loads all widget stylesheets into a single page scope. Generic selectors like `.progressbar-track` will collide with BAW's own styles and with other widgets. **Every CSS rule must be prefixed** with the unique outer wrapper class:
+BAW loads all widget stylesheets into a single page scope. Generic selectors like `.progressbar-track` collide with BAW styles and with other widgets. Prefix every CSS rule with the unique outer wrapper class:
 
 ```css
 /* CORRECT — scoped, collision-safe */
-.mywidget_maincontentbox .mywidget-track { height: 8px; background-color: #e0e0e0; }
-.mywidget_maincontentbox .mywidget-fill  { height: 100%; background-color: #0f62fe; }
+.mywidget_maincontentbox .mywidget-track { min-height: 8px; background-color: #e0e0e0; }
+.mywidget_maincontentbox .mywidget-fill  { min-height: 8px; background-color: #0f62fe; }
 
-/* WRONG — unscoped, will collide */
-.mywidget-track { height: 8px; }
+/* WRONG — unscoped, collides with other styles */
+.mywidget-track { min-height: 8px; }
 ```
 
 Name the outer wrapper class with an **underscore** separator (`mywidget_maincontentbox`) — this visually distinguishes it from child classes and matches the convention used across working widgets in the reference repo.
@@ -236,7 +236,7 @@ Incorrect business object format is the most common cause of packaging failures.
 }
 ```
 
-This is the format our packager is built for. Some older widgets in the reference repo use `"type": "TaskItem"` only (without `"name"`) — the packager has a fallback for that, but it is less reliable. Always use both `"name"` and `"type": "businessObject"` in this project.
+The packager expects this format. Some older widgets in the reference repo use `"type": "TaskItem"` only (without `"name"`). The packager has a fallback for that format, but the fallback is less reliable. Use both `"name"` and `"type": "businessObject"` in this project.
 
 **Rule 2 — `config.json`'s `businessObjects` must be an array of objects with `{name, file}`, not a string array:**
 ```json
@@ -273,7 +273,7 @@ Valid property types: `String`, `Integer`, `Decimal`, `Boolean`, `Date`. Every p
 
 ## Preview rules — read before writing AdvancePreview/ files
 
-Every widget **must** have both `AdvancePreview/{WidgetName}.html` and `AdvancePreview/{WidgetName}Snippet.js`. Missing either file causes BAW Designer to show "Error loading helper JS or HTML snippet files" on the canvas.
+Every widget must have both `AdvancePreview/{WidgetName}.html` and `AdvancePreview/{WidgetName}Snippet.js`. Missing either file causes BAW Designer to show "Error loading helper JS or HTML snippet files" on the canvas.
 
 ### Two valid preview patterns — choose based on CSS approach
 
@@ -292,7 +292,7 @@ If `.html` has visible markup AND the Snippet also builds DOM, the widget appear
 
 **Pattern B — HTML with `<style>` block + `DesignContentBox`-scoped CSS + Snippet (complex widgets)**
 
-Use when the preview has enough CSS to warrant a stylesheet. The `.html` file contains the `<style>` block and a `<div class="SPARKPanel panel">` wrapper; the Snippet builds live DOM inside the `inputDiv`. **Every CSS selector in the `<style>` block must go through `.DesignContentBox`** because that class is added by `domClass.add(container, "DesignContentBox")` in the Snippet:
+Use when the preview has enough CSS to warrant a stylesheet. The `.html` file contains the `<style>` block and a `<div class="SPARKPanel panel">` wrapper; the Snippet builds live DOM inside the `inputDiv`. Every CSS selector in the `<style>` block must go through `.DesignContentBox`, because the Snippet adds that class with `domClass.add(container, "DesignContentBox")`:
 
 ```html
 <!-- ProgressBar.html — Pattern B -->
@@ -365,7 +365,7 @@ Copy the full wiring from `assets/examples/TasksList/AdvancePreview/task.js` (Pa
 
 For each widget created or changed, report:
 - The files created/modified, as a file tree rooted at `widgets/{WidgetName}/`
-- Which optional pieces you included and *why* (e.g. "added `change.js` because the widget re-renders on data updates; skipped `load.js` — no init logic needed")
+- Which optional pieces you included and *why* (for example, "added `change.js` because the widget re-renders on data updates; skipped `load.js` — no init logic needed")
 - Any Carbon variables used, so the user can sanity-check the visual match
 - If a preview was created, confirm it follows the mixObject pattern (not a placeholder)
 - After packaging: the output `.twx` path, version, and list of included widgets
@@ -390,8 +390,8 @@ After delivering the Phase 1 summary, always ask the user whether they want to p
 9. Create `widgets/RatingStars/widget/datamodel.md`.
 
 **Phase 2 output:**
-1. The packager auto-discovers `RatingStars` from the `widgets/` folder -- no manual step needed.
+1. The packager discovers `RatingStars` in the `widgets/` folder. No manual step is needed.
 2. Run `python3 scripts/package_baw.py`.
 3. Report: `output/Custom_Widgets_1.0.1.twx` (42 KB) — contains RatingStars. Ready to import via:
-   - **Traditional BAW:** Workflow Center → Process Apps → Import
-   - **CP4BA (Studio):** Business Automation Studio → Business automations → Toolkits → Import
+   - **Traditional BAW:** Workflow Center > Process Apps > Import
+   - **CP4BA (Studio):** Business Automation Studio > Business automations > Toolkits > Import

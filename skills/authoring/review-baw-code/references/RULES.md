@@ -22,9 +22,9 @@ and fix template before writing it into the report.
 ### HARD-01 — Hardcoded credential
 **Severity:** Critical  
 **Applies to:** JS (server, coach, integration)  
-**Pattern:** A variable whose name contains any of `password`, `passwd`, `secret`,
-`apikey`, `api_key`, `token`, `authtoken`, `auth_token`, `credential`, `private_key`
-(case-insensitive) is assigned a non-empty string literal.  
+**Pattern:** The script assigns a non-empty string literal to a variable whose name
+contains any of `password`, `passwd`, `secret`, `apikey`, `api_key`, `token`,
+`authtoken`, `auth_token`, `credential`, `private_key` (case-insensitive).
 ```js
 // Example violations
 var password = "P@ssw0rd!";
@@ -32,9 +32,9 @@ var apiKey = "sk-abc123";
 var dbSecret = 'prod-secret-XYZ';
 ```
 **Fix template:** Replace the literal with a BAW managed team/environment variable
-read via `tw.env.*` or a process variable initialised from a BAW configuration
-property (`tw.system.findManagedFile` / config property lookup). Never store
-credentials in scripts.
+that the script reads through `tw.env.*`, or with a process variable that you
+initialize from a BAW configuration property (`tw.system.findManagedFile` / config
+property lookup). Never store credentials in scripts.
 
 ---
 
@@ -61,8 +61,8 @@ var endpoint = tw.env.integrationBaseUrl + "/api/process";
 **Applies to:** JS, HTML  
 **Pattern:** A string literal that matches the regex `\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b`
 (IPv4 dotted-decimal notation).  
-**Fix template:** Replace with a hostname resolved via DNS, or store in an environment
-variable as for HARD-02.
+**Fix template:** Replace the address with a hostname that DNS resolves, or store it in
+an environment variable as for HARD-02.
 
 ---
 
@@ -72,7 +72,8 @@ variable as for HARD-02.
 **Pattern:** A string literal that ends with `:<port>` where port is not 80 or 443,
 or a numeric literal assigned to a variable named `port`, `portNumber`, `serverPort`
 (case-insensitive). Exempt: well-known ports (80, 443, 8080 is borderline — flag as Low).  
-**Fix template:** Externalise to an environment variable or BAW configuration property.
+**Fix template:** Externalize the port to an environment variable or BAW configuration
+property.
 
 ---
 
@@ -83,13 +84,13 @@ or a numeric literal assigned to a variable named `port`, `portNumber`, `serverP
 **Applies to:** JS (server, integration)  
 **Pattern:** A `tw.local.<name>` reference appears as a read (right-hand side of
 assignment, passed as argument, used in condition) at a line that precedes any
-assignment `tw.local.<name> = ...` in the same script scope. Does not apply to
-variables declared in the process model and legitimately passed into the script as
-inputs — if there is any plausible input mapping, downgrade to Medium and note
-"Verify this is an output variable, not a process input."  
+assignment `tw.local.<name> = ...` in the same script scope. This rule does not apply
+to variables that the process model declares and passes into the script as inputs. If
+there is any plausible input mapping, downgrade to Medium and note "Verify this is an
+output variable, not a process input."
 **Fix template:** Declare and assign the variable before first use:
 ```js
-tw.local.result = "";   // declare/initialise first
+tw.local.result = "";   // declare/initialize first
 // … logic …
 tw.local.result = computedValue;
 ```
@@ -103,8 +104,8 @@ tw.local.result = computedValue;
 appears as a read in the same script. May indicate dead code or a forgotten output
 mapping.  
 **Fix template:** Either remove the assignment if the variable is truly unused, or
-confirm that the output is mapped in the containing service/process and the variable
-is intentionally written for downstream consumption.
+confirm that the containing service or process maps the output and that you
+intentionally write the variable for downstream consumption.
 
 ---
 
@@ -115,9 +116,9 @@ is intentionally written for downstream consumption.
 **Applies to:** JS  
 **Pattern:** Multiple logging idioms coexist across the artifact set or within a
 single script. Detect the dominant idiom across all reviewed scripts (the idiom used
-by >50% of log calls). Any script using a different idiom is flagged. Common idioms:
-`log.info` / `log.error`, `tw.system.log`, `console.log`, a custom `logger.*` wrapper.  
-**Fix template:** Standardise on the project's dominant idiom. If no convention
+by >50% of log calls). Flag any script that uses a different idiom. Common idioms:
+`log.info` / `log.error`, `tw.system.log`, `console.log`, a custom `logger.*` wrapper.
+**Fix template:** Standardize on the project's dominant idiom. If no convention
 exists, adopt `log.info` / `log.error` from the BAW Script Logger API, which writes
 to the BAW system log and supports severity levels.
 
@@ -151,8 +152,8 @@ try {
 **Pattern:** `console.log(`, `console.warn(`, `console.error(` appear in a script
 that is not clearly a test or development utility (filename does not contain `test`,
 `spec`, `dev`).  
-**Fix template:** Replace with the project's standard logging idiom. `console.log`
-output is not captured in BAW server logs and disappears in server-side scripts.
+**Fix template:** Replace with the project's standard logging idiom. BAW server logs
+do not capture `console.log` output, so it disappears in server-side scripts.
 
 ---
 
@@ -163,7 +164,7 @@ output is not captured in BAW server logs and disappears in server-side scripts.
 **Applies to:** JS (server, integration)  
 **Pattern:** `java.lang.Thread.sleep(`, `Thread.sleep(`, or the alias pattern
 `Packages.java.lang.Thread.sleep(` appears in a script.  
-**Fix template:** Remove the sleep entirely. If a delay is needed between retry
+**Fix template:** Remove the sleep entirely. If you need a delay between retry
 attempts, implement a BAW timer boundary event on the containing process/service task.
 If polling an external system, use a BAW intermediate timer event or an integration
 pattern with a callback. `Thread.sleep` blocks the BAW thread pool and can cause

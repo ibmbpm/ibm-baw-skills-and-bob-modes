@@ -4,7 +4,6 @@
 
 
 ## IBM Business Automation Workflow Operations REST Interface
-*Source: `apis/baw-ops.26.0.0.json`*
 
 ### `POST /ops/system/login`
 **Obtain IBM Business Automation Workflow CSRF prevention token**
@@ -28,11 +27,11 @@ Retrieves a list of all process applications and toolkits on the Workflow Center
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs.
-- `type` (query, string) — Valid values (mutually exclusive): 'PA', 'TK'. Specify 'PA' to view only process applications and 'TK' to view only tool
-- `ids` (query, array) — A comma-separated list of IDs of process applications or toolkits. This parameter restricts the results to the process a
-- `offset` (query, integer) — In a list of entries, the offset specifies the position of the first process application or toolkit to return from the q
+- `type` (query, string) — Valid values (mutually exclusive): 'PA', 'TK'. Specify 'PA' to view only process applications and 'TK' to view only toolkits. If the value is not set, both are returned.
+- `ids` (query, array) — A comma-separated list of IDs of process applications or toolkits. This parameter restricts the results to the process applications or toolkits with the specified IDs.
+- `offset` (query, integer) — In a list of entries, the offset specifies the position of the first process application or toolkit to return from the query result set.
 - `size` (query, integer) — Maximum number of process applications or toolkits to return.
-- `optional_parts` (query, array) — Valid values: 'branches', 'versions'. Specify 'branches' to see the list of tracks in a process application or toolkit. 
+- `optional_parts` (query, array) — Valid values: 'branches', 'versions'. Specify 'branches' to see the list of tracks in a process application or toolkit. Specify 'versions' to see, both, the list of tracks and snapshots. Valid values are: 'branches', 'versions'.
 
 **Responses:**
 - `200` — The information was successfully retrieved.
@@ -67,7 +66,7 @@ Retrieves detailed information for a specified process app or toolkit, including
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs.
 - `container` (path, string) *(required)* — The acronym of the process application or toolkit.
-- `optional_parts` (query, array) — Valid values: 'branches' and 'versions'. Specify 'branches' to see the list of tracks in a process application or toolki
+- `optional_parts` (query, array) — Valid values: 'branches' and 'versions'. Specify 'branches' to see the list of tracks in a process application or toolkit. Specify 'versions' to see, both, the list of tracks and snapshots. Valid values are: 'branches', 'versions'.
 
 **Responses:**
 - `200` — The information was successfully retrieved.

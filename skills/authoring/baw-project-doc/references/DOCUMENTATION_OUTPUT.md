@@ -1,4 +1,4 @@
-# Documentation Output Format
+# Documentation output format
 
 This reference defines the **Technical Reference** output format for `baw-project-doc`.
 This is one of four audience-specific formats — see `AUDIENCE_FORMATS.md` for the full

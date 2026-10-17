@@ -1,6 +1,6 @@
 # Version Lifecycle Manager — Documentation
 
-> Manages IBM® Business Automation Workflow (BAW) Process App and Toolkit version lifecycle via the Operations REST API — handles state-changing operations including installing apps, managing snapshots (activating, deactivating, deleting), and reading, setting, and syncing environment variables — entirely from the command line.
+> Manages IBM Business Automation Workflow (BAW) Process App and Toolkit version lifecycle via the Operations REST API — handles state-changing operations including installing apps, managing snapshots (activating, deactivating, deleting), and reading, setting, and syncing environment variables — entirely from the command line.
 
 ## Purpose
 
@@ -30,7 +30,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 ### Activate a snapshot
 
 **Prompt:**
-> Activate snapshot v2.5 for the CLAIMSAPP process app. Server is https://baw.example.com/bas, username: admin, password: Welcome1.
+> Activate snapshot v2.5 for the CLAIMSAPP process app. Server is https://baw.example.com/bas, username: <your-username>, password: <your-password>.
 
 **What to expect:** The skill presents an operation summary (container, snapshot, effect). Confirm the operation when prompted. The skill then executes the activation call, shows the curl command, reports the HTTP status and API response, and notes that the previously active snapshot is automatically deactivated.
 
@@ -39,7 +39,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 ### Deactivate a snapshot
 
 **Prompt:**
-> Deactivate snapshot 1.8.0 on the INVOICING process app at https://baw.finance.example.com/bas. Credentials: svc_baw / Passw0rd!
+> Deactivate snapshot 1.8.0 on the INVOICING process app at https://baw.finance.example.com/bas. Credentials: username: <your-username>, password: <your-password>
 
 **What to expect:**
 
@@ -54,14 +54,14 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 
 **What to expect:**
 
-> **Important:** Deletion is permanent and may affect instance history. Export a `.twx` archive first. The snapshot must be deactivated before it can be deleted. The skill asks for explicit confirmation before proceeding.
+> **Important:** Deletion is permanent and may affect instance history. Export a `.twx` archive first. Deactivate the snapshot before you delete it. The skill asks for explicit confirmation before proceeding.
 
 ---
 
 ### Install a snapshot — export from source server automatically (preferred)
 
 **Prompt:**
-> Install process app `HSS`, snapshot `0.1` from `https://c79815v1.fyre.ibm.com:9443/` (tw_admin/tw_admin) onto the same server targeting the `Test` environment.
+> Install process app `HSS`, snapshot `0.1` from `https://baw-authoring.example.com:9443/` (username: <your-username>, password: <your-password>) onto the same server targeting the `Test` environment.
 
 **What to expect:** The skill presents an operation summary, then logs in to the source server to obtain a CSRF token and calls `GET /ops/std/bpm/containers/HSS/versions/0.1/export?use_enhanced_filenames=true` to download the TWX. It then POSTs the file as a multipart upload to the install endpoint on the target server, follows up automatically with a verify call, presents the snapshot's status fields, and suggests activating the snapshot as the next step.
 
@@ -70,7 +70,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 ### Install a snapshot — cross-server promotion
 
 **Prompt:**
-> Promote `HSS` snapshot `0.1` from our authoring server at `https://c79815v1.fyre.ibm.com:9443/` (tw_admin/tw_admin) and install it on our test server at `https://baw-test.example.com:9443/` (deploy_user/deploy_pass), targeting the `QA` environment.
+> Promote `HSS` snapshot `0.1` from our authoring server at `https://baw-authoring.example.com:9443/` (username: <your-username>, password: <your-password>) and install it on our test server at `https://baw-test.example.com:9443/` (username: <your-username>, password: <your-password>), targeting the `QA` environment.
 
 **What to expect:** The skill exports from the source server using source credentials, then performs a separate login on the target server to obtain its CSRF token, and installs the downloaded TWX there. Two distinct credential sequences are used — source for export, target for install.
 
@@ -79,7 +79,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 ### Install a process app from a local .twx file (fallback)
 
 **Prompt:**
-> Install /releases/SUPPLYAPP_v4.1.twx to https://baw.prod.example.com/bas (admin / prodpass), then verify it landed.
+> Install /releases/SUPPLYAPP_v4.1.twx to https://baw.prod.example.com/bas (username: <your-username>, password: <your-password>), then verify it landed.
 
 **What to expect:** When a local file path is provided directly (or when the REST export fails), the skill uses the supplied `.twx` file as-is. It constructs a multipart POST to the install endpoint, follows up automatically with a verify call, presents the snapshot's status fields in a readable format, and suggests activating the snapshot as the next step.
 
@@ -88,7 +88,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 ### Verify a snapshot
 
 **Prompt:**
-> Verify that snapshot v3.0 of HRAPP is present and in good shape on https://baw.hr.example.com/bas (hr_admin / hrpass99).
+> Verify that snapshot v3.0 of HRAPP is present and in good shape on https://baw.hr.example.com/bas (username: <your-username>, password: <your-password>).
 
 **What to expect:** The skill calls the verify endpoint and presents the snapshot's lifecycle state, active flag, and instance count in a structured result block.
 
@@ -97,7 +97,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 ### List all snapshots for a container
 
 **Prompt:**
-> List all deployed snapshots for the ORDERSMGMT process app on https://baw.ops.example.com/bas (admin / pass). I need to see which one is active.
+> List all deployed snapshots for the ORDERSMGMT process app on https://baw.ops.example.com/bas (username: <your-username>, password: <your-password>). I need to see which one is active.
 
 **What to expect:** A table of all snapshots with columns for acronym, name, active status, and creation date, highlighting the currently active snapshot.
 
@@ -106,7 +106,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 ### Unknown acronym — discover before acting
 
 **Prompt:**
-> I want to delete an old snapshot of PAYROLLAPP on https://baw.hr.example.com/bas (admin / pass123), but I'm not sure of its exact acronym.
+> I want to delete an old snapshot of PAYROLLAPP on https://baw.hr.example.com/bas (username: <your-username>, password: <your-password>), but I'm not sure of its exact acronym.
 
 **What to expect:** The skill lists all snapshots for PAYROLLAPP first so you can confirm the exact acronym (acronyms are case-sensitive), then constructs the delete call only after you confirm which snapshot to target.
 
@@ -115,7 +115,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 ### Read environment variables
 
 **Prompt:**
-> Show me the current environment variables for snapshot v5.0 of CLAIMSAPP on https://baw.claims.example.com/bas (admin / claimspass).
+> Show me the current environment variables for snapshot v5.0 of CLAIMSAPP on https://baw.claims.example.com/bas (username: <your-username>, password: <your-password>).
 
 **What to expect:** The skill makes a GET request to the env-vars endpoint and presents the results as a table of variable names and current values.
 
@@ -124,7 +124,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 ### Set and sync environment variables
 
 **Prompt:**
-> Set PAYMENT_GATEWAY_URL to https://payments.newprovider.com/api and TIMEOUT_SECONDS to 30 on snapshot v5.0 of CLAIMSAPP at https://baw.claims.example.com/bas (admin / claimspass), then sync them.
+> Set PAYMENT_GATEWAY_URL to https://payments.newprovider.com/api and TIMEOUT_SECONDS to 30 on snapshot v5.0 of CLAIMSAPP at https://baw.claims.example.com/bas (username: <your-username>, password: <your-password>), then sync them.
 
 **What to expect:** Current variables are shown first as a baseline. The new values are written via the set endpoint. Then:
 

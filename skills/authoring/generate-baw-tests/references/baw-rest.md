@@ -4,7 +4,6 @@
 
 
 ## IBM Business Automation Workflow Operations REST Interface
-*Source: `apis/baw-ops.26.0.0.json`*
 
 ### `POST /ops/system/login`
 **Obtain IBM Business Automation Workflow CSRF prevention token**
@@ -24,14 +23,14 @@ Obtain a CSRF prevention token and optionally refresh the user's group membershi
 ### `GET /ops/std/bpm/containers/{container}/versions/{version}/export`
 **Exports a specified process application snapshot or toolkit snapshot**
 
-Enables the exchange of a process app or toolkit between Workflow Center servers. This API exports a specified process app snapshot or toolkit snapshot as a .twx file that you can import into a Workflow Center server. The suggested file name is URL-encoded in the Content-Disposition HTTP response he...
+Enables the exchange of a process app or toolkit between Workflow Center servers. This API exports a specified process app snapshot or toolkit snapshot as a .twx file that you can import into a Workflow Center server. The suggested file name is URL-encoded in the Content-Disposition HTTP response header. Only Business Automation Workflow administrators or users with project read permission are authorized to perform this call.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs.
 - `container` (path, string) *(required)* — The acronym of the process application or toolkit associated with the specified snapshot.
 - `version` (path, string) *(required)* — The acronym of the snapshot to be exported.
-- `format` (query, string) — The format of the export. If the value is not specified, system toolkits are exported. A value of twxWithoutToolkits ski
-- `use_enhanced_filenames` (query, boolean) — A value of true produces more meaningful file names within the exported file. If the value is false or unspecified, the 
+- `format` (query, string) — The format of the export. If the value is not specified, system toolkits are exported. A value of twxWithoutToolkits skips exporting system toolkits that are not versioned (the latest version is already on the server).
+- `use_enhanced_filenames` (query, boolean) — A value of true produces more meaningful file names within the exported file. If the value is false or unspecified, the default internal format is used.
 
 **Responses:**
 - `200` — The specified snapshot was exported successfully.
@@ -43,7 +42,6 @@ Enables the exchange of a process app or toolkit between Workflow Center servers
 ---
 
 ## IBM Business Automation Workflow REST Interface
-*Source: `apis/baw-process.26.0.0.json`*
 
 ### `GET /bpm/processes`
 **Retrieve a list of process instances.**
@@ -55,12 +53,12 @@ Only users with the following roles are authorized to perform this call: Busines
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs
 - `model` (query, string) — The name of the process model. Restricts the results to instances of the specified process model.
-- `containers` (query, array) — A comma-separated list of containers acronyms. Restricts the results to instances that belong to the specified process a
+- `containers` (query, array) — A comma-separated list of containers acronyms. Restricts the results to instances that belong to the specified process application acronyms.
 - `versions` (query, array) — A comma-separated list of snapshot acronyms. Restricts the results to instances that belong to the specified snapshots.
-- `states` (query, array) — A comma-separated list of states. Restricts the results to instances in the specified states. Valid values are: 'running
-- `search_term` (query, string) — A string that filters the process instances returned by the given term. The search term is compared against the process 
-- `sort` (query, array) — A comma-separated list of sort criteria. The order of the items determines the sorting sequence. The list entries must h
-- `offset` (query, string) — In a list of entries the offset specifies the position of the first process instance to return from the query result set
+- `states` (query, array) — A comma-separated list of states. Restricts the results to instances in the specified states. Valid values are: 'running', 'finished', 'terminated', 'suspended', 'stopped', 'did_not_start'.
+- `search_term` (query, string) — A string that filters the process instances returned by the given term. The search term is compared against the process model name and process instance name and handled as if wildcard characters are at the beginning and end.
+- `sort` (query, array) — A comma-separated list of sort criteria. The order of the items determines the sorting sequence. The list entries must have the following format: property:sort_direction. Valid values are: 'creation_time:asc', 'creation_time:desc', 'model:asc', 'model:desc', 'state:asc', 'state:desc', 'due_date:asc', 'due_date:desc'.
+- `offset` (query, string) — In a list of entries the offset specifies the position of the first process instance to return from the query result set.
 - `size` (query, integer) — Maximum number of process instances to return.
 - `optional_parts` (query, array) — A comma-separated list of optional parts to be returned in the response object. Valid values are: 'data', 'actions'.
 
@@ -80,7 +78,7 @@ Only members of teams assigned to the 'Expose to start' option for the process a
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs
 - `model` (query, string) *(required)* — The name of the process model for which a new instance is started.
 - `container` (query, string) *(required)* — The acronym of the process application that contains the process model.
-- `version` (query, string) — The acronym of the process application snapshot that contains the process model. If a version is not specified, the inst
+- `version` (query, string) — The acronym of the process application snapshot that contains the process model. If a version is not specified, the instance is started from the default snapshot in a Workflow Server environment and from the latest snapshot in a Workflow Center environment.
 - `optional_parts` (query, array) — A comma-separated list of optional parts to be returned in the response object. Valid values are: 'data', 'actions'.
 - `input` (body, ) — Values for process variables.
 - `branch_name` (query, string) — The name of the branch of the process application that contains the process model.
@@ -99,7 +97,7 @@ Only members of teams assigned to the 'Expose to start' option for the process a
 
 Retrieves detailed information about a process instance. 
 
-Only users with the following roles or statuses are authorized to perform this call: Business Automation Workflow administrator, process application administrator, instance owner, follower of the instance, tagged in the instance, or members ...
+Only users with the following roles or statuses are authorized to perform this call: Business Automation Workflow administrator, process application administrator, instance owner, follower of the instance, tagged in the instance, or members of teams assigned to the Expose Performance Metrics option for the process.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs
@@ -145,11 +143,11 @@ Only users with the following roles are authorized to perform this call: Busines
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs
 - `model` (query, string) — The name of the process model for which user task instances are returned.
 - `process_id` (query, string) — The ID of the process instance for which user task instances are returned.
-- `states` (query, array) — A comma-separated list of user task states. Valid values are: 'claimed', 'ready', 'completed', 'terminated', 'suspended'
+- `states` (query, array) — A comma-separated list of user task states. Valid values are: 'claimed', 'ready', 'completed', 'terminated', 'suspended'.
 - `offset` (query, string) — In a list of entries offset specifies the position of the first user task instance to return from the query result set.
 - `size` (query, integer) — The maximum number of user task instances to be returned.
-- `optional_parts` (query, array) — A comma-separated list of optional parts to be returned in the response object. Valid values are: 'data', 'actions', 'te
-- `sort` (query, array) — A comma-separated list of sort criteria. The order of the items determines the sorting sequence. The list entries must h
+- `optional_parts` (query, array) — A comma-separated list of optional parts to be returned in the response object. Valid values are: 'data', 'actions', 'team_details', 'container_data'.
+- `sort` (query, array) — A comma-separated list of sort criteria. The order of the items determines the sorting sequence. The list entries must have the following format: property:sort_direction. Valid values are: 'creation_time:asc', 'creation_time:desc', 'completion_time:asc', 'completion_time:desc', 'due_date:asc', 'due_date:desc'.
 
 **Responses:**
 - `200` — The request was processed successfully and returned a list of user task instance objects that match the specified query parameters.
@@ -168,7 +166,7 @@ Only users with the following roles are authorized to perform this call: Busines
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs
 - `task_id` (path, string) *(required)* — User task instance ID.
-- `optional_parts` (query, array) — A comma-separated list of optional parts to be returned in the response object. Valid values are: 'data', 'actions', 'te
+- `optional_parts` (query, array) — A comma-separated list of optional parts to be returned in the response object. Valid values are: 'data', 'actions', 'team_details', 'container_data'.
 
 **Responses:**
 - `200` — The request was processed successfully and returned a user task instance object with details of the specified user task instance.
@@ -189,7 +187,7 @@ Only users with the following roles are authorized to perform this call: Busines
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs
 - `task_id` (path, string) *(required)* — User task instance ID.
-- `optional_parts` (query, array) — A comma-separated list of optional parts to be returned in the response object. Valid values are: 'data', 'actions', 'te
+- `optional_parts` (query, array) — A comma-separated list of optional parts to be returned in the response object. Valid values are: 'data', 'actions', 'team_details', 'container_data'.
 
 **Responses:**
 - `200` — The request was processed successfully.
@@ -211,7 +209,7 @@ Only users with the following roles are authorized to perform this call: Busines
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs
 - `task_id` (path, string) *(required)* — User task instance ID.
-- `optional_parts` (query, array) — A comma-separated list of optional parts to be returned in the response object. Valid values are: 'data', 'actions', 'te
+- `optional_parts` (query, array) — A comma-separated list of optional parts to be returned in the response object. Valid values are: 'data', 'actions', 'team_details', 'container_data'.
 - `output` (body, ) — The data output of the specified user task instance.
 
 **Responses:**

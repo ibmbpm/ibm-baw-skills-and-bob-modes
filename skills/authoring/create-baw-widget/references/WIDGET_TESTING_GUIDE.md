@@ -1,21 +1,21 @@
-# Widget Testing Guide
+# Widget testing guide
 
 This guide helps you test the Carbon-themed widgets in BAW Process Designer.
 
-## Quick Start
+## Quick start
 
-1. **Open your Process App** in BAW Process Designer
-2. **Create a new Coach** or open an existing one
-3. **Add the widgets** you want to test from the palette
-4. **Set up test data** using the script below
+1. Open your process app in BAW Process Designer.
+2. Create a new coach or open an existing one.
+3. Add the widgets you want to test from the palette.
+4. Set up test data using the script in step 4 of the instructions.
 
-## Step-by-Step Instructions
+## Step-by-step instructions
 
-### 1. Create Coach Variables
+### 1. Create coach variables
 
-In your coach, create these variables (only create the ones for widgets you're testing):
+In your coach, create these variables. Create only the variables for the widgets you are testing.
 
-| Variable Name | Type | Widget |
+| Variable name | Type | Widget |
 |--------------|------|--------|
 | `breadcrumb` | BreadcrumbItem (List) | Breadcrumb |
 | `dateoutput` | Date | DateOutput |
@@ -26,34 +26,38 @@ In your coach, create these variables (only create the ones for widgets you're t
 | `tasksList` | String (List) | TasksList |
 | `timeline` | TimelineEvent (List) | Timeline |
 
-### 2. Add Widgets to Coach
+### 2. Add widgets to the coach
 
-Drag and drop the widgets from the palette onto your coach canvas.
+Drag the widgets from the palette onto your coach canvas.
 
-### 3. Bind Variables to Widgets
+### 3. Bind variables to widgets
 
 For each widget:
-1. Select the widget
-2. Go to the **Data** tab
-3. Bind the appropriate variable to the widget's data binding
 
-### 4. Add Test Data Script
+1. Select the widget.
+2. Go to the **Data** tab.
+3. Bind the appropriate variable to the widget's data binding.
 
-1. Click on the coach canvas (not on any widget)
-2. Go to the **Behavior** section
-3. Find the **Script** section
-4. Copy the contents of [`test_widgets_sample_data.js`](../scripts/test_widgets_sample_data.js) and paste it into the Script field
-5. Save your coach
+### 4. Add the test data script
 
-### 5. Run and Test
+Use this script in a test environment only. Remove it from the coach before you promote the process app to production.
 
-1. Click **Run** to preview your coach
-2. The widgets should now display with sample data
-3. Test interactions and verify the Carbon theme styling
+1. Click the coach canvas (not any widget).
+2. Go to the **Behavior** section.
+3. Find the **Script** section.
+4. Copy the contents of [`test_widgets_sample_data.js`](../scripts/test_widgets_sample_data.js) and paste them into the Script field.
+5. Save your coach.
 
-## Widget-Specific Test Data
+### 5. Run and test
+
+1. Click **Run** to preview your coach.
+2. Confirm that the widgets display the sample data.
+3. Test interactions and verify the Carbon theme styling.
+
+## Widget-specific test data
 
 ### Breadcrumb
+
 ```javascript
 tw.local.breadcrumb = [
     { "label": "Home", "status": "completed", "url": "#home" },
@@ -62,16 +66,19 @@ tw.local.breadcrumb = [
 ```
 
 ### DateOutput
+
 ```javascript
 tw.local.dateoutput = new Date(); // Current date
 ```
 
 ### MarkdownViewer
+
 ```javascript
 tw.local.markdownviewer = "# Title\n\nSome **bold** text.";
 ```
 
 ### MultiSelect
+
 ```javascript
 // Selected values (data binding)
 tw.local.multiSelect = [
@@ -96,11 +103,13 @@ tw.local.multiSelectOptions = {
 **Important:** In the MultiSelect widget's Configuration Options panel, bind the `options` property to `tw.local.multiSelectOptions`. The widget expects a list of objects with `name` and `value` properties (nameValuePair structure).
 
 ### ProcessCircle
+
 ```javascript
 tw.local.processcircle = 75; // 75% complete
 ```
 
 ### ProgressBar
+
 ```javascript
 tw.local.progressbar = {
     "percentage": 65,
@@ -110,6 +119,7 @@ tw.local.progressbar = {
 ```
 
 ### TasksList
+
 ```javascript
 tw.local.tasksList = [
     "Task 1",
@@ -119,6 +129,7 @@ tw.local.tasksList = [
 ```
 
 ### Timeline
+
 ```javascript
 tw.local.timeline = [
     {
@@ -131,74 +142,78 @@ tw.local.timeline = [
 ];
 ```
 
-## Carbon Theme Features to Test
+## Carbon theme features to test
 
 ### Colors
-- **Primary Blue**: `#0f62fe` - Used for active states, links, primary actions
-- **Success Green**: `#198038` - Used for completed states
-- **Warning Yellow**: `#fdd13a` - Used for warning states
-- **Error Red**: `#da1e28` - Used for error states
+
+- **Primary blue**: `#0f62fe`. Active states, links, and primary actions use this color.
+- **Success green**: `#198038`. Completed states use this color.
+- **Warning yellow**: `#fdd13a`. Warning states use this color.
+- **Error red**: `#da1e28`. Error states use this color.
 
 ### Typography
-- **Font Family**: IBM Plex Sans
-- **Base Size**: 14px
-- **Small Size**: 12px
-- **Large Size**: 18px
 
-### Interactive States
+- **Font family**: IBM Plex Sans
+- **Base size**: 14px
+- **Small size**: 12px
+- **Large size**: 18px
+
+### Interactive states
+
 Test these interactions:
-- ✅ Hover effects (should show subtle color changes)
-- ✅ Click/active states
-- ✅ Focus states (keyboard navigation)
-- ✅ Disabled states
+
+- Hover effects (subtle color changes)
+- Click and active states
+- Focus states (keyboard navigation)
+- Disabled states
 
 ## Troubleshooting
 
-### Widget Not Displaying
-- Check that the variable is properly bound to the widget
-- Verify the variable type matches the widget's expected type
-- Check browser console for JavaScript errors
+### Widget not displaying
 
-### Data Not Showing
-- Ensure the script runs before the widgets render
-- Check that variable names match exactly (case-sensitive)
-- Verify the data structure matches the widget's expected format
+- Check that you bound the variable to the widget.
+- Verify that the variable type matches the type that the widget expects.
+- Check the browser console for JavaScript errors.
 
-### Styling Issues
-- Clear browser cache
-- Verify the toolkit was deployed successfully
-- Check that you're using version 1.0.68 or later
+### Data not showing
 
-## Testing Checklist
+- Ensure the script runs before the widgets render.
+- Check that variable names match exactly (names are case-sensitive).
+- Verify that the data structure matches the format that the widget expects.
+
+### Styling issues
+
+- Clear the browser cache.
+- Verify that the toolkit imported successfully.
+- Check that you imported the latest packaged toolkit version.
+
+## Testing checklist
 
 - [ ] Breadcrumb navigation works
-- [ ] DateOutput displays correctly formatted date
+- [ ] DateOutput displays a correctly formatted date
 - [ ] MarkdownViewer renders markdown properly
 - [ ] MultiSelect allows selection
-- [ ] ProcessCircle shows correct percentage
-- [ ] ProgressBar displays with correct color based on percentage
+- [ ] ProcessCircle shows the correct percentage
+- [ ] ProgressBar displays the correct color for the percentage
 - [ ] TasksList displays all items
 - [ ] Timeline shows events in chronological order
 - [ ] All widgets use Carbon theme colors
-- [ ] All widgets use IBM Plex Sans font
+- [ ] All widgets use the IBM Plex Sans font
 - [ ] Hover states work correctly
 - [ ] Responsive design works on mobile
 
-## Next Steps
+## Next steps
 
 After testing:
-1. Integrate widgets into your actual process flows
-2. Connect to real business data
-3. Customize widget options as needed
-4. Add event handlers for user interactions
+
+1. Integrate the widgets into your process flows.
+2. Connect the widgets to real business data.
+3. Customize widget options as needed.
+4. Add event handlers for user interactions.
 
 ## Support
 
 For issues or questions:
-- Review [`CARBON_THEME_VARIABLES.md`](CARBON_THEME_VARIABLES.md)
-- Examine widget README files in `widgets/[WidgetName]/README.md`
 
----
-**Version**: 1.0.68  
-**Last Updated**: 2026-05-06  
-**Carbon Theme**: Fully integrated
+- Review [`CARBON_THEME_VARIABLES.md`](CARBON_THEME_VARIABLES.md).
+- Review the `datamodel.md` file in each widget folder (`widgets/<WidgetName>/widget/datamodel.md`).

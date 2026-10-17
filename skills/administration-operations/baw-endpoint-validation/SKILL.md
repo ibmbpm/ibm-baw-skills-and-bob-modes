@@ -8,12 +8,11 @@ allowed-tools:
   - Edit
   - Bash
 metadata:
-  version: "1.1.0"
+  version: "1.0.0"
   display_name: BAW Endpoint Validation
   short_description: Scan a BAW process app TWX export for hardcoded server endpoints and generate a migration report before moving to a new environment.
   author: IBM BAW Team
 ---
-
 # BAW Endpoint Validation
 
 Identify what needs to change when a BAW process application is installed on a new server. Supports both deployment types:
@@ -32,9 +31,17 @@ Steps for both paths:
 
 The TWX scan is driven by `scripts/scan_twx_endpoints.py`.
 
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+
+---
+
 ## Key constraint
 
-All environment information is derived from exported BPMConfig properties files, values the user provides directly, or commands run by Bob via `execute_command`. Paths come from the user or are discovered automatically (profiles directory). Do not invent paths that are not discoverable.
+Bob derives all environment information from exported BPMConfig properties files, values the user provides directly, or commands run by Bob via `execute_command`. Paths come from the user or are discovered automatically (profiles directory). Do not invent paths that are not discoverable.
 
 ## Offline promotion context
 
@@ -65,7 +72,7 @@ The actual offline promotion step uses the `BPMInstallOfflinePackage` wsadmin co
 - User describes an on-premises or VM-based installation
 - User provides a BAW install root path **AND** confirms they are working directly on that server (e.g. SSH'd into the BAW host, not a cluster node)
 
-> **Note — install root path alone is NOT sufficient** to conclude traditional BAW. An admin managing a migration from traditional BAW to CP4BA will often state the old install root as the source, while their current machine has `oc` and no BAW filesystem. Always confirm the working environment before attempting `BPMConfig`.
+> **Note:** Install root path alone is **not** sufficient to conclude traditional BAW. An admin managing a migration from traditional BAW to CP4BA will often state the old install root as the source, while their current machine has `oc` and no BAW filesystem. Always confirm the working environment before attempting `BPMConfig`.
 
 ### When the deployment type is ambiguous
 
@@ -296,6 +303,8 @@ oc version --client
 
 > **Note:** `kubectl` can substitute for `oc` for read-only CR access when the user is logged in via `kubeconfig`. If `oc` is absent but `kubectl` is present, run `kubectl get ICP4ACluster icp4adeploy -n <namespace> -o yaml` instead.
 
+> **Security note:** Store `{BAW_CSRF}` and `{BAW_SESSION}` in memory for this conversation only. Do not write them to any file. Ensure all calls use HTTPS.
+
 Parse the YAML output — the key fields to extract are:
 
 **Workflow hostname (BAW external URL)**
@@ -364,34 +373,10 @@ Use the first path that succeeds. If the user already stated a `.twx` file path 
 
 **Path 1 — Export API (preferred)**
 
-Ask for the server URL and credentials only at this point, immediately before making the login call — do not ask earlier:
-> *"To download the app artifacts I'll need your BAW server URL and credentials — these are only used to get a session token for this conversation and are not stored."*
 
-#### Step A — Determine the context root
+#### Step 4a — Resolve container and version acronyms
 
-The login endpoint path varies by deployment type:
-
-| Deployment | Login endpoint |
-|---|---|
-| Standalone BAW | `{BAW_BASE_URL}/ops/system/login` |
-| CP4BA / Cloud Pak (common) | `{BAW_BASE_URL}/bas/ops/system/login` |
-| CP4BA alternate context roots | `{BAW_BASE_URL}/baw/ops/system/login`, `{BAW_BASE_URL}/bpm/ops/system/login` |
-
-If the user has not told you the deployment type, probe the known paths in order with a GET request (expect 401, not 404) to discover the active context root. Store it as `{CTX}` (e.g. `/bas`). All subsequent REST calls use `{BAW_BASE_URL}{CTX}/...`.
-
-#### Step B — Login
-
-Call `POST {BAW_BASE_URL}{CTX}/ops/system/login` with `Authorization: Basic <base64(user:pass)>`, `Content-Type: application/json`, body `{"refresh_groups": false}`. On HTTP 201 store `csrf_token` as `{BAW_CSRF}` and all `Set-Cookie` values (`LtpaToken2`/`JSESSIONID` or their prefixed equivalents such as `basLtpaToken2`/`BAS-JSESSIONID`) as `{BAW_SESSION}` — send both on all subsequent REST calls.
-
-Use Python (`requests`) for all HTTP calls — this is cross-platform (Windows, Linux, AIX) and avoids PowerShell's `curl` alias incompatibility. For environments with self-signed or private CA certificates (typical in CP4BA on-prem), disable certificate verification:
-
-- Python: `requests.post(..., verify=False)`
-
-If login returns 401/400, ask the user to re-enter credentials.
-
-#### Step C — Resolve container and version acronyms
-
-If the user provided an acronym and snapshot, skip to Step D. Otherwise:
+If the user provided an acronym and snapshot, skip to Step 4b. Otherwise:
 
 1. **List containers:**
    ```
@@ -405,7 +390,7 @@ If the user provided an acronym and snapshot, skip to Step D. Otherwise:
    ```
    Pick the most recent non-archived version. Record its `version` field as `{VERSION}`. If there are multiple snapshots, show the user a brief table and ask which to export.
 
-#### Step D — Export the TWX
+#### Step 4b — Export the TWX
 
 ```
 GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers/{CONTAINER}/versions/{VERSION}/export?use_enhanced_filenames=true
@@ -429,7 +414,7 @@ python -c "import tempfile; print(tempfile.gettempdir())"
 
 Save as `<temp_dir>/<CONTAINER>_<VERSION>.twx`. Use that path as `<absolute_path_to_twx>` throughout Steps 5–6.
 
-If the export returns 403/404, re-check `{CONTAINER}` and `{VERSION}` via the listing calls in Step C.
+If the export returns 403/404, re-check `{CONTAINER}` and `{VERSION}` via the listing calls in Step 4a.
 
 **Path 2 — Local file (fall back after Path 1 has visibly failed)**
 
@@ -447,7 +432,7 @@ Obtain the system temp directory once and reuse it for all temp files in Steps 4
 python -c "import tempfile; print(tempfile.gettempdir())"
 ```
 
-The source map is deleted immediately after the scan regardless of success or failure.
+Delete the source map immediately after the scan, regardless of success or failure.
 
 **Step 4a — Write the source map**
 
@@ -645,7 +630,7 @@ For each Critical finding, tell the user exactly where to fix it in BAW 26.0.x:
 | Finding type | Where to fix (BAW 26.0.x) |
 |---|---|
 | REST server URL hardcoded in `<urlTemplate>` or `urlTemplate` attribute | **Traditional BAW:** In **Workflow Designer**, open the process app → **Process App Settings** → **Servers** tab → find the REST server entry → update **Host name** and **Port**. **CP4BA (Studio):** Business Automation Studio → open process app → **Process App Settings** → **Servers** tab → update the entry. |
-| REST server host/port needs updating post-deployment (without re-importing TWX) | In the **Process Admin Console** → **Installed Apps** → click the overflow menu of the snapshot → **App Details** → **Servers** tab → update **Hostname**, **Port**, and **Secure Server** on each REST server binding. (ref: https://www.ibm.com/docs/en/baw/25.0.x?topic=properties-changing-server-settings-in-process-admin-console) |
+| REST server host/port needs updating post-deployment (without re-importing TWX) | In the **Process Admin Console** → **Installed Apps** → click the overflow menu of the snapshot → **App Details** → **Servers** tab → update **Hostname**, **Port**, and **Secure Server** on each REST server binding. (ref: https://www.ibm.com/docs/en/baw/26.0.x?topic=properties-changing-server-settings-in-process-admin-console) |
 | Hardcoded URL in a service flow script (`<script>` tag) | **Traditional BAW:** In **Workflow Designer**, navigate to the service flow → **Script** tab of the script task → update the hardcoded URL. **CP4BA (Studio):** Business Automation Studio → open process app → open the service flow → script task → **Script** tab. Consider replacing with a server variable bound via Process App Settings instead. |
 | Hardcoded URL in a client-side human service (coach view script) | **Traditional BAW:** In **Workflow Designer**, open the Coach or client-side human service → find the view with the inline script → **Script** tab. **CP4BA (Studio):** Business Automation Studio → open process app → open the coach view → **Script** tab. |
 | Hostname in a variable default value (`<defaultValue>`) | **Traditional BAW:** In **Workflow Designer**, open the service or process → **Variables** tab → find the variable → update the default value. **CP4BA (Studio):** Business Automation Studio → open process app → open the artifact → **Variables** tab. |
@@ -664,7 +649,7 @@ REST calls are only used to: (1) authenticate via `POST {CTX}/ops/system/login`,
 **No TWX path provided and no server access**
 If the user cannot connect to the BAW server and has no `.twx` file on disk, explain how to export based on their deployment:
 
-- **Traditional BAW (Workflow Center):** Open Workflow Center → navigate to the process app → find the snapshot → click **Export** → select **.twx** → save the file. The `.twx` option is for Workflow Center import/export; use `.zip` only for installing directly to a runtime environment. (ref: https://www.ibm.com/docs/en/baw/19.0.0?topic=mpa-importing-exporting-process-apps-case-solutions-from-workflow-center-console)
+- **Traditional BAW (Workflow Center):** Open Workflow Center → navigate to the process app → find the snapshot → click **Export** → select **.twx** → save the file. The `.twx` option is for Workflow Center import/export; use `.zip` only for installing directly to a runtime environment. (ref: https://www.ibm.com/docs/en/baw/26.0.x?topic=snapshots-importing-exporting-projects-toolkits)
 - **CP4BA containerized (Business Automation Studio):** Open Business Automation Studio → **Business automations** → open the process app → select the snapshot → overflow menu → **Export** → save the `.twx` file.
 
 **Multiple deployment environments**
@@ -691,7 +676,7 @@ When in doubt, flag as conditional and explain the two scenarios clearly rather 
 
 **CP4BA containerized — `oc` / `kubectl` access required** — Collecting source endpoints from a CP4BA deployment requires the OpenShift CLI (`oc`) or `kubectl` to be installed and logged in, or the user must supply the `ICP4ACluster` CR YAML manually. If neither is available, the skill pauses and asks for a paste rather than failing silently. The skill does **not** support `BPMConfig` on containerized deployments — that tool is absent by design on CP4BA.
 
-**Encrypted property values (traditional BAW)** — BPMConfig exports mask passwords with `{xor}` encoding. The scan does not attempt to decrypt these; they are excluded from the endpoint map.
+**Encrypted property values (traditional BAW)** — BPMConfig exports mask passwords with `{xor}` encoding. The scan does not attempt to decrypt these; the skill excludes them from the endpoint map.
 
 **Binary or compiled artifacts inside TWX** — some TWX files contain compiled JavaScript or minified CSS where pattern matching may miss encoded references. The scan reports binary files skipped; flag this in the report if relevant.
 
@@ -699,12 +684,12 @@ When in doubt, flag as conditional and explain the two scenarios clearly rather 
 
 ## References
 
-- IBM Docs — BPMConfig command-line utility: https://www.ibm.com/docs/en/baw/25.0.x?topic=utilities-bpmconfig-command-line-utility
-- IBM Docs — Configuration properties for the BPMConfig command: https://www.ibm.com/docs/en/baw/25.0.x?topic=utility-configuration-properties-bpmconfig-command
-- IBM Docs — Adding a REST server in Process App Settings: https://www.ibm.com/docs/en/baw/19.0.0?topic=service-adding-rest-server
-- IBM Docs — Changing REST server settings in Process Admin Console: https://www.ibm.com/docs/en/baw/25.0.x?topic=properties-changing-server-settings-in-process-admin-console
-- IBM Docs — BPMInstallOfflinePackage command: https://www.ibm.com/docs/en/baw/24.0.x?topic=scripting-bpminstallofflinepackage
-- IBM Docs — Exporting process apps from Workflow Center: https://www.ibm.com/docs/en/baw/19.0.0?topic=mpa-importing-exporting-process-apps-case-solutions-from-workflow-center-console
+- IBM Docs — BPMConfig command-line utility: https://www.ibm.com/docs/en/baw/26.0.x?topic=utilities-bpmconfig-command-line-utility
+- IBM Docs — Configuration properties for the BPMConfig command: https://www.ibm.com/docs/en/baw/26.0.x?topic=utility-configuration-properties-bpmconfig-command
+- IBM Docs — Specifying a REST server in Process App Settings: https://www.ibm.com/docs/en/baw/26.0.x?topic=service-specifying-rest-server
+- IBM Docs — Changing REST server settings in Process Admin Console: https://www.ibm.com/docs/en/baw/26.0.x?topic=properties-changing-server-settings-in-process-admin-console
+- IBM Docs — BPMInstallOfflinePackage command: https://www.ibm.com/docs/en/baw/26.0.x?topic=scripting-bpminstallofflinepackage
+- IBM Docs — Importing and exporting projects and toolkits from Workflow Center: https://www.ibm.com/docs/en/baw/26.0.x?topic=snapshots-importing-exporting-projects-toolkits
 - IBM Docs — CP4BA custom resource pattern structure: https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/26.0.0?topic=deployment-installing-capabilities-in-openshift-console
 - IBM Docs — BAW on containers — verifying installation (ConfigMap/route URLs): https://www.ibm.com/docs/en/baw/23.0.x?topic=deployment-verifying-installation
 - IBM Docs — Moving from BAW traditional to CP4BA: https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/26.0.0?topic=cloud-business-automation-workflow

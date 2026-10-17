@@ -1,7 +1,7 @@
 ---
 name: create-baw-portal
 description: >
-  API-knowledge and portal-development skill for IBM Business Automation Workflow (BAW).
+  API-knowledge and portal-development skill for IBM® Business Automation Workflow (BAW).
   Teaches developers which BAW APIs are needed for a requested portal, what they do, how to
   use them correctly, and how authorization, authentication, CORS, proxies, pagination, and
   XSRF affect implementation. Supports non-federated (WLE REST) and federated (PFS) environments.
@@ -28,6 +28,11 @@ metadata:
     - "How do I open a BAW task in an iframe modal?"
     - "How do I handle XSRF tokens when calling BAW APIs?"
 ---
+
+<!-- baw-rest-ops: baw-wle-v1.26.0.0.json: /user/current, /tasks, /task/{taskId}, /searches/tasks, /searches/tasks/{idOrName}, /searches/actions, /searches/tasks/meta/fields, /searches/tasks/meta/constraintFields, /searches/tasks/meta/businessDataFields, /managedGlobalTeams, /globalTeams, /globalTeamUsers/{id}, /team/{teamId}, /team, /group/{groupNameOrID}, /exposed, /process -->
+<!-- baw-rest-ops: baw-wle-v2.26.0.0.json: /search, /search/queries, /dashboards/teamsummary, /dashboards/teamsummary/{teamId}, /dashboards/teammember/{teamId}, /dashboards/teammember/{teamId}/{username}, /dashboards/teamtasks, /dashboards/teamtasks/{teamId}, /dashboards/teamtasktrend/{teamId} -->
+<!-- baw-rest-ops: baw-pfs-v1.26.0.0.json: /tasks, /systems, /launchableEntities, /searches/tasks, /searches/tasks/{idOrName}, /searches/actions, /searches/meta/fields, /searches/meta/constraintFields, /searches/meta/businessDataFields, /searches/meta/taskStatus, /searches/meta/priority, /instances, /globalTeams -->
+<!-- baw-rest-ops: baw-pfs-v2.26.0.0.json: /dashboards/teamsummary, /dashboards/teamsummary/{teamId}, /dashboards/teammember/{teamId}, /dashboards/teammember/{teamId}/{username}, /dashboards/teamtasks/{teamId}, /dashboards/teamtasktrend/{teamId} -->
 
 # create-baw-portal skill
 
@@ -102,7 +107,7 @@ If the user has an existing application:
 
 ## Choose the correct API family
 
-Read [`references/non-federated-api-guide.md`](references/non-federated-api-guide.md) and [`references/federated-api-guide.md`](references/federated-api-guide.md) before generating any BAW API calls.
+Read [`references/baw-rest.md`](references/baw-rest.md) for the canonical list of validated API paths, methods, and parameters. Read [`references/non-federated-api-guide.md`](references/non-federated-api-guide.md) and [`references/federated-api-guide.md`](references/federated-api-guide.md) for usage patterns, authentication behavior, response shapes, and deployment caveats. Use both together — `baw-rest.md` defines what the API accepts; the guides explain how to use it correctly.
 
 | Condition | API family |
 |---|---|
@@ -166,7 +171,7 @@ This skill distinguishes runtime-tested APIs from documentation-only and unteste
 1. If an API has only been confirmed in IBM documentation but not runtime-tested, say so plainly — e.g. "This endpoint is documented by IBM but has not been tested at runtime in this project."
 2. For capabilities gated on runtime validation (e.g. PFS dashboard APIs, administrator-aware endpoints), state the validation requirement clearly.
 3. The Administrator persona is defined — dashboards, APIs, and detection pattern are documented in `references/personas-and-capabilities.md`. Do not generate admin-scoped code until the relevant APIs are runtime-verified.
-4. Do not generate speculative code for unresolved gaps without an explicit PM or product decision.
+4. Do not generate speculative code for unresolved gaps without explicit confirmation from the user.
 
 Read [`references/known-gaps.md`](references/known-gaps.md) before generating code for PFS dashboard or OAuth/OIDC capabilities.
 
@@ -230,14 +235,13 @@ Read the appropriate references before responding:
 | Reference | When to read |
 |---|---|
 | [`references/architecture-and-usage.md`](references/architecture-and-usage.md) | Always — understand the skill's flow and output types |
+| [`references/baw-rest.md`](references/baw-rest.md) | Always before generating any BAW API call — canonical paths, methods, and parameters for all four API families (WLE v1/v2, PFS v1/v2) |
 | [`references/non-federated-api-guide.md`](references/non-federated-api-guide.md) | Always before generating any non-federated BAW API calls — tasks, user identity, task launch, mutations, dashboard endpoints |
 | [`references/federated-api-guide.md`](references/federated-api-guide.md) | Always before generating any PFS/federated API calls |
 | [`references/personas-and-capabilities.md`](references/personas-and-capabilities.md) | Understanding persona requirements and API mapping |
 | [`references/hosting-and-generation.md`](references/hosting-and-generation.md) | Stack selection, hosting, CORS, auth, generation patterns |
 | [`references/quality-and-validation.md`](references/quality-and-validation.md) | Accessibility, security, refresh pipeline, static audit scripts |
 | [`references/known-gaps.md`](references/known-gaps.md) | Unresolved API and validation gaps affecting any capability |
-
-Full API inventory and discovery evidence: `docs/04-api-inventory.md`, `docs/02-evidence-inventory.md`
 
 ---
 

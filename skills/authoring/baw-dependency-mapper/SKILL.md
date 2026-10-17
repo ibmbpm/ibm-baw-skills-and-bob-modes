@@ -1,6 +1,6 @@
 ---
 name: baw-dependency-mapper
-description: Maps all usages and dependencies of a specified variable or Business Object (BO) across an entire IBM BAW process application by analysing the TWX export. Produces a dependency graph showing declarations, read/write usages, service I/O bindings, and coach bindings; detects circular BO references, redundant service calls touching the same BO, and over-coupling. Use when the user asks to analyse dependencies of a variable or BO, map where a BO is used, detect circular references, assess the impact of changing a BO or variable, or identify over-coupling in a BAW process app. Also triggers on phrases like "where is this BO used", "what would break if I change X", "find all usages of", "dependency map", "circular dependency BAW".
+description: Maps all usages and dependencies of a specified variable or Business Object (BO) across an entire IBM BAW process application by analyzing the TWX export. Produces a dependency graph showing declarations, read/write usages, service I/O bindings, and coach bindings; detects circular BO references, redundant service calls touching the same BO, and over-coupling. Use when the user asks to analyze dependencies of a variable or BO, map where a BO is used, detect circular references, assess the impact of changing a BO or variable, or identify over-coupling in a BAW process app. Also triggers on phrases like "where is this BO used", "what would break if I change X", "find all usages of", "dependency map", "circular dependency BAW".
 license: Apache-2.0
 compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
 allowed-tools:
@@ -13,12 +13,19 @@ metadata:
   short_description: Map all usages of a variable or Business Object across a BAW process app TWX export, with circular-reference and over-coupling detection.
   author: IBM BAW Team
 ---
-
 # BAW Dependency Mapper
 
 Analyze a BAW process application TWX export and produce a full dependency map for a specified variable or Business Object (BO), together with circular-reference detection, redundancy analysis, and an impact assessment.
 
 The analysis is driven by `scripts/analyze_dependencies.py`.
+
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+
+---
 
 ## Input requirements
 
@@ -42,40 +49,10 @@ Use the first path that succeeds.
 
 **Path 1 — Export API (preferred)**
 
-Ask for the server URL and credentials only at this point, immediately before making the login call — do not ask earlier:
-> *"To export the app artifacts I'll need your BAW server URL and credentials — these are only used to get a session token for this conversation and are not stored."*
 
-#### Step A — Determine the context root
+#### Step 1 — Resolve container and version acronyms
 
-The login endpoint path varies by deployment type:
-
-| Deployment | Login endpoint |
-|---|---|
-| Standalone BAW | `{BAW_BASE_URL}/ops/system/login` |
-| CP4BA / Cloud Pak (common) | `{BAW_BASE_URL}/bas/ops/system/login` |
-| CP4BA alternate context roots | `{BAW_BASE_URL}/baw/ops/system/login`, `{BAW_BASE_URL}/bpm/ops/system/login` |
-
-If the user has not told you the deployment type, probe the known paths in order with a GET request (expect 401, not 404) to discover the active context root. Store it as `{CTX}` (e.g. `/bas`). All subsequent REST calls use `{BAW_BASE_URL}{CTX}/...`.
-
-#### Step B — Login
-
-Call `POST {BAW_BASE_URL}{CTX}/ops/system/login` with `Authorization: Basic <base64(user:pass)>`, `Content-Type: application/json`, body `{"refresh_groups": false}`. On HTTP 201 store `csrf_token` as `{BAW_CSRF}` and all `Set-Cookie` values (`LtpaToken2`/`JSESSIONID` or their prefixed equivalents such as `basLtpaToken2`/`BAS-JSESSIONID`) as `{BAW_SESSION}` — send both on all subsequent REST calls.
-
-Use **Python stdlib `urllib`** for all HTTP calls — no third-party packages required. Never use PowerShell or `curl` for HTTP; Python is available on all supported platforms and avoids shell quoting and alias incompatibilities. For environments with self-signed or private CA certificates (typical in CP4BA on-prem), disable certificate verification with:
-
-```python
-import ssl
-ctx = ssl.create_default_context()
-ctx.check_hostname = False
-ctx.verify_mode = ssl.CERT_NONE
-# pass ctx= to every urllib.request.urlopen() call
-```
-
-If login returns 401/400, ask the user to re-enter credentials.
-
-#### Step C — Resolve container and version acronyms
-
-If the user provided an acronym and snapshot, skip to Step D. Otherwise:
+If the user provided an acronym and snapshot, skip to Step 2. Otherwise:
 
 1. **List containers:**
    ```
@@ -89,7 +66,7 @@ If the user provided an acronym and snapshot, skip to Step D. Otherwise:
    ```
    Pick the most recent non-archived version. Record its `version` field as `{VERSION}`. If there are multiple snapshots, show the user a brief table and ask which to export.
 
-#### Step D — Export the TWX
+#### Step 2 — Export the TWX
 
 ```
 GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers/{CONTAINER}/versions/{VERSION}/export?use_enhanced_filenames=true
@@ -113,7 +90,7 @@ python -c "import tempfile; print(tempfile.gettempdir())"
 
 Save as `<temp_dir>/<CONTAINER>_<VERSION>.twx` and use that path as `<path-to-file.twx>` in all subsequent steps.
 
-If the export returns 403/404, re-check `{CONTAINER}` and `{VERSION}` via the listing calls in Step C.
+If the export returns 403/404, re-check `{CONTAINER}` and `{VERSION}` via the listing calls in Step 1.
 
 **Path 2 — Local file (fall back after Path 1 has visibly failed)**
 
@@ -143,7 +120,7 @@ python <skills_directory>/baw-dependency-mapper/scripts/analyze_dependencies.py 
   [--threshold <N>]
 ```
 
-The script derives the output directory automatically from the TWX filename (e.g. `C:/exports/ClaimsApp.twx` → `C:/exports/ClaimsApp.twx - reports/`). Do not pass `--output-dir` unless the user has explicitly requested a different location. The directory will be created automatically if it does not exist.
+The script derives the output directory automatically from the TWX filename (e.g. `C:/exports/ClaimsApp.twx` → `C:/exports/ClaimsApp.twx - reports/`). Do not pass `--output-dir` unless the user has explicitly requested a different location. The script creates the directory automatically if it does not exist.
 
 The script writes structured results to `<output-dir>/<TargetName>-dependency-report.json` (machine-readable) and `<output-dir>/<TargetName>-dependency-report.md` (human-readable).
 
@@ -155,7 +132,7 @@ Read the generated markdown report using `read_file` before presenting any resul
 
 Format the report as described in `references/OUTPUT_FORMAT.md`. The sections to always include:
 
-1. **Summary** — one-paragraph description of what was found.
+1. **Summary** — one-paragraph description of findings.
 2. **Dependency graph** — a Mermaid diagram showing the target BO/variable at the center, with directed edges to/from each artifact that declares, reads, writes, or binds it (see `references/OUTPUT_FORMAT.md` for node shape conventions). The script trims the diagram to 20 nodes on large process apps; a note in the diagram shows how many nodes were omitted. The full list appears in the tables below the diagram.
 3. **Declaration** — where and how the target is declared (process variable, BO type definition, service input/output parameter).
 4. **Read usages** — list of artifacts that read the target, with the artifact type and location.
@@ -171,7 +148,7 @@ A circular reference exists when BO type A has a field of type B, and B (directl
 
 > ⚠️ **Circular BO reference:** `OrderHeader` → `OrderLine` → `OrderHeader`
 
-Each circular reference means the BO type hierarchy contains a loop, which can cause serialisation and deep-copy errors at runtime. List each cycle once; do not repeat shared sub-paths.
+Each circular reference means the BO type hierarchy contains a loop, which can cause serialization and deep-copy errors at runtime. List each cycle once; do not repeat shared sub-paths.
 
 ### 7. Issues: over-coupling
 
@@ -193,19 +170,19 @@ A write-only variable is written by at least one service but never read by any o
 
 ### 11. Issues: missing output mappings
 
-A service activity passes the target BO as input but has no corresponding output mapping for it. Changes made to the BO inside the service will not be propagated back to the calling process when the activity completes. Flag with ⚠️.
+A service activity passes the target BO as input but has no corresponding output mapping for it. The calling process does not receive any changes the service makes to the BO when the activity completes. Flag with ⚠️.
 
 ### 12. Issues: unused BO types
 
-The target BO is defined in the process app's BO library but no process variable, service parameter, or coach ever uses it as its declared type. Flag with ⚠️ as a cleanup candidate.
+The process app's BO library defines the target BO, but no process variable, service parameter, or coach uses it as its declared type. Flag with ⚠️ as a cleanup candidate.
 
 ### 13. Issues: stale coach bindings
 
-A coach control binds to a field path on the target BO (e.g. `claim.claimantPhone`) that does not exist in the BO definition. The field path will not resolve at runtime. Flag with ⚠️. Note: this check requires the BO definition to be present in the same TWX — bindings to toolkit-defined BOs cannot be checked.
+A coach control binds to a field path on the target BO (e.g. `claim.claimantPhone`) that does not exist in the BO definition. The field path does not resolve at runtime. Flag with ⚠️. Note: this check requires the BO definition to be present in the same TWX — the skill cannot check bindings to toolkit-defined BOs.
 
 ### 14. Issues: read before write
 
-An activity reads the target variable before any activity that writes it has been reached on any flow path from the process start. This typically manifests as a gateway condition or coach pre-population evaluating an uninitialised BO.
+An activity reads the target variable before any writing activity reaches it on any flow path from the process start. This typically manifests as a gateway condition or coach pre-population evaluating an uninitialized BO.
 
 The script performs a BFS over the sequence flow graph to determine whether a write node is reachable before each read node on every inbound path. Use icons to distinguish confidence:
 

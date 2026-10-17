@@ -12,8 +12,7 @@ metadata:
   short_description: Generate comprehensive Markdown documentation for a BAW application from a TWX export, BPMN+XSD pair, or ZIP archive.
   author: IBM BAW Team
 ---
-
-# BAW Documentation
+# BAW documentation
 
 Generate comprehensive Markdown documentation for an IBM BAW application. No MCP server
 or live server connection required.
@@ -60,7 +59,7 @@ environment:
 >   1. Open **Workflow Center** and navigate to your process app.
 >   2. Click the snapshot you want to document (or create one if needed).
 >   3. Select **Export** and save the `.twx` file.
->      (ref: https://www.ibm.com/docs/en/baw/26.0.x?topic=snapshots-importing-exporting-projects-toolkits)
+>      (ref: [Importing and exporting projects and toolkits](https://www.ibm.com/docs/en/baw/26.0.x?topic=snapshots-importing-exporting-projects-toolkits))
 >
 > - **CP4BA containerized (Business Automation Studio):**
 >   1. Open **Business Automation Studio** and navigate to **Business automations**.

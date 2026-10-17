@@ -12,7 +12,7 @@ A set of three Python scripts for working with IBM Business Automation Workflow 
 | [`list_bos.py`](#list_bospy) | Inspect all Business Objects inside an existing TWX |
 | [`apply_bos.py`](#apply_bospy) | Add or overwrite Business Objects in an existing TWX |
 
-The reference template (`empty-project.twx`) is included in this folder and is required by `create_empty_twx.py`. The other two scripts only need a path to an existing TWX.
+This folder includes the reference template (`empty-project.twx`), which `create_empty_twx.py` requires. The other two scripts only need a path to an existing TWX.
 
 ---
 
@@ -33,7 +33,7 @@ Business Objects use the XML type `twClass`. Every object is identified by a **t
 
 Used by `apply_bos.py`. The **filename stem** (everything before `.bo.json`) is the Business Object name — the name is never duplicated inside the file.
 
-Two kinds are supported, selected by the required `"kind"` field.
+The `"kind"` field selects one of two supported kinds.
 
 ### Complex BO
 
@@ -108,7 +108,7 @@ An enumeration (list of value/display pairs). BAW calls these "Selection" type s
 | `value` | Yes | The stored value written to BAW data, e.g. `"NEW"`. |
 | `display` | Yes | The human-readable label shown in BAW UI, e.g. `"New"`. |
 
-At least one option is required.
+Include at least one option.
 
 ### What is not supported
 
@@ -314,17 +314,17 @@ python apply_bos.py \
 
 ### Cross-BO references
 
-If one BO's property references another BO by name (e.g. `Customer.orders` typed as `Order`), both must be resolvable at the time the script runs — either already present in the source TWX, or provided as input files in the same run. The order of the input files does not matter; all IDs are resolved before any XML is generated.
+If one BO's property references another BO by name (e.g. `Customer.orders` typed as `Order`), both must resolve at the time the script runs — either already present in the source TWX, or provided as input files in the same run. The order of the input files does not matter; all IDs are resolved before any XML is generated.
 
 ### UUID stability
 
 When overwriting an existing BO, the original `12.<uuid>` is preserved. This is important: BAW tracks an object's history across snapshots by its UUID. If the UUID were re-minted on overwrite, BAW would treat the result as a brand-new object with no history, and the old one as deleted.
 
-When a BO is new (no matching name in the source TWX), a fresh UUID is minted. Because this tool has no lockfile, a BO that is new on one run and absent in the next run's source TWX will receive a different UUID each time. To get stable UUIDs for new BOs across runs, start by importing one output TWX into BAW, then export it back and use that export as the `--source` for subsequent runs — the UUID will then be in the exported TWX and will be preserved on overwrite.
+When a BO is new (no matching name in the source TWX), a fresh UUID is minted. Because this tool has no lockfile, a BO that is new on one run and absent in the next run's source TWX receives a different UUID each time. To get stable UUIDs for new BOs across runs, start by importing one output TWX into BAW, then export it back and use that export as the `--source` for subsequent runs — the UUID is then in the exported TWX and is preserved on overwrite.
 
 ### Output snapshot identity
 
-The output TWX gets a **new snapshot UUID** and the version name from `--version`. The project UUID and branch UUID are preserved from the source TWX, so BAW recognises the import as a new snapshot of the same project rather than a new project.
+The output TWX gets a **new snapshot UUID** and the version name from `--version`. The project UUID and branch UUID are preserved from the source TWX, so BAW recognizes the import as a new snapshot of the same project rather than a new project.
 
 ---
 

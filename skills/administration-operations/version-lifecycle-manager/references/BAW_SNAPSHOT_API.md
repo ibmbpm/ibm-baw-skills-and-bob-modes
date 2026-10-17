@@ -22,7 +22,7 @@ Always verify against the IBM documentation for the exact server version in use:
 9. [Read environment variables](#9-read-environment-variables)
 10. [Set environment variables](#10-set-environment-variables)
 11. [Synchronize environment variables](#11-synchronize-environment-variables)
-12. [List containers (Process Apps / Toolkits)](#12-list-containers)
+12. [List containers (Process Apps and Toolkits)](#12-list-containers-process-apps-and-toolkits)
 13. [Common errors and remediation](#13-common-errors-and-remediation)
 
 ---
@@ -110,7 +110,7 @@ curl -X POST \
 }
 ```
 
-**After install:** always verify the snapshot using section 4 to confirm it was registered with the expected state before activating.
+**After install:** always verify the snapshot using section 4 to confirm BAW registered it with the expected state before activating.
 
 ---
 
@@ -396,7 +396,7 @@ Always read env vars before making changes so you have a baseline for rollback.
 
 ## 10. Set environment variables
 
-Writes one or more environment variables to a snapshot's stored configuration. Values are persisted but **not applied to the running environment** until a sync is performed (section 11).
+Writes one or more environment variables to a snapshot's stored configuration. BAW persists the values but does not apply them to the running environment until you run a sync (section 11).
 
 **Method:** `POST`
 **Path:** `/ops/std/bpm/containers/{container}/versions/{version}/env_vars`

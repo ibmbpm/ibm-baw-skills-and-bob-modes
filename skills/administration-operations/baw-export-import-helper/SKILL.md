@@ -22,7 +22,22 @@ Migrate IBM BAW or CP4BA Process Apps, toolkits, case solutions, and Business Ap
 
 This skill operates in **REST mode only**. All calls use the BAW REST API documented in `references/baw-rest.md`.
 
-Before taking any action, confirm `{SOURCE_URL}` and `{TARGET_URL}` are known for this session. If not, see Step 0a.
+---
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read source credentials from `.env` automatically. Do this once per session only.
+
+This skill connects to **two** BAW servers. The source server uses the standard `BAW_BASE_URL`, `BAW_USERNAME`, and `BAW_PASSWORD` variables. For the target server, the following additional variables must be present in `.env` — add them if they are not already there, replacing the placeholders:
+
+```dotenv
+BAW_TARGET_BASE_URL=https://your-target-baw-server.example.com:9443
+BAW_TARGET_USERNAME=<your-target-baw-username>
+BAW_TARGET_PASSWORD=<your-target-baw-password>
+```
+
+Apply the same missing-value detection as the source credentials. If any target variable is missing, ask for all three together in a single message — never one at a time.
 
 ---
 
@@ -47,23 +62,7 @@ All REST details for each operation are in `references/baw-rest.md`. The step lo
 
 ## Step 0a — establish connections
 
-If the user's opening message already contains source URL, source credentials, target URL, and target credentials, skip the question and go straight to login.
-
-Otherwise ask for everything in a single turn:
-
-> *"To get started I need:*
-> *1. Source BAW server URL (e.g. `https://source.example.com:9443`)*
-> *2. Source username and password*
-> *3. Target BAW server URL (e.g. `https://target.example.com:9443`)*
-> *4. Target username and password*
->
-> *Both source and target are required. Do not paste real production credentials into chat. Use test or placeholder values here and supply production credentials through environment variables or a secrets manager.*
->
-> *Credentials are used only to obtain a session token for this conversation."*
-
-All 6 values (source URL, source user, source password, target URL, target user, target password) are mandatory. Do not proceed until all 6 are provided.
-
-Once all 6 are known:
+Credentials are resolved automatically from `.env` via `references/CREDENTIAL_HANDLING.md` (handled by the `## Credentials` section above). Once credentials are resolved, call `login` on both servers:
 - Call `login` on the **source** server. Store the CSRF token as `{SOURCE_CSRF}`.
 - Call `login` on the **target** server. Store the CSRF token as `{TARGET_CSRF}`.
 - Never repeat, echo, log, or include raw credentials in any output, report, or tool call after the session token is obtained.
@@ -173,9 +172,9 @@ For each (container, snapshot) pair marked `to import`, oldest snapshot first wi
 1. Call `import twx` to upload the `.twx` file to the target server.
 2. The import endpoint returns **HTTP 202** (asynchronous). Extract the queue job URL from the `url` field of the JSON response body.
 3. Poll `GET /ops/system/queue/{id}` on the target server (using `{TARGET_CSRF}` and `{TARGET_SESSION}`) every 10 seconds until the job reaches a terminal state:
-   - `state: "success"`: import completed successfully. Proceed to the next snapshot.
-   - `state: "failure"`: import failed. Capture the `result` field for the error message.
-   - Any other state (`pending`, `running`): continue polling. After 10 minutes without a terminal state, treat the job as timed out and stop.
+   - `state: "success"` — import completed successfully; proceed to the next snapshot.
+   - `state: "failure"` — import failed; capture the `result` field for the error message.
+   - Any other state (`pending`, `running`) — continue polling. After 10 minutes without a terminal state, treat the job as timed out and stop.
 4. Record the outcome: success, already exists (treat as success), or failure with error message.
 5. If an import fails or times out, **stop immediately**. Tell the user which snapshot failed and what the error was, then ask how to proceed.
 
@@ -246,6 +245,6 @@ If any snapshots were identified but not imported (for example, user cancelled, 
 ## Important constraints
 
 - **Verify all acronyms against live API responses** before using them in export or import calls.
-- **Skip system toolkits** (`isSystem="true"` in the manifest). Do not export or import them. They are platform-managed and already present on every BAW server.
-- **Migrate all toolkit snapshots across all branches**, not just the version bundled in a Process App's TWX file. The bundled version covers runtime correctness; the separate export covers full history.
+- **Skip system toolkits** (`isSystem="true"` in the manifest) — do not export or import them. They are platform-managed and already present on every BAW server.
+- **Migrate all toolkit snapshots across all branches** — not just the version bundled in a process app's TWX. The bundled version covers runtime correctness; the separate export covers full history.
 - **Never log, echo, or store raw credentials.** Do not include credentials, session tokens, or CSRF tokens in any output, report, tool call, or saved file.

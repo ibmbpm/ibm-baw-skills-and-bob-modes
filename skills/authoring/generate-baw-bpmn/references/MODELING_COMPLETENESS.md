@@ -12,7 +12,7 @@ Mentally walk through the process from every angle before writing the config:
 
 **Roles and actors.** Who does each step — a specific person, a team, or the system?
 Different actors suggest distinct work areas. Capture this in a `roles` section (see
-`references/PROCESS_JSON_SCHEMA.md`) and reference each role from its tasks with
+[PROCESS_JSON_SCHEMA.md](PROCESS_JSON_SCHEMA.md)) and reference each role from its tasks with
 `"role": "<roleId>"`. Assign a role to every task — user tasks especially must have an
 explicit role so BAW creates the correct human swimlane on import. Always include a
 system role (`"type": "system"`) for service tasks and automated steps; if none is
@@ -50,8 +50,8 @@ escalation path based on what should actually happen when the timer fires:
   dead-end here means the escalation handler's work has no effect on the process.
 
 - **Timeout cancellation or takeover (interrupting timer):** Use the default
-  (`"interrupting": true` or omit the field). The original task is cancelled when the
-  timer fires. The timeout path should either route to an explicit resolution (a
+  (`"interrupting": true` or omit the field). The timer cancels the original task when it fires.
+  The timeout path should either route to an explicit resolution (a
   handling task, a notification, or a named end event such as "Timed Out"), or rejoin
   the main flow at a downstream gateway if the timeout handler makes the equivalent
   decision the original task would have produced.
@@ -106,7 +106,7 @@ a position has candidates; an application has attachments), model that as a sepa
 
 **4. Model status and decision fields explicitly.**
 Every process-controlled object needs at least one status field (String) whose
-possible values are documented in the object's `description`. Decision objects should
+possible values you document in the object's `description`. Decision objects should
 carry the outcome, the actor who made it, and the timestamp — not just a boolean.
 
 **5. Wire variables correctly.**

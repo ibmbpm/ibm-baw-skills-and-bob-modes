@@ -1,4 +1,4 @@
-# BAW Portal Builder — Documentation
+# BAW portal builder — documentation
 
 > API-knowledge and portal-development skill for IBM® Business Automation Workflow (BAW). Teaches developers which BAW APIs are needed for a requested portal, how to use them correctly, and how authentication, CORS, proxies, pagination, and XSRF affect implementation. Supports non-federated (WLE REST) and federated (PFS) environments.
 
@@ -20,8 +20,8 @@ Use this skill when a developer needs to know which BAW endpoints to call, how t
 - **Non-federated WLE v2 dashboard APIs** (manager/executive dashboards) require **BAW 24+** with the Federated Dashboard Repository (FDR) feature enabled. The skill probes FDR at runtime via `GET /rest/bpm/wle/v2/dashboards/teamsummary`: HTTP 200 = FDR enabled; HTTP 503 = FDR not enabled. Do not rely on a version check alone.
 - **Federated API family** (`/rest/bpm/federated/`) requires a **Process Federation Server** deployment. The federated task list endpoint returns HTTP 404 on a non-federated BAW server — confirm your environment before requesting PFS-specific guidance or code.
 - **CSRF / XSRF** — the WLE REST API (`/rest/bpm/wle/`) and PFS API (`/rest/bpm/federated/`) have no CSRF filter for same-origin browser portals. `BPMCSRFToken` applies only to the BPM standard API (`/rest/bpm/std/`). Do not add CSRF header handling to portal code unless calling `/rest/bpm/std/` endpoints.
-- **CP4BA deployments** use `Authorization: Bearer <token>` (IAM) instead of session-cookie auth. A live CP4BA IAM endpoint is required to obtain the token. Do not use `credentials: 'same-origin'` for CP4BA.
-- **Administrator-aware features** are blocked: the administrator persona has not been defined by product management. No admin portal capabilities can be scoped, mapped, or generated until a PM decision is made.
+- **CP4BA deployments** — external portals use `Authorization: Bearer <token>` (IAM) instead of session-cookie auth. A live CP4BA IAM endpoint is required to obtain the token. Do not use `credentials: 'same-origin'` for external bearer-token scenarios. Same-origin portals hosted on the CP4BA server itself still use session-cookie auth with `credentials: 'same-origin'`.
+- **Administrator-aware features** — the administrator persona is now defined. Dashboards, APIs, and detection patterns are in `references/personas-and-capabilities.md`. Do not generate admin-scoped code until the relevant APIs are runtime-verified.
 - **Standalone HTML audit scripts** validate the approved reference example only — they cannot be pointed at generated portal files.
 
 ## Prompt examples
@@ -166,7 +166,7 @@ Use this skill when a developer needs to know which BAW endpoints to call, how t
 **Prompt:**
 > I need an admin view where the administrator can see all tasks across all users in the BAW system.
 
-**What to expect:** A clear statement that the administrator persona is not yet defined (a named PM-owned blocker), no admin capability code generated, an explanation of what must be defined before implementation can begin (persona scope, permissions, authorization model), and a recommendation to use placeholder navigation ("Administrator views — coming soon") until the persona is defined.
+**What to expect:** Guidance that the administrator persona is defined in `references/personas-and-capabilities.md` and that admin-scoped code generation is gated on runtime verification of the relevant API endpoints. No speculative admin code is generated before that verification.
 
 ---
 

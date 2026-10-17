@@ -2,7 +2,6 @@
 
 > **Skill:** `create-baw-portal`
 > **Purpose:** Implementation-ready guidance for non-federated BAW (WLE REST API).
-> **Evidence:** See `docs/04-api-inventory.md` T1–T2 and `docs/02-evidence-inventory.md` for full classifications.
 
 ---
 
@@ -43,7 +42,7 @@ GET /rest/bpm/wle/v1/user/current?parts=all
 | `data.managerName` | Manager's display name — present when `parts=all` |
 | `data.jobTitle` | Job title — present when `parts=all` |
 
-All six fields above are confirmed present in the `parts=all` response on this BAW instance.
+All six fields appear in the `parts=all` response on this BAW instance.
 Always request `parts=all` — the default `parts` response omits email, managerName, and jobTitle.
 Generate initials from the first letter of each word in `fullName`.
 Do not persist user data in `localStorage`.

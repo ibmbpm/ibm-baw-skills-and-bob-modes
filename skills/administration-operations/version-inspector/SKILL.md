@@ -20,12 +20,19 @@ metadata:
   short_description: Browse and inspect BAW snapshot metadata — version names, lifecycle status, creation dates, and toolkit dependencies.
   author: IBM BAW Team
 ---
-
 # Version Inspector
 
 Retrieve and present a plain-language summary of a BAW snapshot's current state — version name, lifecycle status, creation date, in-flight task count, and toolkit dependencies — using the public Operations REST API. No write operations are performed. Works for both Process App and Toolkit container types.
 
-**Companion skill:** Lifecycle actions (activate, deactivate, delete, env var management) are handled by the `version-lifecycle-manager` skill — mention this after presenting the summary.
+**Companion skill:** The `version-lifecycle-manager` skill handles lifecycle actions (activate, deactivate, delete, env var management) — mention this after presenting the summary.
+
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+
+---
 
 ## Entry point — choosing the right path
 
@@ -37,69 +44,20 @@ Before calling any API, determine how much the user already knows:
 | Container acronym but **not** the snapshot version | Snapshot picker section below |
 | Neither container nor snapshot | Container browser section below |
 
-You only need to perform the auth sequence (Steps A and B below) **once per session** — reuse the same credentials and CSRF token across all calls.
-
-Read `references/BAW_SNAPSHOT_API.md` for full authentication patterns, base URL formats, and response schemas.
-
 ---
 
-## Auth sequence — always run first
+## Container browser — user does not know which Process App or Toolkit
 
-Before any API call, complete these two steps in order:
+Use this path when the user says things like "what process apps are deployed?", "show me all toolkits", "list everything on this server", "what's installed?", or does not provide a container name.
 
-### Step A — Obtain a session credential
-
-**On-premises:** use Basic auth (`Authorization: Basic <base64(user:pass)>`).
-
-**CP4BA:** Basic auth returns `403`. Exchange credentials for a Bearer token first:
-```bash
-curl -sk -X POST "https://<cpd-host>/icp4d-api/v1/authorize" \
-  -H "Content-Type: application/json" \
-  -d '{"username":"<user>","password":"<pass>"}'
-```
-Use the returned `token` value as `Authorization: Bearer <token>` on all subsequent calls.
-
-### Step B — Obtain the CSRF token
-
-Every Operations API endpoint (`/ops/...`) requires a `BPMCSRFToken` header. Without it the server returns `CWTBG0651E`. Call the login endpoint **once** to get it:
-
-```bash
-curl -sk -X POST "<BAW_BASE_URL>/ops/system/login" \
-  -H "Authorization: Basic <base64(user:pass)>" \
-  -H "Content-Type: application/json" \
-  -d '{"refresh_groups": false}'
-```
-
-**CP4BA (Bearer token):**
-```bash
-curl -sk -X POST "<BAW_BASE_URL>/ops/system/login" \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"refresh_groups": false}'
-```
-
-**Response (HTTP 201):**
-```json
-{ "csrf_token": "abc123xyz...", "expiration": 7200 }
-```
-
-Pass `csrf_token` as the `BPMCSRFToken` header on every subsequent call. Valid for up to 7200 seconds. Re-run this step if `CWTBG0651E` is received after a pause.
-
-> **WLE API:** The WLE endpoints (`/bpm/wle/v1/...`) also enforce `BPMCSRFToken` on CP4BA clusters. Reuse the same token obtained here.
-
----
-
-## Container browser — user doesn't know which Process App or Toolkit
-
-Use this path when the user says things like "what process apps are deployed?", "show me all toolkits", "list everything on this server", "what's installed?", or simply doesn't provide a container name.
-
-After completing the auth sequence, call:
+Call:
 
 ```bash
 curl -sk -X GET \
-  "<BAW_BASE_URL>/ops/std/bpm/containers?optional_parts=versions" \
-  -H "Authorization: Basic <base64(user:pass)>" \
-  -H "BPMCSRFToken: <csrf_token>"
+  "{BAW_BASE_URL}/ops/std/bpm/containers?optional_parts=versions" \
+  -H "Authorization: Basic <base64(BAW_USERNAME:BAW_PASSWORD)>" \
+  -H "BPMCSRFToken: {BAW_CSRF}" \
+  -b /tmp/baw_cookies.txt
 ```
 
 The `optional_parts=versions` parameter returns containers **and** their snapshots in a single call. Use `type=PA` or `type=TK` to filter to Process Apps or Toolkits only; omit to return both.
@@ -130,9 +88,10 @@ Use this path when the user provides a container acronym (or name) but not a sna
 
 ```bash
 curl -sk -X GET \
-  "<BAW_BASE_URL>/ops/std/bpm/containers/<CONTAINER>/versions" \
-  -H "Authorization: Basic <base64(user:pass)>" \
-  -H "BPMCSRFToken: <csrf_token>"
+  "{BAW_BASE_URL}/ops/std/bpm/containers/<CONTAINER>/versions" \
+  -H "Authorization: Basic <base64(BAW_USERNAME:BAW_PASSWORD)>" \
+  -H "BPMCSRFToken: {BAW_CSRF}" \
+  -b /tmp/baw_cookies.txt
 ```
 
 Present that container's snapshots as a table:
@@ -155,9 +114,10 @@ Then ask: "Which snapshot would you like to inspect in detail?"
 
 ```bash
 curl -sk -X GET \
-  "<BAW_BASE_URL>/ops/std/bpm/containers/<CONTAINER>/versions/<VERSION>" \
-  -H "Authorization: Basic <base64(user:pass)>" \
-  -H "BPMCSRFToken: <csrf_token>"
+  "{BAW_BASE_URL}/ops/std/bpm/containers/<CONTAINER>/versions/<VERSION>" \
+  -H "Authorization: Basic <base64(BAW_USERNAME:BAW_PASSWORD)>" \
+  -H "BPMCSRFToken: {BAW_CSRF}" \
+  -b /tmp/baw_cookies.txt
 ```
 
 This is a read-only call — no confirmation is needed before making it. Show the exact `curl` command in the response.
@@ -266,13 +226,13 @@ End with: **Next steps:** To activate, deactivate, delete this snapshot, or mana
 | HTTP | Likely cause | What to say |
 |---|---|---|
 | `401` | Invalid credentials | "Authentication failed — check the username/password or API key and try again." |
-| `403` | Insufficient permissions or wrong auth type for CP4BA | "Access denied. On CP4BA, switch from Basic auth to a Bearer token (exchange via `POST /icp4d-api/v1/authorize` — see Step A in the auth sequence). On-premises: ensure the account is in the `tw_admins` group." |
-| `400 CWTBG0651E` | Missing or invalid CSRF token | "CSRF token missing or expired. Run `POST <BAW_BASE_URL>/ops/system/login` to obtain a fresh token and include it as the `BPMCSRFToken` header." |
+| `403` | Insufficient permissions or wrong auth type for CP4BA | "Access denied. Follow `references/CREDENTIAL_HANDLING.md` to check credentials and permissions. On-premises: ensure the account is in the `tw_admins` group." |
+| `400 CWTBG0651E` | Missing or invalid CSRF token | "CSRF token missing or expired. Re-read `references/CREDENTIAL_HANDLING.md` to obtain a fresh token and include it as the `BPMCSRFToken` header." |
 | `400 CWTBG0624E` | Container acronym not found | "The container `<acronym>` was not found — acronyms are case-sensitive. Offer to list containers to confirm the exact acronym." |
 | `400 CWTBG0646E` | Snapshot acronym not found | "The snapshot `<version>` was not found in container `<acronym>`. Offer to list snapshots to confirm the exact acronym." |
 | `404` | Operations API not present on server | "This server may be IBM BPM 8.x, which does not support the Operations REST API. Use the Process Admin Console to inspect snapshots manually." |
 
-Surface the full raw API response body alongside the plain-language explanation — don't filter it.
+Surface the full raw API response body alongside the plain-language explanation — do not filter it.
 
 ---
 
@@ -280,40 +240,38 @@ Surface the full raw API response body alongside the plain-language explanation 
 
 **Example 1 — Process App snapshot**
 
-Input: "Show me the details for snapshot v2.0 of HRAPP on https://baw.hr.example.com/bas. Credentials: admin / hrpass99."
+Input: "Show me the details for snapshot v2.0 of HRAPP."
 
-1. Step A: Basic auth — `Authorization: Basic YWRtaW46aHJwYXNzOTk=`
-2. Step B: `POST https://baw.hr.example.com/bas/ops/system/login` → obtain `csrf_token`.
-3. Call `GET https://baw.hr.example.com/bas/ops/std/bpm/containers/HRAPP/versions/v2.0` with both headers.
-4. Probe the WLE context root (try `/rest`, `""`, `/baw`, `/bas`) to find the prefix that returns HTTP 200, then call `GET <WLE_BASE_URL>/bpm/wle/v1/processApps?includeToolkitProcessApps=true` to retrieve toolkit dependencies.
-5. Render the Snapshot Summary block.
-6. Offer lifecycle action next steps via `version-lifecycle-manager`.
+1. Authenticate via `references/CREDENTIAL_HANDLING.md` (read from `.env`).
+2. Call `GET {BAW_BASE_URL}/ops/std/bpm/containers/HRAPP/versions/v2.0` with authorization and CSRF headers.
+3. Probe the WLE context root (try `/rest`, `""`, `/baw`, `/bas`) to find the prefix that returns HTTP 200, then call `GET <WLE_BASE_URL>/bpm/wle/v1/processApps?includeToolkitProcessApps=true` to retrieve toolkit dependencies.
+4. Render the Snapshot Summary block.
+5. Offer lifecycle action next steps via `version-lifecycle-manager`.
 
 **Example 2 — CP4BA cluster**
 
-Input: "I want to inspect some versions from https://cpd.example.com/bas, CEAdmin/Genius1."
+Input: "I want to inspect some versions from our CP4BA environment."
 
-1. Step A: `POST https://cpd.example.com/icp4d-api/v1/authorize` with `CEAdmin`/`Genius1` → obtain Bearer token.
-2. Step B: `POST https://cpd.example.com/bas/ops/system/login` with `Authorization: Bearer <token>` → obtain `csrf_token`.
-3. Call `GET /bas/ops/std/bpm/containers?optional_parts=versions` with both headers.
-4. Present containers table and ask which one to inspect.
+1. Authenticate via `references/CREDENTIAL_HANDLING.md` (read from `.env`).
+2. Call `GET {BAW_BASE_URL}/ops/std/bpm/containers?optional_parts=versions` with authorization and CSRF headers.
+3. Present containers table and ask which one to inspect.
 
 **Example 3 — Toolkit snapshot**
 
-Input: "Get metadata for snapshot 1.5 of the SHAREDTK toolkit on https://baw.example.com/bas, admin/pass."
+Input: "Get metadata for snapshot 1.5 of the SHAREDTK toolkit."
 
-1. Complete auth sequence (Steps A and B).
-2. Call `GET /bas/ops/std/bpm/containers/SHAREDTK/versions/1.5` with both headers. Note `toolkit: true` in the response — show container type as "Toolkit" in the summary.
-3. Call `GET /bpm/wle/v1/toolkit?includeSnapshots=true` and locate SHAREDTK → 1.5 for dependency data.
+1. Authenticate via `references/CREDENTIAL_HANDLING.md` (read from `.env`).
+2. Call `GET {BAW_BASE_URL}/ops/std/bpm/containers/SHAREDTK/versions/1.5` with authorization and CSRF headers. Note `toolkit: true` in the response — show container type as "Toolkit" in the summary.
+3. Call `GET /bpm/wle/v1/toolkit?includeSnapshots=true` and locate SHAREDTK to find 1.5 for dependency data.
 4. Render the Snapshot Summary block.
 5. Offer lifecycle action next steps.
 
-**Example 4 — User doesn't know the container name at all**
+**Example 4 — User does not know the container name at all**
 
-Input: "I'm not sure what process apps we have deployed on https://baw.corp.example.com/bas. Can you show me? admin/corp123."
+Input: "I'm not sure what process apps we have deployed. Can you show me?"
 
-1. Complete auth sequence (Steps A and B).
-2. Call `GET /bas/ops/std/bpm/containers?optional_parts=versions` and present all containers as labelled tables (Process Apps and Toolkits).
+1. Authenticate via `references/CREDENTIAL_HANDLING.md` (read from `.env`).
+2. Call `GET {BAW_BASE_URL}/ops/std/bpm/containers?optional_parts=versions` and present all containers as labelled tables (Process Apps and Toolkits).
 3. Ask: "Which one would you like to inspect? I can show you its snapshots."
 4. Once the user picks a container, present its snapshots from the `branches[].versions[]` already returned, or call `GET /ops/std/bpm/containers/{container}/versions` if snapshots weren't included.
 5. Once the user picks a snapshot, proceed with the Snapshot Summary workflow (Steps 1–4).
@@ -322,7 +280,7 @@ Input: "I'm not sure what process apps we have deployed on https://baw.corp.exam
 
 Input: "I want to check the status of our current INVOICING process app but I'm not sure what the snapshot name is."
 
-1. Complete auth sequence (Steps A and B).
+1. Authenticate via `references/CREDENTIAL_HANDLING.md` (read from `.env`).
 2. Call `GET /ops/std/bpm/containers/INVOICING/versions` and present its snapshots as a picker table (Acronym, Name, Status, Created).
 3. Ask the user to confirm which snapshot to inspect.
 4. Then proceed with the Snapshot Summary workflow.

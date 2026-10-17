@@ -95,10 +95,10 @@ When building the `--source-map` for `scan_twx_endpoints.py`, include the values
 These are the values most likely to appear hardcoded inside TWX service configurations,
 web service bindings, REST server definitions, or JDBC datasource references.
 
-## Properties NOT relevant to endpoint transition
+## Properties **not** relevant to endpoint transition
 
 The following properties are environment-specific configuration that does not leak
-into TWX artifacts and does not need to be scanned in the TWX:
+into TWX artifacts and does not need scanning in the TWX:
 
 - `bpm.dmgr.profilePath` / `bpm.de.node.*.profilePath` — filesystem paths; not embedded in TWX
 - `bpm.de.db.*.schema` — DB schema names; encoded in JDBC but not in TWX source files

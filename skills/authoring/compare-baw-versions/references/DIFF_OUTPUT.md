@@ -1,12 +1,12 @@
 # Diff output format
 
-This file defines the exact structure for the comparison report produced in Step 5 of `compare-baw-versions`.
+This file defines the exact structure for the comparison report that `compare-baw-versions` produces in Step 6.
 
 ---
 
 ## Report structure
 
-Always follow this template — in order. Omit any section with zero changes.
+Follow this template in order. Omit any section that has zero changes.
 
 ```
 # BAW Version Comparison: {App Name} ({Acronym})
@@ -95,45 +95,45 @@ These artifacts were modified in both versions. Review each carefully before rec
 
 ## Output files
 
-Two files are always produced — never optional, never on request:
+The skill always produces two files. Producing them is never optional and never depends on a request from the user.
 
 | File | When | Contents |
 |---|---|---|
-| `<acronym>-<versionA>-vs-<versionB>-diff.md` | End of Step 5 | Full diff report |
-| `<acronym>-<versionA>-vs-<versionB>-reconciliation.md` | End of Step 6 (if run) | Reconciliation checklist |
+| `<acronym>-<versionA>-vs-<versionB>-diff.md` | End of Step 6 | Full diff report |
+| `<acronym>-<versionA>-vs-<versionB>-reconciliation.md` | End of Step 7 (if run) | Reconciliation checklist |
 
-Use the snapshot **acronyms** (not full names) in the filename — they are short and safe for filenames. Example: `HSS-v10-vs-v11-diff.md`.
+Use the snapshot acronyms (not the full names) in the file name. They are short and suitable for file names. Example: `HSS-v10-vs-v11-diff.md`.
 
 ---
 
 ## Formatting rules
 
-**Change icons:**
-- ➕ Added (exists in B, not A)
-- ➖ Removed (exists in A, not B)
-- ✏️ Modified (exists in both, content differs)
-- ⚠️ Conflict hint (modified in both — needs manual attention)
+**Change icons.** Prefix each artifact heading with one of these icons:
+- ➕ Added (exists in B, not in A)
+- ➖ Removed (exists in A, not in B)
+- ✏️ Modified (exists in both, and the content differs)
+- ⚠️ Conflict hint (changed in both, and needs manual attention)
 
-**Conflict hints section:** Always render it first, immediately after the header block, if any conflict hints exist. Make it impossible to miss — it is the most important part of the output for a developer about to reconcile manually.
+**Conflict hints section.** If any conflict hints exist, always render this section first, immediately after the header block. Make it impossible to miss. It is the most important part of the output for a developer who is about to reconcile manually.
 
-**Summary table:** Always render it, even if most cells are 0. It gives the developer a quick triage view before they read the details.
+**Summary table.** Always render the table, even if most cells are 0. It gives the developer a quick triage view before they read the details.
 
-**Script diffs:** Show only the changed lines in unified diff format (`-` old, `+` new). Do not dump the entire script. If a script is completely replaced (no shared lines), show the first 5 lines of each with a note "full replacement — {A lines} → {B lines}".
+**Script diffs.** Show only the changed lines in unified diff format (`-` for old, `+` for new). Do not dump the entire script. If a script is completely replaced (no shared lines), show the first five lines of each version with the note "full replacement: {A lines} → {B lines}".
 
-**Empty categories:** Omit entire sections (heading and all) when a category has zero changes. Do not write "No changes" entries — their absence is the signal.
+**Empty categories.** Omit entire sections (heading and all content) when a category has zero changes. Do not write "No changes" entries. The absence of a section is the signal.
 
-**Artifact names:** Use the human-readable display name from the TWX (the `name` attribute on the element), not the internal ID or filename.
+**Artifact names.** Use the human-readable display name from the TWX file (the `name` attribute on the element), not the internal ID or file name.
 
-**Length:** For large diffs (more than ~20 changed artifacts), offer to break the report into sections:
-> *"There are N changes across M artifact types. I can show you the full report at once, or break it down by category — which would you prefer?"*
+**Length.** For large diffs (more than about 20 changed artifacts), offer to break the report into sections:
+> *"There are N changes across M artifact types. I can show you the full report at once, or break it down by category. Which would you prefer?"*
 
-**Tone:** Use plain, technical, neutral language. Do not recommend which version is "better". Do not comment on code quality. Report facts only.
+**Tone.** Use plain, technical, neutral language. Do not recommend which version is better. Do not comment on code quality. Report facts only.
 
 ---
 
 ## Reconciliation checklist format
 
-Produced at the end of Step 6 (interactive conflict resolution). Always use this exact structure:
+Produce the checklist at the end of Step 7 (interactive conflict resolution). Always use this exact structure:
 
 ```
 # Reconciliation Checklist: {App Name} — {Version A} → {Version B}
@@ -164,8 +164,8 @@ These exist on one side only. Apply them directly in Process Designer:
 ```
 
 **Checklist rules:**
-- List decisions in the order they were made during Step 6
-- For "Blend" decisions, write out the user's described outcome verbatim — not a summary
-- One-sided changes come from the diff produced in Step 4/5 — include all of them, not just the ones discussed
-- If zero conflicts were skipped, omit the "Skipped" section entirely
-- If the user skipped all conflicts (or said no to Step 6), the checklist still includes the one-sided changes section — it's always useful
+- List decisions in the order the user made them during Step 7.
+- For "Blend" decisions, write out the user's described outcome verbatim, not a summary.
+- One-sided changes come from the diff that Steps 5 and 6 produce. Include all of them, not just the ones discussed.
+- If the user skipped zero conflicts, omit the "Skipped conflicts" section entirely.
+- If the user skipped all conflicts, or declined Step 7, the checklist still includes the one-sided changes section. It is always useful.

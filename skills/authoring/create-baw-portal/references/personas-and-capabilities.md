@@ -12,8 +12,8 @@
 |---|---|---|
 | Task worker | Personal task list and launch | Runtime-verified (non-federated and federated) |
 | Manager/team lead | Team workload and member overview | Runtime-verified (non-federated and federated) |
-| Executive/process owner | Cross-team aggregate and trend | Documented, product definition required |
-| Administrator | Cross-user task and process visibility; scoped by BAW server-side role | Documented — APIs mapped; runtime verification pending |
+| Executive/process owner | Cross-team aggregate and trend | Runtime-verified (client-side rollup over per-team APIs) |
+| Administrator | Cross-user task and process visibility; scoped by BAW server-side role | ✅ Runtime-verified (CP4BA 26.0.0) |
 
 ---
 
@@ -163,9 +163,9 @@ Workplace and Process Portal do.
 
 | Data | Endpoint | Admin-specific parameter | Verification |
 |---|---|---|---|
-| Detect admin rights | `GET /rest/bpm/wle/v1/searches/actions` | Presence of `ACTION_ADMINISTER_SHARED_SAVED_SEARCHES` or `ACTION_SAVED_SEARCH_SUPER_ADMIN` in response | ⚠️ Documented — runtime verification pending |
-| All claimed tasks (cross-user) | `PUT /rest/bpm/wle/v1/tasks` | `allClaimed=true` (only effective when `assignedToUser` filter also present) | ⚠️ Documented — runtime verification pending |
-| All process instances (cross-user) | `GET /rest/bpm/wle/v1/processes/search` | `includeNonAdmin=true` | ⚠️ Documented — runtime verification pending |
+| Detect admin rights | `GET /rest/bpm/wle/v1/searches/actions` | Presence of `ACTION_ADMINISTER_SHARED_SAVED_SEARCHES` or `ACTION_SAVED_SEARCH_SUPER_ADMIN` in response | ✅ VERIFIED (CP4BA 26.0.0) |
+| All claimed tasks (cross-user) | `PUT /rest/bpm/wle/v1/tasks` | `allClaimed=true` as **query parameter** (not request body); empty or minimal body `{}` accepted; non-admin users receive 0 results | ✅ VERIFIED (CP4BA 26.0.0) |
+| All process instances (cross-user) | `GET /rest/bpm/wle/v1/processes/search` | `includeNonAdmin=true` as query parameter; admin scope returns more instances than a non-admin user; non-admin users get a scoped subset regardless of flag | ✅ VERIFIED (CP4BA 26.0.0) |
 
 ### Authorization expectations
 
@@ -183,10 +183,17 @@ to show or hide admin UI surfaces.
 
 ### Validation status
 
-- API patterns documented; runtime verification against CP4BA 26.0.x pending
-- Do not generate admin-scoped code until the relevant APIs are runtime-verified in this project
+- All three admin API patterns: ✅ VERIFIED against CP4BA 26.0.0
+- Admin detection via `GET /rest/bpm/wle/v1/searches/actions`: confirmed — `ACTION_ADMINISTER_SHARED_SAVED_SEARCHES` present for admin users, absent for standard users
+- Cross-user task visibility via `PUT /rest/bpm/wle/v1/tasks?allClaimed=true`: confirmed — admin users see tasks across all users; non-admin users receive 0 results; parameter must be a **query parameter**, not a body field
+- Cross-user process visibility via `GET /rest/bpm/wle/v1/processes/search?includeNonAdmin=true`: confirmed — admin scope returns the full set of process instances; non-admin users see a scoped subset; BAW enforces access server-side; both calls return HTTP 200
+
+### Implementation notes (runtime-confirmed)
+
+- `allClaimed=true` must be passed as a **query parameter** on `PUT /rest/bpm/wle/v1/tasks`, not in the request body. The body is a `SavedSearchDefinition` object; `allClaimed` is not a recognized body field and will return HTTP 400 if placed there.
+- `includeNonAdmin=true` is a query parameter on `GET /rest/bpm/wle/v1/processes/search`. Non-admin users receive a scoped subset; BAW enforces the restriction server-side.
+- The `processes/search` response envelope uses `data.processes[]` (not `data.items[]`) and `data.overview` (aggregate counts). Generate code accordingly.
 
 ### Known blockers
 
-- None — persona definition confirmed
-- Runtime verification of admin endpoints is a validation task, not a blocker
+- None

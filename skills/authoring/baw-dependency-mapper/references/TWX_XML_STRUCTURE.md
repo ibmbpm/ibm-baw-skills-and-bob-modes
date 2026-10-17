@@ -128,7 +128,7 @@ Variables are `flowElement` entries with `"declaredType": "dataObject"`:
 
 ### Service I/O parameters
 
-Found in `ioSpecification` at the top level of the JSON (or inside `rootElement[0]`):
+The `ioSpecification` object appears at the top level of the JSON (or inside `rootElement[0]`):
 
 ```json
 {
@@ -171,7 +171,7 @@ Script scanning matches the target name by whole-word, case-insensitive comparis
 
 For complete variable-level tracing, use the Declarations section to identify variable names of the target type, then re-run the analysis for each variable name.
 
-## What the script does NOT parse
+## What the script does not parse
 
 - Binary or image files inside the TWX.
 - `META-INF/ibm-process-app.xml` — used only for archive identification, not artifact scanning.

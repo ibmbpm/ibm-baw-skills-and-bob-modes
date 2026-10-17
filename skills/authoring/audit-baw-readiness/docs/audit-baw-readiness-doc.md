@@ -1,10 +1,10 @@
-# Audit BAW Readiness — Documentation
+# Audit BAW readiness — documentation
 
 > Evaluates an IBM BAW process application's design for compliance and audit readiness — scores six internal design-time control domains (traceability, separation of duties, access control, SLA/timeliness, data completeness, error handling) and produces a Markdown scorecard with specific gaps and remediation steps.
 
 ## Purpose
 
-This skill is for BAW developers and architects preparing for internal audit reviews and design-time control readiness assessments. It exports the process application's `.twx` artifact, analyzes the BPMN design and business objects against six internal control domains, and produces a scored gap analysis telling you exactly what needs to be fixed before an audit begins. The skill writes a Markdown scorecard to `reports/` with a Pass / Needs Attention / Not Ready overall rating. This skill inspects internal process design only — it does not touch running instances, nor does it evaluate external regulatory policies. For evaluating process models against external compliance standards and policies (SOX, GDPR, ISO, corporate policies), use the `process-compliance-violation-detection` skill.
+This skill is for IBM Business Automation Workflow (BAW) developers and architects preparing for internal audit reviews and design-time control readiness assessments. It exports the process application's `.twx` artifact, analyzes the BPMN design and business objects against six internal control domains, and produces a scored gap analysis telling you exactly what needs to be fixed before an audit begins. The skill writes a Markdown scorecard to `reports/` with a Pass / Needs Attention / Not Ready overall rating. This skill inspects internal process design only — it does not touch running instances, nor does it evaluate external regulatory policies. For evaluating process models against external compliance standards and policies (SOX, GDPR, ISO, corporate policies), use the `process-compliance-violation-detection` skill.
 
 ## Setup and configuration
 
@@ -26,7 +26,7 @@ This skill is for BAW developers and architects preparing for internal audit rev
 
 ### Full audit readiness check from a live server
 **Prompt:**
-> Run an audit readiness check on my Hiring Sample app on https://baw.internal.com:9443, username tw_admin, password tw_admin.
+> Run an audit readiness check on my Hiring Sample app on https://baw.internal.com:9443, username <your-username>, password <your-password>.
 
 **What to expect:** Bob authenticates, lists available snapshots, confirms which to assess, exports the TWX, presents an artifact inventory, scores all six domains (Traceability, Separation of Duties, Access Control, SLA/Timeliness, Data Completeness, Error Handling), and writes `reports/HSS-audit-readiness.md`. It then tells you how many gaps were found and offers to walk through remediation.
 
@@ -34,7 +34,7 @@ This skill is for BAW developers and architects preparing for internal audit rev
 
 ### SOX audit preparation
 **Prompt:**
-> I have a SOX audit next month. Does my Claims Processing app (acronym CP, snapshot CP_V2) meet the requirements? BAW is at https://baw.company.com:9443, admin/secret.
+> I have a SOX audit next month. Does my Claims Processing app (acronym CP, snapshot CP_V2) meet the requirements? BAW is at https://baw.company.com:9443, <your-username>/<your-password>.
 
 **What to expect:** Bob runs the full six-domain assessment with particular attention to Traceability and Separation of Duties (the domains most relevant to SOX). Writes the scorecard to `reports/CP-audit-readiness.md` with an overall Pass / Needs Attention / Not Ready verdict.
 
@@ -50,7 +50,7 @@ This skill is for BAW developers and architects preparing for internal audit rev
 
 ### GDPR compliance gap check
 **Prompt:**
-> Check my Employee Onboarding app for GDPR compliance gaps. BAW: https://baw.internal:9443, user admin, pass admin123.
+> Check my Employee Onboarding app for GDPR compliance gaps. BAW: https://baw.internal:9443, user <your-username>, pass <your-password>.
 
 **What to expect:** Bob runs the full assessment with particular attention to the Data Completeness domain (personal data fields, retention/deletion controls). Scores all six standard domains — no additional GDPR-specific domains are invented. Writes the scorecard with any gaps identified.
 
@@ -76,7 +76,7 @@ This skill is for BAW developers and architects preparing for internal audit rev
 **Prompt:**
 > Evaluate our process model against the corporate SOX compliance standard document at `docs/policies/SOX_Controls.docx` and flag any violations.
 
-**What to expect:** Bob explains that checking process models against external compliance policies, regulatory standards (SOX, GDPR, ISO), and generating remediation plans is handled by `process-compliance-violation-detection`, and redirects you there.
+**What to expect:** Bob explains that checking process models against external compliance policies, regulatory standards (SOX, GDPR, ISO), and generating remediation plans is out of scope for this skill — use `process-compliance-violation-detection` for that.
 
 ---
 

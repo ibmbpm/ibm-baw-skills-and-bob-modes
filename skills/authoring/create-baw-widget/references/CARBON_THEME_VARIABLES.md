@@ -2,25 +2,25 @@
 
 This document provides a reference for using Carbon Design System theme variables in BAW Coach widgets.
 
-## How to Use Carbon Theme Variables in Widgets
+## How to use Carbon theme variables in widgets
 
-BAW Coach widgets use inline CSS that gets compiled with the Carbon.less theme file. To use theme variables:
+BAW does not run LESS preprocessing on widget `InlineCSS.css` files, so you cannot reference `@variable-name` directly. To use a theme value:
 
-1. Reference variables using LESS syntax: `@variable-name`
-2. The variables will be resolved at compile time by BAW
-3. Use comments to document which theme variables are being referenced
+1. Find the variable in this reference.
+2. Write its literal value in the CSS property.
+3. Add a comment that names the theme variable.
 
-## Key Carbon Theme Variables
+## Key Carbon theme variables
 
 ### Colors
 
-#### Primary Colors
+#### Primary colors
 - `@bpm-color-primary: #0f62fe` - Primary blue color
 - `@bpm-color-primary-light: #c9deff` - Light blue
 - `@bpm-color-primary-dark: #0353E9` - Dark blue
 - `@bpm-color-primary-darker: #061f80` - Darker blue
 
-#### Semantic Colors
+#### Semantic colors
 - `@bpm-color-success: #198038` - Success green
 - `@bpm-color-success-light: #56d679` - Light green
 - `@bpm-color-success-dark: #10642a` - Dark green
@@ -37,7 +37,7 @@ BAW Coach widgets use inline CSS that gets compiled with the Carbon.less theme f
 - `@bpm-color-info-light: #b3e6ff` - Light info blue
 - `@bpm-color-info-dark: #0072c3` - Dark info blue
 
-#### Neutral Colors
+#### Neutral colors
 - `@bpm-neutral-darkest: #3d3d3d`
 - `@bpm-neutral-darker: #171717`
 - `@bpm-neutral-dark: #3c4646`
@@ -46,20 +46,20 @@ BAW Coach widgets use inline CSS that gets compiled with the Carbon.less theme f
 - `@bpm-neutral-lighter: #dcdcdc`
 - `@bpm-neutral-lightest: #f3f3f3`
 
-#### Text Colors
+#### Text colors
 - `@bpm-text-color: #161616` - Primary text color (Carbon Gray 100)
 - `@bpm-text-alternate-color: #fff` - Alternate text (white)
 - `@bpm-text-color-negative: @bpm-neutral-lightest` - Negative/disabled text
 
-#### Background Colors
+#### Background colors
 - `@bpm-body-bg: #fff` - Main background (white)
 - `@bpm-fill-normal: #fff` - Normal fill
 - `@bpm-fill-darker: #565656` - Darker fill
 
-#### Border Colors
+#### Border colors
 - `@bpm-border-normal: lighten(@bpm-neutral, 2%)` - Normal border color
 
-#### Link Colors
+#### Link colors
 - `@bpm-link-text-color: #0f62fe` - Default link
 - `@bpm-link-text-color-hover: #0043ce` - Hover link
 - `@bpm-link-text-color-visited: #8a3ffc` - Visited link
@@ -68,13 +68,13 @@ BAW Coach widgets use inline CSS that gets compiled with the Carbon.less theme f
 
 ### Typography
 
-#### Font Families
+#### Font families
 - `@bpm-font-family-sans-serif: "IBM Plex Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`
 - `@bpm-font-family-serif: Georgia, "Times New Roman", Times, serif`
 - `@bpm-font-family-monospace: "Courier New", Courier, monospace`
 - `@bpm-font-family-base: @bpm-font-family-sans-serif`
 
-#### Font Sizes
+#### Font sizes
 - `@bpm-font-size-base: 14px` - Base font size (body text)
 - `@bpm-font-size-xsmall: round(@bpm-font-size-base/1.4)` - 10px
 - `@bpm-font-size-small: round(@bpm-font-size-base/1.16)` - 12px
@@ -83,7 +83,7 @@ BAW Coach widgets use inline CSS that gets compiled with the Carbon.less theme f
 - `@bpm-font-size-xxlarge: round(@bpm-font-size-base * 2.3)` - 32px
 - `@bpm-font-size-xxxlarge: round(@bpm-font-size-base * 3.85)` - 54px
 
-#### Heading Sizes
+#### Heading sizes
 - `@bpm-font-size-h1: round(@bpm-font-size-h2*1.25)`
 - `@bpm-font-size-h2: round(@bpm-font-size-h3*1.25)`
 - `@bpm-font-size-h3: round(@bpm-font-size-h4*1.25)`
@@ -91,18 +91,18 @@ BAW Coach widgets use inline CSS that gets compiled with the Carbon.less theme f
 - `@bpm-font-size-h5: @bpm-font-size-base` - 14px
 - `@bpm-font-size-h6: @bpm-font-size-small` - 12px
 
-#### Font Weights
+#### Font weights
 - `@bpm-font-weight-normal: 400` - Regular
 - `@bpm-font-weight-slim: @bpm-font-weight-normal * 0.75` - 300 (Light)
 - `@bpm-font-weight-semibold: @bpm-font-weight-normal * 1.5` - 600 (Semibold)
 - `@bpm-font-weight-bold: @bpm-font-weight-normal * 1.75` - 700 (Bold)
 
-### Spacing & Layout
+### Spacing and layout
 
 #### Padding
 - `@bpm-main-body-padding: 0`
 
-### Component-Specific Variables
+### Component-specific variables
 
 #### Buttons
 - `@bpm-btn-height-xsmall: 28px`
@@ -131,7 +131,7 @@ BAW Coach widgets use inline CSS that gets compiled with the Carbon.less theme f
 - `@bpm-checkbox-disabled-bg: #c6c6c6`
 - `@bpm-checkbox-disabled-color: #fff`
 
-#### Radio Buttons
+#### Radio buttons
 - `@bpm-radio-bg: @bpm-body-bg`
 - `@bpm-radio-color: @bpm-text-color`
 - `@bpm-radio-border: @bpm-text-color`
@@ -152,9 +152,9 @@ BAW Coach widgets use inline CSS that gets compiled with the Carbon.less theme f
 - `@bpm-table-item-hover-bg: #F0F4F4`
 - `@bpm-table-header-hover-border-bottom: @bpm-hover-border-bottom`
 
-## Common Color Mappings
+## Common color mappings
 
-When updating widgets, use these mappings:
+When you update widgets, use these mappings:
 
 | Hardcoded Value | Carbon Variable | Usage |
 |----------------|-----------------|-------|
@@ -179,9 +179,9 @@ When updating widgets, use these mappings:
 | `18px` | `@bpm-font-size-large` | Large font size |
 | `'IBM Plex Sans'` | `@bpm-font-family-sans-serif` | Font family |
 
-## Example: Before and After
+## Example: Before and after
 
-### Before (Hardcoded)
+### Before (hardcoded)
 ```css
 .widget-title {
     font-size: 14px;
@@ -196,10 +196,10 @@ When updating widgets, use these mappings:
 }
 ```
 
-### After (Correct — hardcoded values with variable names as comments)
+### After (correct — literal values with variable names as comments)
 ```css
-/* ⚠️  InlineCSS.css is plain CSS — LESS variables do NOT work here.
-   Use hardcoded hex/px values and document the corresponding theme variable in a comment. */
+/* InlineCSS.css is plain CSS. LESS variables do not work here.
+   Use literal hex and px values, and document the corresponding theme variable in a comment. */
 .widget-title {
     font-size: 14px; /* @bpm-font-size-base */
     font-weight: 600; /* @bpm-font-weight-semibold */
@@ -213,26 +213,26 @@ When updating widgets, use these mappings:
 }
 ```
 
-### Wrong (LESS variables — will silently produce no styling)
+### Wrong (LESS variables silently produce no styling)
 ```css
-/* ❌ Do NOT use LESS variable syntax in InlineCSS.css */
+/* Wrong: do not use LESS variable syntax in InlineCSS.css */
 .widget-title {
-    font-size: @bpm-font-size-base;       /* ❌ not valid CSS */
-    font-weight: @bpm-font-weight-semibold; /* ❌ not valid CSS */
-    color: @bpm-text-color;               /* ❌ not valid CSS */
-    font-family: @bpm-font-family-sans-serif; /* ❌ not valid CSS */
+    font-size: @bpm-font-size-base;       /* not valid CSS */
+    font-weight: @bpm-font-weight-semibold; /* not valid CSS */
+    color: @bpm-text-color;               /* not valid CSS */
+    font-family: @bpm-font-family-sans-serif; /* not valid CSS */
 }
 ```
 
-## Why hardcoded values + comments
+## Why to use literal values with comments
 
-BAW does **not** run LESS preprocessing on `InlineCSS.css` widget files. Using `@bpm-*` variable syntax directly produces invalid CSS that the browser silently ignores — the widget renders with no styling and no error message. The correct pattern is always: literal value in the property, variable name in a `/* comment */`.
+BAW does not run LESS preprocessing on `InlineCSS.css` widget files. The `@bpm-*` variable syntax produces invalid CSS that the browser silently ignores, so the widget renders with no styling and no error message. Always write the literal value in the property and the variable name in a `/* comment */`.
 
 ## Notes
 
-- Widget CSS (`InlineCSS.css`) is plain CSS — no LESS preprocessing
-- Widget CSS is scoped to prevent conflicts between widgets
-- Always test widgets after writing or updating CSS
-- Document which theme variables the hardcoded values correspond to
+- Widget CSS (`InlineCSS.css`) is plain CSS with no LESS preprocessing.
+- Scope widget CSS to prevent conflicts between widgets.
+- Test widgets after you write or update CSS.
+- Document which theme variables the literal values correspond to.
 
 <!-- Made with Bob -->

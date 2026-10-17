@@ -61,9 +61,9 @@ write? List every distinct data entity (the order, the customer, the position, t
 payment, the applicant, the decision…).
 
 **Step 2 — expand to full fields.** For each entity, think "what would a developer
-put on the data entry form for this?" Don't just use fields the document explicitly
+put on the data entry form for this?" Do not use only the fields the document explicitly
 names — apply domain knowledge to complete the shape. See the entity-type field table
-in `references/MODELING_COMPLETENESS.md` for common field sets.
+in [MODELING_COMPLETENESS.md](MODELING_COMPLETENESS.md) for common field sets.
 
 **Step 3 — find nested/list relationships.** Does any entity contain a variable number
 of child records? (Order → line items, Position → candidates, Application → attachments.)

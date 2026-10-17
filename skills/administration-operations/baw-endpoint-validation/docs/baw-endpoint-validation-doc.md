@@ -16,10 +16,10 @@ This skill helps BAW administrators identify what must change before a process a
 
 ## TWX acquisition
 
-When you provide a server URL for the TWX download, the skill will:
+When you provide a server URL for the TWX download, the skill:
 
 1. Probe for the active context root (`/ops`, `/bas/ops`, `/baw/ops`, `/bpm/ops`) to handle both standalone BAW and CP4BA deployments automatically.
-2. Authenticate via `POST .../ops/system/login` — credentials are used only to obtain a session token and are not stored beyond the current conversation.
+2. Authenticate via `POST .../ops/system/login` — Bob uses the credentials only to obtain a session token and does not store them beyond the current conversation.
 3. List containers and versions if you do not know the app acronym or snapshot.
 4. Download the TWX via `GET .../ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true` and save it to a system temp directory.
 
@@ -30,9 +30,9 @@ If you already have a `.twx` file on disk, provide its path — the skill uses i
 - **Traditional BAW** (on-premises, WebSphere Network Deployment): uses `BPMConfig -export` — the deployment manager must be running during export.
 - **CP4BA containerized** (OpenShift / Kubernetes): uses `oc get ICP4ACluster` — `BPMConfig` is unavailable by design and is never invoked.
 - **Mixed migration** (traditional BAW → CP4BA): supported — source endpoints come from `BPMConfig`, target endpoints come from the `ICP4ACluster` CR.
-- **TWX must be a valid, unencrypted ZIP archive** — password-protected TWX files cannot be scanned and will cause the script to error.
+- **TWX must be a valid, unencrypted ZIP archive** — password-protected TWX files cannot be scanned and cause the script to fail.
 - **BPMConfig -export requires a running deployment manager** — export the properties file before taking any server offline.
-- For environments with self-signed certificates, TLS verification is disabled automatically during TWX download.
+- For environments with self-signed certificates, the skill disables TLS verification during TWX download when the server uses a self-signed certificate — Bob asks before doing so.
 
 ## Prompt examples
 
@@ -223,9 +223,9 @@ python scan_twx_endpoints.py \
 
 - [BPMConfig command-line utility (BAW 26.0.x)](https://www.ibm.com/docs/en/baw/26.0.x?topic=utilities-bpmconfig-command-line-utility)
 - [Configuration properties for the BPMConfig command (BAW 26.0.x)](https://www.ibm.com/docs/en/baw/26.0.x?topic=utility-configuration-properties-bpmconfig-command)
-- [Adding a REST server in Process App Settings (BAW 19.0)](https://www.ibm.com/docs/en/baw/19.0.0?topic=service-adding-rest-server)
-- [Changing REST server settings in Process Admin Console (BAW 24.0.x)](https://www.ibm.com/docs/en/baw/24.0.x?topic=properties-changing-server-settings-in-process-admin-console)
-- [BPMInstallOfflinePackage command (BAW 24.0.x)](https://www.ibm.com/docs/en/baw/24.0.x?topic=scripting-bpminstallofflinepackage)
-- [Exporting process apps from Workflow Center (BAW 19.0)](https://www.ibm.com/docs/en/baw/19.0.0?topic=mpa-importing-exporting-process-apps-case-solutions-from-workflow-center-console)
+- [Specifying a REST server in Process App Settings (BAW 26.0.x)](https://www.ibm.com/docs/en/baw/26.0.x?topic=service-specifying-rest-server)
+- [Changing REST server settings in Process Admin Console (BAW 26.0.x)](https://www.ibm.com/docs/en/baw/26.0.x?topic=properties-changing-server-settings-in-process-admin-console)
+- [BPMInstallOfflinePackage command (BAW 26.0.x)](https://www.ibm.com/docs/en/baw/26.0.x?topic=scripting-bpminstallofflinepackage)
+- [Importing and exporting projects and toolkits from Workflow Center (BAW 26.0.x)](https://www.ibm.com/docs/en/baw/26.0.x?topic=snapshots-importing-exporting-projects-toolkits)
 - `references/BPMCONFIG_REFERENCE.md` — full BPMConfig properties key reference (included in the skill folder)
 
