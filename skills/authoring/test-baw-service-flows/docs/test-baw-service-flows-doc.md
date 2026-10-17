@@ -34,7 +34,7 @@ This skill automates end-to-end testing of IBM BAW Service Flows. It operates in
 ### Run an existing test suite against a BAW server
 
 **Prompt:**
-> Here is my test suite — run all tests against `https://baw-dev.example.com:9443`. Username is `qauser`, password is `QApass2024!`.
+> Here is my test suite — run all tests against `https://baw-dev.example.com:9443`. Username is `<your-username>`, password is `<your-password>`.
 
 _Before using this prompt, save your test suite as `IQ-sf-test-suite.json` and attach or reference it in the chat._
 
@@ -103,7 +103,7 @@ _Attach or reference your existing test suite file._
 **Prompt:**
 > Can you test the `Review Claim` process? It has three human tasks and a manager approval step.
 
-**What to expect:** The skill recognises this is a BPMN process with user tasks — not a Service Flow — and redirects you to the `generate-baw-tests` skill, which handles process and coach testing.
+**What to expect:** The skill recognizes this is a BPMN process with user tasks — not a Service Flow — and redirects you to the `generate-baw-tests` skill, which handles process and coach testing.
 
 ---
 

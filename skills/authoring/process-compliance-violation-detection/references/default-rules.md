@@ -1,62 +1,62 @@
-# Default Compliance Rule Set
+# Default compliance rule set
 
-> **These rules are illustrative examples.** They represent widely accepted governance, operational, and security best practices for IBM BAW / CP4BA process applications, but they are not an authoritative or pre-approved standard. When no compliance document is provided, present them to the user as suggestions only — do not apply them silently. The user must explicitly include, exclude, or modify each rule before the active rule set is finalized.
+> **These rules are illustrative examples.** They represent widely accepted governance, operational, and security best practices for IBM BAW and CP4BA process applications, but they are not an authoritative or pre-approved standard. When the user provides no compliance document, present the rules as suggestions only. Do not apply them silently. The user must explicitly include, exclude, or modify each rule before you finalize the active rule set.
 
 Rule IDs use the `[DEF-NNN]` series.
 Severity: Critical | High | Medium | Low
 
 ---
 
-## Category: Approval (APR)
+## Category: approval (APR)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
 | DEF-001 | Every process that creates, updates, or deletes a significant business record must include at least one human approval step. | High | Human Task with approval outcome variable in BPD flow. |
 | DEF-002 | Approval decisions must be stored in a retrievable process variable or tracking field. | High | Process variable mapped to task output containing decision value. |
-| DEF-003 | Rejected items must follow a defined rejection path — not silently terminate. | High | Gateway after approval Human Task with explicit rejection sequence flow. |
+| DEF-003 | Rejected items must follow a defined rejection path and must not terminate silently. | High | Gateway after approval Human Task with explicit rejection sequence flow. |
 
 ---
 
-## Category: Separation of Duties (SOD)
+## Category: separation of duties (SOD)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
 | DEF-010 | The user who initiates a process must not be the sole approver of that same process instance. | Critical | Separate lane or team assignment for initiator lane vs approver lane. |
-| DEF-011 | Roles must be defined at the team or lane level — no process may assign tasks directly to a named individual user (hard-coded user assignment). | Medium | Team-based or lane-based task routing, no literal user name in assignment logic. |
+| DEF-011 | Define roles at the team or lane level. No process may assign tasks directly to a named individual user (hard-coded user assignment). | Medium | Team-based or lane-based task routing, no literal user name in assignment logic. |
 
 ---
 
-## Category: Audit Trail (AUD)
+## Category: audit trail (AUD)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
-| DEF-020 | All task completions and status transitions must be traceable via BAW's built-in process history or a tracking group. | High | BPDW tracking group configured, or process history enabled. |
+| DEF-020 | All task completions and status transitions must be traceable through the BAW built-in process history or a tracking group. | High | Business Performance Data Warehouse (BPDW) tracking group configured, or process history enabled. |
 | DEF-021 | Process variables carrying decision data (approval/rejection, amount, risk score) must be tracked. | High | Tracked variables in the BPD tracking group definition. |
-| DEF-022 | Process start and end times must be captured. | Medium | Verify that process instance start and end timestamps are available via process history or a tracking group. |
+| DEF-022 | The process must capture start and end times. | Medium | Verify that process instance start and end timestamps are available through process history or a tracking group. |
 
 ---
 
-## Category: Error Handling (ERR)
+## Category: error handling (ERR)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
-| DEF-030 | Every service call (REST, database, EIS) must have an error handling path — either a Boundary Error Intermediate Event or a try/catch block in the service flow. | Critical | Error boundary event attached to service task, or explicit error path in service flow. |
-| DEF-031 | Integration failures must not silently abort the process — the process must enter a recoverable or notifiable error state. | Critical | Error path leads to human task, notification, or compensating flow. |
+| DEF-030 | Every service call (REST, database, EIS) must have an error handling path: either a Boundary Error Intermediate Event or a try/catch block in the service flow. | Critical | Error boundary event attached to service task, or explicit error path in service flow. |
+| DEF-031 | Integration failures must not silently abort the process. The process must enter a recoverable or notifiable error state. | Critical | Error path leads to human task, notification, or compensating flow. |
 | DEF-032 | Unhandled script exceptions in JavaScript coach views or service flows must be caught. | Medium | try/catch in JavaScript code blocks. |
 
 ---
 
-## Category: SLA / Timer (SLA)
+## Category: SLA and timer (SLA)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
 | DEF-040 | Human tasks that require a response within a defined SLA must have a Boundary Intermediate Timer Event configured. | High | Non-interrupting boundary timer event on Human Task step. |
-| DEF-041 | Timer interval must be at least 1 minute as a best practice to avoid excessive server polling. | High | Timer configuration value ≥ 1 minute. |
+| DEF-041 | Timer interval must be at least 1 minute as a best practice to avoid excessive server polling. | High | Timer configuration value of at least 1 minute. |
 | DEF-042 | Repeatable escalation timers must have a defined maximum escalation count or terminal condition. | Medium | Timer set to Repeatable with documented max iterations or downstream termination. |
 
 ---
 
-## Category: Escalation (ESC)
+## Category: escalation (ESC)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
@@ -65,7 +65,7 @@ Severity: Critical | High | Medium | Low
 
 ---
 
-## Category: Notification (NOT)
+## Category: notification (NOT)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
@@ -74,17 +74,17 @@ Severity: Critical | High | Medium | Low
 
 ---
 
-## Category: Security (SEC)
+## Category: security (SEC)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
 | DEF-070 | All Human Services (coaches) must be accessible only to authenticated users. | Critical | Lane or task restricted to a defined Team or BPM security role (not public/anonymous). |
 | DEF-071 | Administrative operations (process termination, bulk reassignment) must be restricted to the BPMAdministrator role or equivalent. | Critical | BPM security role check or process app exposure restriction. |
-| DEF-072 | Sensitive data fields (SSN, account number, PII) in coaches must not be exposed in plain text — use masking or server-side retrieval. | High | Coach control configured as masked/password type, or data retrieved only on demand. |
+| DEF-072 | Coaches must not expose sensitive data fields (SSN, account number, PII) in plain text. Use masking or server-side retrieval. | High | Coach control configured as masked/password type, or data retrieved only on demand. |
 
 ---
 
-## Category: Data Validation (DAT)
+## Category: data validation (DAT)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
@@ -93,7 +93,7 @@ Severity: Critical | High | Medium | Low
 
 ---
 
-## Category: Reporting / Tracking (RPT)
+## Category: reporting and tracking (RPT)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
@@ -102,21 +102,21 @@ Severity: Critical | High | Medium | Low
 
 ---
 
-## Category: Role / Team Configuration (ROL)
+## Category: role and team configuration (ROL)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
-| DEF-100 | Every lane in every BPD must be assigned to a Team or a Role — unassigned lanes are a governance violation. | High | All BPD lanes have explicit Team binding. |
+| DEF-100 | Assign every lane in every BPD to a Team or a Role. Unassigned lanes are a governance violation. | High | All BPD lanes have explicit Team binding. |
 | DEF-101 | Teams must be sourced from an LDAP/directory group, not from a static list of named users. | Medium | Team definition uses group sync, not individual user list. |
 
 ---
 
-## Category: Exception Handling (EXC)
+## Category: exception handling (EXC)
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
-| DEF-110 | Processes must handle the "timeout with no action" scenario — if no user completes a task within the maximum SLA window, the process must not hang indefinitely. | Critical | Interrupting timer event or process-level end state configured for max timeout. |
-| DEF-111 | Exception paths must not lead to a blank end event — they must route to a named error-end event or a documented compensating flow. | Medium | Error end event or labeled compensating sequence. |
+| DEF-110 | Processes must handle the "timeout with no action" scenario. If no user completes a task within the maximum SLA window, the process must not hang indefinitely. | Critical | Interrupting timer event or process-level end state configured for max timeout. |
+| DEF-111 | Exception paths must not lead to a blank end event. They must route to a named error-end event or a documented compensating flow. | Medium | Error end event or labeled compensating sequence. |
 
 ---
 

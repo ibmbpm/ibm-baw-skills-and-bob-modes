@@ -32,8 +32,6 @@ customModes:
         archived snapshots, and deleting obsolete versions to keep environments clean.
       - Environment variable management: reading and syncing environment variables
         across containers and versions (e.g. copying variables from TEST to PROD).
-      - Application and branch operations: creating new Process Apps, creating
-        feature branches, and managing toolkit dependencies across branches.
       - Application version comparison: comparing two snapshots or branches of a
         BAW application to produce a structured diff by artifact type — process
         steps, variables, business objects, services, scripts, and configuration —
@@ -87,6 +85,22 @@ customModes:
       - When listing containers or snapshots (`baw-container-inventory`, `version-inspector`) → suggest comparing snapshot versions (`compare-baw-versions`) or syncing environment variables / managing snapshot states (`version-lifecycle-manager`).
       - When evaluating an application for audit readiness (`audit-baw-readiness`) → if design compliance or code quality gaps are flagged, suggest switching to **IBM BAW Author** mode to run `process-compliance-violation-detection` or `review-baw-code` for remediation.
       - When runtime errors stem from endpoint configuration or service timeouts (`troubleshoot-baw-logs`) → suggest checking endpoints with `baw-endpoint-validation` or testing service flows with `test-baw-service-flows` in Author mode.
+
+
+      **Startup .env check -- run this on the very first turn of every new
+      session, immediately after the skill check:** Use the read_file tool to
+      attempt to read `.env` at the workspace root. Then check: (1) does the
+      file exist? (2) are BAW_BASE_URL, BAW_USERNAME, and BAW_PASSWORD present
+      and not still set to placeholder values (e.g. `https://cpd-cp4ba.example.com/bas`,
+      `admin`, `password`)? If the file is missing or any value is a placeholder,
+      display this message (do not block the user -- skills that don't need a live
+      server will still work): "⚠️ BAW credentials not configured. Some skills in
+      this mode connect to a live BAW server and will need your credentials. Open
+      `.env` at the workspace root and replace the placeholder values for
+      BAW_BASE_URL, BAW_USERNAME, and BAW_PASSWORD. If `.env` does not exist,
+      run the install script and it will be created for you." If `.env` exists
+      and all three values are non-placeholder, do not display any message --
+      proceed silently.
 
 
       **Mode switching:** Switch to IBM BAW Admin mode for any request involving

@@ -20,12 +20,18 @@ metadata:
   short_description: Activate, deactivate, install, and delete BAW snapshots and manage environment variables via the Operations REST API.
   author: IBM BAW Team
 ---
-
 # Version Lifecycle Manager
 
 Manage IBM BAW Process App and Toolkit version lifecycles using the BAW Operations REST API. This skill installs applications, activates, deactivates, and deletes snapshots, verifies snapshot state, and manages environment variables — all via documented public REST endpoints with no Process Admin Console required.
 
 > **Companion skill:** To inspect a snapshot's metadata (version name, status, creation date, dependencies) before taking a lifecycle action, use the `version-inspector` skill. The two skills are designed to work together — inspect first, act here.
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+
+---
 
 Before performing any operation:
 1. Identify the **container** (Process App or Toolkit acronym/ID) and, where applicable, the **snapshot version** (snapshot acronym/ID).
@@ -59,15 +65,7 @@ curl -sk -o /dev/null -w "%{http_code}" \
 - If it returns **404** but `GET <base-url>/bpm/wle/v1/processApps` returns **200** → the server is likely IBM BPM 8.x. Stop and tell the user:
   > "The Operations REST API (`/ops/std/bpm/...`) is not available on this server. It requires IBM Business Automation Workflow 18.0 or later, but this server appears to be IBM BPM 8.x. Snapshot lifecycle management through this skill is not supported on BPM 8.x. Use the Process Admin Console on that server to manage snapshots manually."
 
-Ask the user for the base URL and credentials if not supplied. Never hard-code or invent a URL.
-
-> **CP4BA auth note:** On CP4BA clusters, `Authorization: Basic` returns 403 and `Authorization: ZenApiKey <base64>` may return 401 depending on cluster configuration. If either occurs, exchange credentials for a Bearer token first:
-> ```bash
-> curl -sk -X POST "https://<cpd-host>/icp4d-api/v1/authorize" \
->   -H "Content-Type: application/json" \
->   -d '{"username":"<user>","password":"<pass>"}'
-> ```
-> Use the returned `token` value as `Authorization: Bearer <token>` for all subsequent calls. Tokens expire; re-exchange if you receive a 401 on a previously working call.
+Never hard-code or invent a URL. The base URL is read from `.env` via `references/CREDENTIAL_HANDLING.md`.
 
 ## Step-by-step workflow
 
@@ -75,11 +73,10 @@ Ask the user for the base URL and credentials if not supplied. Never hard-code o
 
 Collect everything needed before constructing an API call. Ask for missing values in a single question rather than one at a time:
 
-- **BAW base URL** — e.g. `https://baw.example.com/bas`
+- **BAW base URL** — read from `.env` via `references/CREDENTIAL_HANDLING.md`; ask only if missing
 - **Container** — Process App or Toolkit acronym (e.g. `MYAPP`) or numeric container ID
 - **Snapshot version** — snapshot acronym (e.g. `0.9.3`) or snapshot ID (tip: if unsure, list snapshots first — see `references/BAW_SNAPSHOT_API.md` section 8; snapshots are nested in the `installedSnapshots` array of the container response)
 - **Operation** — install / verify / activate / deactivate / delete / read-env-vars / set-env-vars / sync-env-vars / list-versions
-- **Credentials** — username/password, API key, or Zen API key, depending on deployment type
 
 For **install**, also collect the `.twx` source. Prefer the REST export API over a
 manually supplied file — see the Installing section below for the acquisition sequence.
@@ -203,7 +200,7 @@ the same login sequence above (target may differ from source).
 - If a container with the same acronym already exists on the target server, BAW may
   create a new snapshot within it rather than a brand-new container — verify with the
   list endpoint afterward.
-- After install, use the verify endpoint to confirm the snapshot was registered and
+- After install, use the verify endpoint to confirm BAW registered the snapshot and
   check its initial status before activating.
 
 ### Verifying a snapshot
@@ -226,7 +223,7 @@ the same login sequence above (target may differ from source).
 - Keep a record of env var values externally (e.g. in a secrets manager or version-controlled config file) — BAW does not maintain a history of previous values.
 
 ### Deleting a snapshot
-- Deletion is irreversible. Export or archive the snapshot (`.twx` file via **Process Center / Workflow Center** for traditional BAW, or **Business Automation Studio** for CP4BA) before deleting if there is any chance the version will be needed again.
+- Deletion is irreversible. Export or archive the snapshot (`.twx` file via **Workflow Center** (formerly Process Center) for traditional BAW, or **Business Automation Studio** for CP4BA) before deleting if there is any chance the version will be needed again.
 - You cannot delete the currently active snapshot without first deactivating it.
 - BAW may reject the deletion if there are active process instances on the snapshot; resolve those first.
 - On CP4BA, namespace-level RBAC may require additional authorization for deletion.
@@ -266,7 +263,7 @@ For **install**, include a follow-up suggestion to verify the snapshot using the
 
 **Example 1 — Deactivate a snapshot**
 
-Input: "Deactivate snapshot v2.1 of our HRAPP process app on https://baw.corp.example.com/bas. My username is admin and password is hunter2."
+Input: "Deactivate snapshot v2.1 of our HRAPP process app on https://baw.corp.example.com/bas. My username is <your-username> and password is <your-password>."
 
 1. Container: `HRAPP`, snapshot: `v2.1`, operation: Deactivate.
 2. Present summary and ⚠️ deactivation warning; wait for confirmation.
@@ -274,7 +271,7 @@ Input: "Deactivate snapshot v2.1 of our HRAPP process app on https://baw.corp.ex
    ```bash
    curl -X POST \
      "https://baw.corp.example.com/bas/std/bpm/containers/HRAPP/versions/v2.1/deactivate" \
-     -H "Authorization: Basic YWRtaW46aHVudGVyMg==" \
+     -H "Authorization: Basic <base64-encoded-credentials>" \
      -H "Content-Type: application/json"
    ```
 4. Report HTTP status, response body, and note that running instances on `v2.1` complete normally but no new instances start on that version.

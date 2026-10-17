@@ -33,7 +33,7 @@ The execution protocol in `SERVICE_FLOW_EXECUTION.md` writes to this format. Use
 }
 ```
 
-`invocation_path_used` records the actual path taken during execution — it may differ from the `exposure_type` in the suite if a fallback was required.
+`invocation_path_used` records the actual path taken during execution — it may differ from the `exposure_type` in the suite if the skill used a fallback.
 
 ---
 
@@ -60,7 +60,7 @@ The execution protocol in `SERVICE_FLOW_EXECUTION.md` writes to this format. Use
 - `PASS` — all assertions passed.
 - `FAIL` — at least one assertion failed; the service responded but the output did not match expectations.
 - `ERROR` — an invocation failure (4xx/5xx on unexpected path, timeout, auth failure) prevented the test from producing assertable output. Result is inconclusive.
-- `SKIPPED` — the test was excluded from this run (e.g. user requested only happy-path tests).
+- `SKIPPED` — the test was excluded from this run (for example, user requested only happy-path tests).
 
 `process_instance_id` is non-null only when the `process_embedded` invocation path was used — it records the BAW process instance ID created during the test, for post-run cleanup reference.
 
@@ -83,7 +83,7 @@ One entry per field in `test_case.expected_output`.
 
 **Fields:**
 - `field` — the output variable name.
-- `expected` — the expectation string from the test case (e.g. `">= 0"`, `"approved"`, `"any_non_null"`).
+- `expected` — the expectation string from the test case (for example, `">= 0"`, `"approved"`, `"any_non_null"`).
 - `actual` — the value returned by the service.
 - `operator` — parsed comparison operator if the expected value was a range expression; `null` for exact or placeholder assertions.
 - `threshold` — parsed numeric threshold if applicable; `null` otherwise.

@@ -110,7 +110,7 @@ Lanes must be bound to named, restricted teams. A lane open to all users is an a
 
 ### Notes
 
-The TWX shows lane **names** as defined in Process Designer. Whether those lanes are bound to actual teams at runtime requires checking team binding XML files in the TWX (`teams/` directory or inline team references). If lane names are specific (e.g. "HR Manager", "Finance Approver") but no team binding files are found, score A1 as passing and note: *"Confirm runtime team bindings are configured in BAW Administration."*
+The TWX shows lane **names** as defined in Process Designer. To confirm runtime team bindings, check the team binding XML files in the TWX (`teams/` directory or inline team references). If lane names are specific (e.g. "HR Manager", "Finance Approver") but no team binding files are found, score A1 as passing and note: *"Confirm runtime team bindings are configured in BAW Administration."*
 
 ---
 

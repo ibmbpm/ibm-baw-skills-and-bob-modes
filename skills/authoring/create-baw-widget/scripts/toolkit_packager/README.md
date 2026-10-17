@@ -1,28 +1,28 @@
-# BAW Toolkit Packager
+# BAW toolkit packager
 
-A Python toolkit for packaging IBM Business Automation Workflow (BAW) custom widgets into TWX files.
+A Python toolkit that packages IBM Business Automation Workflow (BAW) custom widgets into TWX files.
 
 ## Features
 
-- **Widget Discovery**: Automatically scan project directories for widgets
-- **Validation**: Validate widget structure and required files
-- **GUID Generation**: Deterministic GUID generation for TWX objects
-- **XML Generation**: Generate proper TWX XML structures
-- **File Hashing**: SHA-256 hashing for file integrity
-- **TWX Packaging**: Create complete TWX archives ready for BAW import
+- **Widget discovery**: Scans project directories for widgets automatically.
+- **Validation**: Validates widget structure and required files.
+- **GUID generation**: Generates deterministic GUIDs for TWX objects.
+- **XML generation**: Generates TWX XML structures.
+- **File hashing**: Uses SHA-256 hashing for file integrity.
+- **TWX packaging**: Creates complete TWX archives that are ready for BAW import.
 
 ## Installation
 
-No external dependencies required - uses Python 3.8+ standard library only.
+The packager has no external dependencies. It uses the Python 3.8+ standard library only.
 
 ```bash
-# Add toolkit_packager to your Python path or use directly
-python -m toolkit_packager --help
+# Run the packaging script from the skill root
+python scripts/package_baw.py --help
 ```
 
-## Quick Start
+## Quick start
 
-### As a Library
+### As a library
 
 ```python
 from pathlib import Path
@@ -48,34 +48,30 @@ config = ToolkitConfig.from_dict({
 })
 ```
 
-### Command Line
+### Command line
+
+Run the packaging script from the skill root. The script discovers every widget in `widgets/`, reads `assets/toolkit.config.json`, and writes the TWX file to `output/`.
 
 ```bash
-# List all widgets in project
-python -m toolkit_packager list
-
-# Validate widgets
-python -m toolkit_packager validate
-
-# Package widgets into TWX
-python -m toolkit_packager package --config toolkit.config.json
+python scripts/package_baw.py
 ```
 
-## Project Structure
+## Project structure
 
-Your BAW widget project should follow this structure:
+Structure your BAW widget project as follows:
 
-```
+```text
 project/
-├── toolkit.config.json          # Optional configuration
+├── assets/toolkit.config.json   # Toolkit configuration
 ├── WidgetName1/
 │   ├── widget/
 │   │   ├── Layout.html          # Required
 │   │   ├── InlineCSS.css        # Required
 │   │   ├── inlineJavascript.js  # Required
-│   │   ├── WidgetName1.json     # Required (OpenAPI schema)
+│   │   ├── config.json          # Required
 │   │   ├── datamodel.md         # Optional
-│   │   └── eventHandler.md      # Optional
+│   │   ├── eventHandler.md      # Optional
+│   │   └── WidgetName1.json     # Optional (business object schema, only if widget uses a custom type)
 │   └── AdvancePreview/          # Optional
 │       ├── WidgetName1.html
 │       └── WidgetName1.js
@@ -87,7 +83,7 @@ project/
 
 ## Configuration
 
-Create `toolkit.config.json` in your project root:
+Edit `assets/toolkit.config.json` in the skill root:
 
 ```json
 {
@@ -121,14 +117,14 @@ Create `toolkit.config.json` in your project root:
 }
 ```
 
-## Module Overview
+## Module overview
 
 ### Core (`toolkit_packager/core/`)
 
 - **constants.py**: BAW object type constants and defaults
-- **guid_generator.py**: GUID/UUID generation utilities
+- **guid_generator.py**: GUID and UUID generation utilities
 - **xml_utils.py**: XML escaping and formatting
-- **file_hasher.py**: File hashing for TWX structure
+- **file_hasher.py**: File hashing for the TWX structure
 
 ### Models (`toolkit_packager/models/`)
 
@@ -138,25 +134,23 @@ Create `toolkit.config.json` in your project root:
 
 ### Scanner (`toolkit_packager/scanner/`)
 
-- **widget_scanner.py**: Discover widgets in project
-- **validator.py**: Validate widget structure
+- **widget_scanner.py**: Discovers widgets in the project
+- **validator.py**: Validates widget structure
 
 ### Generators (`toolkit_packager/generators/`)
 
 - **base_generator.py**: Base class for generators
-- **coach_view.py**: Generate coach view XML (64.*.xml)
-- **business_object.py**: Generate business object XML (12.*.xml)
-- **managed_asset.py**: Generate managed asset XML (61.*.xml)
-- **meta_inf.py**: Generate META-INF files
+- **coach_view_generator.py**: Generates coach view XML (64.*.xml)
+- **business_object_generator.py**: Generates business object XML (12.*.xml)
+- **managed_asset_generator.py**: Generates managed asset XML (61.*.xml)
 
 ### Packager (`toolkit_packager/packager/`)
 
-- **file_mapper.py**: Map files to TWX structure
-- **twx_builder.py**: Build and ZIP TWX file
+- **twx_builder.py**: Builds and zips the TWX file; maps files to the TWX structure and generates META-INF
 
-## API Reference
+## API reference
 
-### Widget Scanner
+### Widget scanner
 
 ```python
 from toolkit_packager.scanner import scan_project, validate_widget
@@ -173,7 +167,7 @@ else:
         print(f"Error: {error}")
 ```
 
-### GUID Generation
+### GUID generation
 
 ```python
 from toolkit_packager.core import generate_guid, generate_object_id
@@ -186,7 +180,7 @@ object_id = generate_object_id("WidgetName", "64", timestamp=1234567890)
 # Returns: "64.xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
 ```
 
-### XML Utilities
+### XML utilities
 
 ```python
 from toolkit_packager.core import escape_xml, create_element
@@ -199,34 +193,9 @@ element = create_element("name", "MyWidget", id="123")
 # Returns: '<name id="123">MyWidget</name>'
 ```
 
-## Development Status
-
-### Completed Modules ✅
-
-- ✅ Core utilities (GUID, XML, hashing)
-- ✅ Data models (Widget, TWXObject, Config)
-- ✅ Widget scanner and validator
-- ✅ Exception handling and logging
-- ✅ Base generator class
-
-### In Progress 🚧
-
-- 🚧 XML generators (Coach View, Business Object, Managed Assets)
-- 🚧 META-INF file generators
-- 🚧 File mapper and TWX builder
-- 🚧 CLI interface
-- 🚧 Complete documentation
-
-### Planned 📋
-
-- 📋 Unit tests
-- 📋 Integration tests
-- 📋 Example projects
-- 📋 Advanced features (incremental builds, caching)
-
 ## Examples
 
-### Example 1: List All Widgets
+### Example 1: list all widgets
 
 ```python
 from pathlib import Path
@@ -236,7 +205,7 @@ widgets = list_widget_names(Path("."))
 print(f"Found widgets: {', '.join(widgets)}")
 ```
 
-### Example 2: Validate Project
+### Example 2: validate a project
 
 ```python
 from pathlib import Path
@@ -249,10 +218,10 @@ for result in results:
     if not result.is_valid:
         print(f"\n{result.widget_name}:")
         for error in result.errors:
-            print(f"  ❌ {error}")
+            print(f"  Error: {error}")
 ```
 
-### Example 3: Generate GUIDs
+### Example 3: generate GUIDs
 
 ```python
 from toolkit_packager.core import generate_object_id, generate_binding_type_id
@@ -268,12 +237,12 @@ print(f"Binding Type ID: {binding_id}")
 
 ## Contributing
 
-This toolkit is designed to be modular and extensible. To add new features:
+The toolkit uses a modular, extensible design. To add features:
 
-1. Follow the existing module structure
-2. Add appropriate error handling
-3. Include logging statements
-4. Update documentation
+1. Follow the existing module structure.
+2. Add appropriate error handling.
+3. Include logging statements.
+4. Update the documentation.
 
 ## License
 

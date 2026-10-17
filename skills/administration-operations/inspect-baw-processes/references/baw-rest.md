@@ -4,7 +4,6 @@
 
 
 ## IBM Business Automation Workflow Operations REST Interface
-*Source: `apis/baw-ops.26.0.0.json`*
 
 ### `POST /ops/system/login`
 **Obtain IBM Business Automation Workflow CSRF prevention token**
@@ -24,16 +23,16 @@ Obtain a CSRF prevention token and optionally refresh the user's group membershi
 ### `DELETE /ops/std/bpm/processes`
 **Delete specified process instances.**
 
-Deletes the specified process instances according to their states, completion dates, process models, or process instance identifiers. This operation is asynchronous. Messages for this operation are available only in the system log. Only Business Automation Workflow administrators are authorized to p...
+Deletes the specified process instances according to their states, completion dates, process models, or process instance identifiers. This operation is asynchronous. Messages for this operation are available only in the system log. Only Business Automation Workflow administrators are authorized to perform this call.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs
-- `states` (query, array) *(required)* — A comma-separated list of states. To delete process instances that are not in an end state, set the 'force' parameter to
-- `force` (query, boolean) — Set this parameter to the value 'true' if you want to delete process instances regardless of whether they are in an end 
+- `states` (query, array) *(required)* — A comma-separated list of states. To delete process instances that are not in an end state, set the 'force' parameter to 'true'. Valid values are: 'finished', 'terminated', 'running', 'suspended', 'stopped', 'did_not_start'.
+- `force` (query, boolean) — Set this parameter to the value 'true' if you want to delete process instances regardless of whether they are in an end state.
 - `container` (query, string) — The acronym of the process application for which process instances are deleted.
-- `versions` (query, array) — A comma-separated list of snapshot acronyms for which process instances are deleted. This parameter is only valid if the
-- `ended_before` (query, string) — Only process instances that completed before this point in time are deleted. Specify the time in ISO 8601 format 'yyyy-M
-- `ended_after` (query, string) — Only process instances that completed after this point in time are deleted. Specify the time in ISO 8601 format 'yyyy-MM
+- `versions` (query, array) — A comma-separated list of snapshot acronyms for which process instances are deleted. This parameter is only valid if the container parameter is specified.
+- `ended_before` (query, string) — Only process instances that completed before this point in time are deleted. Specify the time in ISO 8601 format 'yyyy-MM-dd'T'HH:mm:ssz'.
+- `ended_after` (query, string) — Only process instances that completed after this point in time are deleted. Specify the time in ISO 8601 format 'yyyy-MM-dd'T'HH:mm:ssz'.
 - `process_ids` (query, array) — A comma-separated list of process instance identifiers.
 - `transaction_slice` (query, integer) — Specifies the number of instances that are deleted per transaction. The default value is 10.
 
@@ -53,14 +52,14 @@ Tells you how many process instances match the specified criteria. Only Business
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs
-- `states` (query, array) — A comma-separated list of states. Restricts the results to instances that are in the specified states. Valid values are:
-- `containers` (query, array) — A comma-separated list of containers. Restricts the results to instances that belong to the specified process applicatio
+- `states` (query, array) — A comma-separated list of states. Restricts the results to instances that are in the specified states. Valid values are: 'finished', 'terminated', 'running', 'suspended', 'stopped', 'did_not_start'.
+- `containers` (query, array) — A comma-separated list of containers. Restricts the results to instances that belong to the specified process application acronyms.
 - `versions` (query, array) — A comma-separated list of snapshot acronyms. Restricts the results to instances that belong to the specified snapshots.
 - `model` (query, string) — The name of the process model. Restricts the results to instances of the specified process model.
-- `ended_before` (query, string) — Only process instances that completed before this point in time are returned. Specify the time in ISO 8601 format 'yyyy-
-- `ended_after` (query, string) — Only process instances that completed after this point in time are returned. Specify the time in ISO 8601 format 'yyyy-M
+- `ended_before` (query, string) — Only process instances that completed before this point in time are returned. Specify the time in ISO 8601 format 'yyyy-MM-dd'T'HH:mm:ssz'.
+- `ended_after` (query, string) — Only process instances that completed after this point in time are returned. Specify the time in ISO 8601 format 'yyyy-MM-dd'T'HH:mm:ssz'.
 - `search_term` (query, string) — A string that uses the given term to filters the process instances that are returned.
-- `process_ids` (query, array) — A comma-separated list of process instance identifiers. Restricts the results to instances with the specified process ID
+- `process_ids` (query, array) — A comma-separated list of process instance identifiers. Restricts the results to instances with the specified process IDs.
 
 **Responses:**
 - `200` — The request was processed successfully and returned the number of process instances that match the specified query parameters.
@@ -73,15 +72,15 @@ Tells you how many process instances match the specified criteria. Only Business
 ### `DELETE /ops/adv/bpm/processes`
 **Delete specified BPEL process instances.**
 
-Deletes specified BPEL process instances according to their process instance states, process models, valid-from dates, completion dates, or according to which user started the process instance. This operation is asynchronous. You can find messages for this operation only in the system log. For more ...
+Deletes specified BPEL process instances according to their process instance states, process models, valid-from dates, completion dates, or according to which user started the process instance. This operation is asynchronous. You can find messages for this operation only in the system log. For more information about which roles are authorized to perform this call, see the documentation.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs
-- `states` (query, array) — A comma-separated list of states. The default is that all instances in state finished, terminated or failed are deleted.
+- `states` (query, array) — A comma-separated list of states. The default is that all instances in state finished, terminated or failed are deleted. Valid values are: 'failed', 'finished', 'terminated'.
 - `model` (query, string) — The process template name of the BPEL processes to delete.
-- `valid_from` (query, string) — Only process instances of a process template that is valid from this point in time are deleted. Specify the time in ISO 
-- `ended_before` (query, string) — Only process instances that completed before this point in time are deleted. Specify the time in ISO 8601 format 'yyyy-M
-- `ended_after` (query, string) — Only process instances that completed after this point in time are deleted. Specify the time in ISO 8601 format 'yyyy-MM
+- `valid_from` (query, string) — Only process instances of a process template that is valid from this point in time are deleted. Specify the time in ISO 8601 format 'yyyy-MM-dd'T'HH:mm:ssz'. This parameter is only valid if the model parameter is specified.
+- `ended_before` (query, string) — Only process instances that completed before this point in time are deleted. Specify the time in ISO 8601 format 'yyyy-MM-dd'T'HH:mm:ssz'.
+- `ended_after` (query, string) — Only process instances that completed after this point in time are deleted. Specify the time in ISO 8601 format 'yyyy-MM-dd'T'HH:mm:ssz'.
 - `starter` (query, string) — The user ID of the user who started the process instance.
 
 **Responses:**

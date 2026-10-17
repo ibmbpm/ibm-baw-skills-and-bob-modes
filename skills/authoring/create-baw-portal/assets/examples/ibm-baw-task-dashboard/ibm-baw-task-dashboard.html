@@ -1,0 +1,2803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IBM BAW Process Portal</title>
+  <style>
+    /* ─── Reset & Base ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand-color:   #0f62fe;
+      --brand-name:    "IBM BAW Process Portal";
+
+      --ibm-blue-70:   #0043ce;
+      --ibm-blue-60:   #0f62fe;
+      --ibm-blue-50:   #4589ff;
+      --ibm-blue-10:   #edf5ff;
+      --ibm-gray-100:  #161616;
+      --ibm-gray-90:   #262626;
+      --ibm-gray-80:   #393939;
+      --ibm-gray-70:   #525252;
+      --ibm-gray-60:   #6f6f6f;
+      --ibm-gray-40:   #a8a8a8;
+      --ibm-gray-20:   #e0e0e0;
+      --ibm-gray-10:   #f4f4f4;
+      --ibm-white:     #ffffff;
+      --ibm-red-60:    #da1e28;
+      --ibm-red-10:    #fff1f1;
+      --ibm-orange-40: #ff832b;
+      --ibm-orange-10: #fff2e8;
+      --ibm-green-50:  #198038;
+      --ibm-green-10:  #defbe6;
+      --ibm-yellow-20: #fdd13a;
+      --ibm-yellow-10: #fcf4d6;
+      --ibm-purple-60: #8a3ffc;
+      --ibm-purple-10: #f6f2ff;
+      --ibm-teal-50:   #009d9a;
+      --ibm-teal-10:   #d9fbfb;
+
+      --radius:        4px;
+      --shadow-sm:     0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+      --shadow-md:     0 4px 12px rgba(0,0,0,.15);
+      --transition:    160ms cubic-bezier(.2,0,.38,.9);
+      --header-h:      48px;
+      --nav-w:         220px;
+      --touch-target:  44px;
+      --ptr-indicator-h: 56px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--ibm-gray-100);
+      background: var(--ibm-gray-10);
+    }
+
+    /* ─── Screen-reader utility ──────────────────────────────────────── */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap; border: 0;
+    }
+
+    /* ─── Skip link ─────────────────────────────────────────────────── */
+    .skip-link {
+      position: absolute; top: -9999px; left: 8px; z-index: 9999;
+      background: var(--ibm-blue-60); color: var(--ibm-white);
+      padding: 8px 16px;
+      border-radius: 0 0 var(--radius) var(--radius);
+      font-size: 14px; font-weight: 600;
+      text-decoration: none; white-space: nowrap;
+    }
+    .skip-link:focus { top: 0; outline: 3px solid var(--ibm-white); outline-offset: 2px; }
+
+    /* ─── Focus ring ─────────────────────────────────────────────────── */
+    :focus-visible { outline: 2px solid var(--ibm-blue-60); outline-offset: 2px; }
+    :focus:not(:focus-visible) { outline: none; }
+
+    /* ─── Header ────────────────────────────────────────────────────── */
+    .app-header {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: var(--ibm-gray-100);
+      display: flex; align-items: center;
+      padding: 0 16px; gap: 12px;
+      z-index: 300;
+      border-bottom: 1px solid var(--ibm-gray-80);
+    }
+    .header-logo {
+      font-size: 14px; font-weight: 600;
+      color: var(--ibm-white); white-space: nowrap;
+    }
+    .header-logo span { color: var(--ibm-blue-50); }
+    .header-spacer { flex: 1; }
+    .header-right { display: flex; align-items: center; gap: 12px; position: relative; }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--ibm-blue-60);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: var(--ibm-white);
+      flex-shrink: 0;
+    }
+    .user-name { font-size: 13px; color: var(--ibm-gray-20); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ─── User profile button & dropdown ────────────────────────────── */
+    .user-profile-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: transparent; border: none; cursor: pointer;
+      padding: 4px 8px; border-radius: var(--radius);
+      transition: background var(--transition);
+      min-height: var(--touch-target);
+    }
+    .user-profile-btn:hover { background: var(--ibm-gray-80); }
+    .user-profile-btn:focus-visible { outline: 2px solid var(--ibm-blue-50); outline-offset: 2px; border-radius: var(--radius); }
+
+    .user-dropdown {
+      display: none;
+      position: absolute; top: calc(100% + 6px); right: 0;
+      width: 280px;
+      background: var(--ibm-white);
+      border: 1px solid var(--ibm-gray-20);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      z-index: 400;
+      overflow: hidden;
+    }
+    .user-dropdown.open { display: block; }
+
+    .user-dropdown-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px;
+      background: var(--ibm-gray-90);
+    }
+    .user-dropdown-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--ibm-blue-60);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 600; color: var(--ibm-white);
+      flex-shrink: 0;
+    }
+    .user-dropdown-name  { font-size: 14px; font-weight: 500; color: var(--ibm-white); }
+    .user-dropdown-uname { font-size: 11px; color: var(--ibm-gray-40); margin-top: 2px; }
+
+    .user-dropdown-body { padding: 12px 16px; }
+    .profile-row {
+      display: flex; align-items: baseline; gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--ibm-gray-10);
+      font-size: 12px;
+    }
+    .profile-row:last-child { border-bottom: none; }
+    .profile-label { color: var(--ibm-gray-60); min-width: 80px; flex-shrink: 0; }
+    .profile-value { color: var(--ibm-gray-100); word-break: break-word; }
+
+    /* ─── Shell ─────────────────────────────────────────────────────── */
+    .app-shell {
+      display: flex;
+      margin-top: var(--header-h);
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* ─── Sidebar nav ───────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--nav-w);
+      background: var(--ibm-gray-90);
+      flex-shrink: 0;
+      display: flex; flex-direction: column;
+      padding: 16px 0;
+      position: fixed;
+      top: var(--header-h); bottom: 0; left: 0;
+      overflow-y: auto;
+      z-index: 200;
+      transition: transform var(--transition);
+    }
+
+    .sidebar.hidden { transform: translateX(-100%); }
+
+    .nav-section-label {
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--ibm-gray-60);
+      padding: 16px 16px 6px;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
+      color: var(--ibm-gray-40);
+      background: transparent; border: none;
+      font: inherit; font-size: 13px;
+      cursor: pointer; width: 100%; text-align: left;
+      min-height: var(--touch-target);
+      transition: background var(--transition), color var(--transition);
+      text-decoration: none;
+    }
+    .nav-item:hover { background: var(--ibm-gray-80); color: var(--ibm-white); }
+    .nav-item.active { background: var(--ibm-blue-60); color: var(--ibm-white); }
+    .nav-item:focus-visible { outline: 2px solid var(--ibm-blue-50); outline-offset: -2px; }
+    .nav-icon { width: 16px; text-align: center; flex-shrink: 0; font-size: 14px; }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--ibm-red-60);
+      color: var(--ibm-white);
+      border-radius: 10px;
+      font-size: 10px; font-weight: 700;
+      padding: 1px 6px;
+      min-width: 18px; text-align: center;
+    }
+
+    .nav-divider { border: none; border-top: 1px solid var(--ibm-gray-80); margin: 8px 16px; }
+
+    /* Sidebar toggle (mobile) */
+    .sidebar-toggle {
+      display: none;
+      background: transparent; border: none;
+      color: var(--ibm-gray-40); font-size: 18px;
+      cursor: pointer; padding: 8px;
+      min-width: var(--touch-target); min-height: var(--touch-target);
+      align-items: center; justify-content: center;
+    }
+    .sidebar-toggle:focus-visible { outline: 2px solid var(--ibm-blue-50); outline-offset: 2px; border-radius: 2px; }
+
+    /* ─── Main area ─────────────────────────────────────────────────── */
+    .main-area {
+      flex: 1;
+      margin-left: var(--nav-w);
+      min-width: 0;
+      display: flex; flex-direction: column;
+    }
+
+    /* ─── View panels ───────────────────────────────────────────────── */
+    .view { display: none; padding: 24px; }
+    .view.active { display: block; }
+
+    /* ─── Page header ───────────────────────────────────────────────── */
+    .page-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+    }
+    .page-title { font-size: 20px; font-weight: 300; color: var(--ibm-gray-100); }
+    .page-subtitle { font-size: 12px; color: var(--ibm-gray-60); margin-top: 2px; }
+
+    /* ─── Section titles ────────────────────────────────────────────── */
+    .section-title {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--ibm-gray-60); margin-bottom: 12px;
+    }
+
+    /* ─── Stat cards ────────────────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--ibm-white);
+      border: 2px solid transparent;
+      border-radius: var(--radius);
+      padding: 16px; cursor: pointer;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+      position: relative; overflow: hidden;
+      min-height: var(--touch-target); width: 100%;
+      text-align: left; font-family: inherit; font-size: inherit; color: inherit;
+    }
+    .stat-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .stat-card:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+    .stat-card:focus-visible { outline: 2px solid var(--ibm-blue-60); outline-offset: 2px; }
+    .stat-card.active-filter { border-color: var(--ibm-blue-60); box-shadow: var(--shadow-sm); }
+
+    .stat-card--overdue::before { background: var(--ibm-red-60); }
+    .stat-card--atrisk::before  { background: var(--ibm-orange-40); }
+    .stat-card--active::before  { background: var(--ibm-blue-60); }
+    .stat-card--all::before     { background: var(--ibm-gray-60); }
+
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ibm-gray-60); margin-bottom: 8px; }
+    .stat-count { font-size: 32px; font-weight: 300; line-height: 1; margin-bottom: 4px; }
+    .stat-desc  { font-size: 11px; color: var(--ibm-gray-60); }
+
+    .stat-card--overdue .stat-count { color: var(--ibm-red-60); }
+    .stat-card--atrisk  .stat-count { color: var(--ibm-orange-40); }
+    .stat-card--active  .stat-count { color: var(--ibm-blue-60); }
+    .stat-card--all     .stat-count { color: var(--ibm-gray-80); }
+
+    /* ─── Toolbar ───────────────────────────────────────────────────── */
+    .toolbar {
+      display: flex; align-items: center;
+      gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .search-icon {
+      position: absolute; left: 10px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--ibm-gray-60); pointer-events: none;
+    }
+    .search-input {
+      width: 100%; height: 36px;
+      padding: 0 10px 0 34px;
+      border: 1px solid var(--ibm-gray-40);
+      border-radius: var(--radius);
+      font-size: 14px; font-family: inherit;
+      color: var(--ibm-gray-100); background: var(--ibm-white);
+      transition: border-color var(--transition);
+    }
+    .search-input:focus { outline: none; border-color: var(--ibm-blue-60); box-shadow: 0 0 0 2px rgba(15,98,254,.2); }
+    .search-input::placeholder { color: var(--ibm-gray-40); }
+
+    .filter-select {
+      height: 36px; padding: 0 28px 0 10px;
+      border: 1px solid var(--ibm-gray-40);
+      border-radius: var(--radius);
+      font-size: 13px; font-family: inherit;
+      color: var(--ibm-gray-100); background: var(--ibm-white);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236f6f6f' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      cursor: pointer; transition: border-color var(--transition);
+    }
+    .filter-select:focus { outline: none; border-color: var(--ibm-blue-60); box-shadow: 0 0 0 2px rgba(15,98,254,.2); }
+
+    .btn {
+      height: 36px; min-height: var(--touch-target);
+      padding: 0 14px; border: none;
+      border-radius: var(--radius);
+      font-size: 13px; font-family: inherit; font-weight: 500;
+      cursor: pointer; transition: background var(--transition);
+      white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--ibm-blue-60); color: var(--ibm-white); }
+    .btn-primary:hover { background: var(--ibm-blue-70); }
+    .btn-primary:focus-visible { outline: 2px solid var(--ibm-white); outline-offset: 2px; box-shadow: 0 0 0 4px var(--ibm-blue-60); }
+    .btn-ghost { background: transparent; color: var(--ibm-blue-60); border: 1px solid var(--ibm-blue-60); }
+    .btn-ghost:hover { background: var(--ibm-blue-10); }
+    .btn-ghost:focus-visible { outline: 2px solid var(--ibm-blue-60); outline-offset: 2px; }
+    .btn-danger { background: var(--ibm-red-60); color: var(--ibm-white); }
+    .btn-danger:hover { background: #b01922; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .result-count { font-size: 12px; color: var(--ibm-gray-60); white-space: nowrap; }
+
+    /* ─── Truncation banner ─────────────────────────────────────────── */
+    .truncation-banner {
+      display: none;
+      background: var(--ibm-yellow-10);
+      border: 1px solid var(--ibm-yellow-20);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px; color: #7a5c00;
+      margin-bottom: 14px;
+      align-items: center; gap: 8px;
+    }
+    .truncation-banner.visible { display: flex; }
+
+    /* ─── Refresh bar ───────────────────────────────────────────────── */
+    .refresh-bar {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 8px;
+      font-size: 11px; color: var(--ibm-gray-60);
+      margin-bottom: 12px; min-height: 20px;
+    }
+    .refresh-stale-msg { display: none; color: var(--ibm-orange-40); font-weight: 600; }
+    .refresh-bar.stale .refresh-stale-msg { display: inline; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin-refresh { to { transform: rotate(360deg); } }
+    .btn-primary.refreshing .refresh-icon { display: inline-block; animation: spin-refresh .7s linear infinite; }
+    @media (prefers-reduced-motion: reduce) { .btn-primary.refreshing .refresh-icon { animation: none; } }
+
+    /* ─── Table ─────────────────────────────────────────────────────── */
+    .table-wrap {
+      background: var(--ibm-white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: var(--ibm-gray-10); border-bottom: 1px solid var(--ibm-gray-20); }
+    th {
+      padding: 10px 14px; text-align: left;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--ibm-gray-70); white-space: nowrap; user-select: none;
+    }
+    .sort-btn {
+      display: inline-flex; align-items: center; gap: 0;
+      background: none; border: none; padding: 0;
+      font: inherit; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--ibm-gray-70); cursor: pointer; white-space: nowrap;
+      min-height: var(--touch-target); width: 100%;
+    }
+    th.sortable { cursor: pointer; padding: 0; }
+    .sort-btn:hover, th.sortable:hover .sort-btn { color: var(--ibm-blue-60); }
+    .sort-btn:focus-visible { outline: 2px solid var(--ibm-blue-60); outline-offset: 2px; }
+    .sort-indicator { display: inline-block; margin-left: 4px; opacity: .5; font-size: 10px; }
+    th.sorted .sort-indicator { opacity: 1; color: var(--ibm-blue-60); }
+
+    tbody tr { border-bottom: 1px solid var(--ibm-gray-10); transition: background var(--transition); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--ibm-blue-10); }
+    td { padding: 10px 14px; font-size: 13px; vertical-align: middle; }
+
+    .task-name-cell { max-width: 240px; }
+    .task-name-link {
+      color: var(--ibm-blue-60); text-decoration: none; font-weight: 500;
+      display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .task-name-link:hover { text-decoration: underline; }
+    .process-name { font-size: 11px; color: var(--ibm-gray-60); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+
+    .priority-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;
+    }
+    .priority-high   { background: var(--ibm-red-10);    color: var(--ibm-red-60); }
+    .priority-medium { background: var(--ibm-orange-10);  color: #b45309; }
+    .priority-low    { background: var(--ibm-green-10);   color: var(--ibm-green-50); }
+
+    .due-overdue { color: var(--ibm-red-60); font-weight: 600; }
+    .due-atrisk  { color: var(--ibm-orange-40); font-weight: 600; }
+    .due-ok      { color: var(--ibm-gray-70); }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 500;
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .status-claimed   { background: var(--ibm-blue-10);   color: var(--ibm-blue-70); }
+    .status-claimed .status-dot   { background: var(--ibm-blue-60); }
+    .status-ready     { background: var(--ibm-green-10);  color: var(--ibm-green-50); }
+    .status-ready .status-dot     { background: var(--ibm-green-50); }
+    .status-received  { background: var(--ibm-yellow-10); color: #7a5c00; }
+    .status-received .status-dot  { background: var(--ibm-yellow-20); }
+    .status-other     { background: var(--ibm-gray-10);   color: var(--ibm-gray-70); }
+    .status-other .status-dot     { background: var(--ibm-gray-40); }
+
+    /* ─── Action buttons in table ───────────────────────────────────── */
+    .row-actions { display: flex; gap: 6px; }
+    .btn-sm {
+      height: 28px; min-height: 28px;
+      padding: 0 10px; font-size: 11px;
+      font-family: inherit; font-weight: 500;
+      border: 1px solid var(--ibm-gray-20);
+      border-radius: var(--radius);
+      background: var(--ibm-white);
+      color: var(--ibm-gray-80);
+      cursor: pointer; white-space: nowrap;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .btn-sm:hover { background: var(--ibm-gray-10); border-color: var(--ibm-gray-40); }
+    .btn-sm:focus-visible { outline: 2px solid var(--ibm-blue-60); outline-offset: 2px; }
+    .btn-sm.btn-sm-primary { background: var(--ibm-blue-60); color: var(--ibm-white); border-color: var(--ibm-blue-60); }
+    .btn-sm.btn-sm-primary:hover { background: var(--ibm-blue-70); }
+
+    /* ─── Empty / Loading / Error states ────────────────────────────── */
+    .state-row td { text-align: center; padding: 48px 16px; color: var(--ibm-gray-60); }
+    .state-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+    .spinner {
+      display: inline-block; width: 24px; height: 24px;
+      border: 3px solid var(--ibm-gray-20);
+      border-top-color: var(--ibm-blue-60);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    .sr-table-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    /* ─── Pagination ────────────────────────────────────────────────── */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; background: var(--ibm-white);
+      border-top: 1px solid var(--ibm-gray-20);
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+    .page-info { font-size: 12px; color: var(--ibm-gray-60); }
+    .page-btns { display: flex; gap: 4px; }
+    .page-btn {
+      width: 30px; height: 30px;
+      min-width: var(--touch-target); min-height: var(--touch-target);
+      border: 1px solid var(--ibm-gray-20);
+      border-radius: var(--radius);
+      background: var(--ibm-white); color: var(--ibm-gray-80);
+      font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .page-btn:hover:not(:disabled) { background: var(--ibm-blue-10); border-color: var(--ibm-blue-60); color: var(--ibm-blue-60); }
+    .page-btn.current { background: var(--ibm-blue-60); border-color: var(--ibm-blue-60); color: var(--ibm-white); font-weight: 600; }
+    .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .page-btn:focus-visible { outline: 2px solid var(--ibm-blue-60); outline-offset: 2px; }
+
+    /* ─── Process launcher cards ────────────────────────────────────── */
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .process-card {
+      background: var(--ibm-white);
+      border: 1px solid var(--ibm-gray-20);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--transition), border-color var(--transition);
+    }
+    .process-card:hover { box-shadow: var(--shadow-md); border-color: var(--ibm-blue-50); }
+    .process-card-header { display: flex; align-items: flex-start; gap: 10px; }
+    .process-card-icon {
+      width: 36px; height: 36px; border-radius: var(--radius);
+      background: var(--ibm-blue-10); color: var(--ibm-blue-60);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .process-card-name { font-size: 14px; font-weight: 500; color: var(--ibm-gray-100); line-height: 1.3; }
+    .process-card-app  { font-size: 11px; color: var(--ibm-gray-60); margin-top: 2px; }
+    .process-card-actions { margin-top: auto; }
+
+    /* ─── Saved search chips ────────────────────────────────────────── */
+    .saved-search-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .saved-search-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--ibm-gray-10); border: 1px solid var(--ibm-gray-20);
+      border-radius: 16px; padding: 4px 10px 4px 12px;
+      font-size: 12px; color: var(--ibm-gray-80); cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .saved-search-chip:hover { background: var(--ibm-blue-10); border-color: var(--ibm-blue-50); color: var(--ibm-blue-60); }
+    .saved-search-chip:focus-visible { outline: 2px solid var(--ibm-blue-60); outline-offset: 2px; }
+    .chip-del {
+      background: none; border: none; cursor: pointer;
+      color: var(--ibm-gray-60); font-size: 14px; padding: 0;
+      line-height: 1; border-radius: 50%;
+      min-width: 18px; min-height: 18px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .chip-del:hover { color: var(--ibm-red-60); }
+    .chip-del:focus-visible { outline: 2px solid var(--ibm-blue-60); outline-offset: 2px; }
+
+    /* ─── Team view placeholder card ────────────────────────────────── */
+    .info-card {
+      background: var(--ibm-white);
+      border: 1px solid var(--ibm-gray-20);
+      border-radius: var(--radius);
+      padding: 24px; box-shadow: var(--shadow-sm);
+    }
+    .info-card-title { font-size: 16px; font-weight: 500; margin-bottom: 8px; }
+    .info-card-body { font-size: 13px; color: var(--ibm-gray-70); line-height: 1.6; }
+    .info-badge {
+      display: inline-block;
+      background: var(--ibm-yellow-10); color: #7a5c00;
+      border: 1px solid var(--ibm-yellow-20);
+      border-radius: var(--radius); padding: 2px 8px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+      margin-bottom: 12px;
+    }
+    .info-badge.blocked { background: var(--ibm-red-10); color: var(--ibm-red-60); border-color: var(--ibm-red-60); }
+
+    /* ─── Team member grid ──────────────────────────────────────────── */
+    .team-member-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ibm-gray-10); }
+    .team-member-row:last-child { border-bottom: none; }
+    .member-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ibm-teal-50); color: var(--ibm-white); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+    .member-name { font-size: 13px; font-weight: 500; flex: 1; }
+    .member-count { font-size: 12px; color: var(--ibm-gray-60); }
+
+    /* ─── Mobile card layout (≤ 680px) ─────────────────────────────── */
+    @media (max-width: 680px) {
+      .table-wrap       { display: none; }
+      .mobile-task-list { display: block; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-wrap { min-width: 0; }
+      .filter-select { width: 100%; }
+      .btn { min-height: var(--touch-target); width: 100%; justify-content: center; }
+    }
+    @media (min-width: 681px) {
+      .table-wrap       { display: block; }
+      .mobile-task-list { display: none; }
+    }
+
+    .mobile-task-list { display: none; }
+    .mobile-task-card {
+      background: var(--ibm-white); border-radius: var(--radius);
+      box-shadow: var(--shadow-sm); padding: 14px 16px; margin-bottom: 10px;
+    }
+    .mobile-task-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .mobile-task-name-btn {
+      background: none; border: none; padding: 0;
+      font: inherit; font-size: 13px; font-weight: 500;
+      color: var(--ibm-blue-60); cursor: pointer; text-align: left;
+      min-height: var(--touch-target); display: flex; align-items: center;
+    }
+    .mobile-task-name-btn:hover { text-decoration: underline; }
+    .mobile-task-name-btn:focus-visible { outline: 2px solid var(--ibm-blue-60); outline-offset: 2px; border-radius: 2px; }
+    .mobile-task-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--ibm-gray-60); margin-bottom: 8px; }
+    .mobile-task-meta-item { display: flex; align-items: center; gap: 4px; }
+    .mobile-task-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .mobile-open-btn {
+      min-height: var(--touch-target); padding: 0 16px;
+      background: var(--ibm-blue-60); color: var(--ibm-white);
+      border: none; border-radius: var(--radius);
+      font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+    }
+    .mobile-open-btn:hover { background: var(--ibm-blue-70); }
+    .mobile-open-btn:focus-visible { outline: 2px solid var(--ibm-white); outline-offset: 2px; box-shadow: 0 0 0 4px var(--ibm-blue-60); }
+
+    @media (max-width: 680px) {
+      .mobile-pagination {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 0; background: transparent;
+        border-top: 1px solid var(--ibm-gray-20); margin-top: 4px;
+      }
+    }
+
+    /* ─── Pull-to-refresh ───────────────────────────────────────────── */
+    .ptr-wrapper { position: relative; height: 0; overflow: visible; }
+    .ptr-indicator {
+      position: absolute;
+      top: calc(-1 * var(--ptr-indicator-h));
+      left: 0; right: 0; height: var(--ptr-indicator-h);
+      z-index: 10;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: var(--ibm-white);
+      border-bottom: 1px solid var(--ibm-gray-20);
+      border-radius: var(--radius) var(--radius) 0 0;
+      transform: translateY(0);
+      transition: transform 200ms cubic-bezier(.2,0,.38,.9);
+    }
+    .ptr-indicator.ptr-dragging { transition: none; }
+    .ptr-arrow { display: inline-block; font-size: 20px; color: var(--ibm-gray-60); transition: transform 200ms cubic-bezier(.2,0,.38,.9), color 200ms cubic-bezier(.2,0,.38,.9); transform: rotate(0deg); }
+    .ptr-indicator.ptr-ready .ptr-arrow { transform: rotate(180deg); color: var(--ibm-blue-60); }
+    .ptr-indicator.ptr-loading .ptr-arrow { display: none; }
+    .ptr-indicator.ptr-loading .ptr-spinner { display: inline-block; }
+    .ptr-spinner { display: none; width: 20px; height: 20px; border: 2px solid var(--ibm-gray-20); border-top-color: var(--ibm-blue-60); border-radius: 50%; animation: spin .7s linear infinite; }
+    .ptr-label { font-size: 12px; color: var(--ibm-gray-60); }
+    @media (prefers-reduced-motion: reduce) {
+      .ptr-indicator, .ptr-indicator.ptr-dragging, .ptr-arrow { transition: none; }
+    }
+
+    /* ─── Modal ─────────────────────────────────────────────────────── */
+    .focus-sentinel { position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; }
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.6); z-index: 500;
+      align-items: center; justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--ibm-white); border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      width: 92vw; max-width: 1100px; height: 86vh;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .modal-header {
+      display: flex; align-items: center;
+      padding: 0 16px; height: 48px;
+      background: var(--ibm-gray-90); gap: 12px; flex-shrink: 0;
+    }
+    .modal-title { flex: 1; font-size: 14px; font-weight: 500; color: var(--ibm-gray-20); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .modal-close {
+      width: 32px; height: 32px;
+      min-width: var(--touch-target); min-height: var(--touch-target);
+      border: none; background: transparent;
+      color: var(--ibm-gray-40); font-size: 18px; cursor: pointer;
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      transition: background var(--transition), color var(--transition);
+    }
+    .modal-close:hover { background: var(--ibm-gray-80); color: var(--ibm-white); }
+    .modal-close:focus-visible { outline: 2px solid var(--ibm-white); outline-offset: 2px; }
+    .modal-iframe { flex: 1; border: none; width: 100%; }
+
+    /* ─── Confirm dialog (small modal) ─────────────────────────────── */
+    .confirm-dialog {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.5); z-index: 600;
+      align-items: center; justify-content: center;
+    }
+    .confirm-dialog.open { display: flex; }
+    .confirm-box {
+      background: var(--ibm-white); border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      width: 90vw; max-width: 400px;
+      padding: 24px; display: flex; flex-direction: column; gap: 16px;
+    }
+    .confirm-title { font-size: 16px; font-weight: 500; }
+    .confirm-body  { font-size: 13px; color: var(--ibm-gray-70); }
+    .confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+    /* ─── Reassign dialog (wider confirm-box variant) ───────────────── */
+    .reassign-box {
+      background: var(--ibm-white); border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      width: 90vw; max-width: 480px;
+      padding: 24px; display: flex; flex-direction: column; gap: 16px;
+    }
+    .form-row {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--ibm-gray-70); }
+    .form-input {
+      height: 36px; padding: 0 10px;
+      border: 1px solid var(--ibm-gray-40); border-radius: var(--radius);
+      font-size: 13px; font-family: inherit; color: var(--ibm-gray-100);
+      background: var(--ibm-white);
+      transition: border-color var(--transition);
+    }
+    .form-input:focus { outline: none; border-color: var(--ibm-blue-60); box-shadow: 0 0 0 2px rgba(15,98,254,.2); }
+    .form-check-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-check {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; cursor: pointer;
+    }
+    .form-check input[type="checkbox"],
+    .form-check input[type="radio"] { width: 16px; height: 16px; cursor: pointer; }
+
+    /* chip rename button */
+    .chip-rename {
+      background: none; border: none; cursor: pointer;
+      color: var(--ibm-gray-60); font-size: 11px; padding: 0 2px;
+      line-height: 1; border-radius: 2px;
+      min-width: 18px; min-height: 18px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .chip-rename:hover { color: var(--ibm-blue-60); }
+    .chip-rename:focus-visible { outline: 2px solid var(--ibm-blue-60); outline-offset: 2px; }
+
+    /* ─── Toast ─────────────────────────────────────────────────────── */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px; z-index: 900;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      background: var(--ibm-gray-90); color: var(--ibm-gray-10);
+      padding: 10px 16px; border-radius: var(--radius);
+      font-size: 13px; box-shadow: var(--shadow-md);
+      animation: slideUp .2s ease; max-width: 320px;
+    }
+    .toast.error { border-left: 3px solid var(--ibm-red-60); }
+    .toast.info  { border-left: 3px solid var(--ibm-blue-60); }
+    .toast.success { border-left: 3px solid var(--ibm-green-50); }
+    @keyframes slideUp {
+      from { opacity:0; transform: translateY(8px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    /* ─── Responsive layout ─────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 720px) {
+      :root { --nav-w: 0px; }
+      .sidebar { transform: translateX(-100%); width: 220px; z-index: 250; }
+      .sidebar.open { transform: translateX(0); }
+      .main-area { margin-left: 0; }
+      .sidebar-toggle { display: flex; }
+      .sidebar-backdrop { display: block; }
+    }
+    .sidebar-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.4); z-index: 249;
+    }
+    .sidebar-backdrop.open { display: block; }
+
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .view { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Skip link -->
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<!-- SR live regions -->
+<div id="srTableStatus" class="sr-table-status" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ─── Header ──────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+  <span class="header-logo"><span>IBM</span> BAW Process Portal</span>
+  <div class="header-spacer"></div>
+  <div class="header-right">
+    <button type="button" class="user-profile-btn" id="userProfileBtn"
+      aria-label="User profile" aria-haspopup="true" aria-expanded="false"
+      onclick="toggleProfileDropdown()">
+      <div class="user-avatar" id="userAvatar" aria-hidden="true">?</div>
+      <span class="user-name" id="userName">Loading…</span>
+      <span aria-hidden="true" style="color:var(--ibm-gray-40);font-size:10px;margin-left:2px;">▾</span>
+    </button>
+    <!-- Profile dropdown (populated by loadUser()) -->
+    <div class="user-dropdown" id="userDropdown" role="menu" aria-label="User profile">
+      <div class="user-dropdown-header">
+        <div class="user-dropdown-avatar" id="dropdownAvatar" aria-hidden="true">?</div>
+        <div>
+          <div class="user-dropdown-name"  id="dropdownFullName">—</div>
+          <div class="user-dropdown-uname" id="dropdownUserName">—</div>
+        </div>
+      </div>
+      <div class="user-dropdown-body" id="dropdownBody">
+        <p style="font-size:12px;color:var(--ibm-gray-60);">Loading profile…</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Sidebar backdrop (mobile) -->
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true" onclick="closeSidebar()"></div>
+
+<!-- ─── Shell ────────────────────────────────────────────────────────── -->
+<div class="app-shell">
+
+  <!-- ─── Sidebar ────────────────────────────────────────────────── -->
+  <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+    <span class="nav-section-label">My Work</span>
+    <button type="button" class="nav-item active" id="nav-tasks" onclick="showView('tasks')" aria-current="page">
+      <span class="nav-icon" aria-hidden="true">☑</span>
+      My Tasks
+      <span class="nav-badge" id="navTaskBadge" style="display:none"></span>
+    </button>
+    <button type="button" class="nav-item" id="nav-launch" onclick="showView('launch')">
+      <span class="nav-icon" aria-hidden="true">▶</span>
+      Start Process
+    </button>
+    <button type="button" class="nav-item" id="nav-search" onclick="showView('search')">
+      <span class="nav-icon" aria-hidden="true">🔍</span>
+      Task Search
+    </button>
+
+    <hr class="nav-divider" />
+    <span class="nav-section-label">Team</span>
+    <button type="button" class="nav-item" id="nav-team" onclick="showView('team')">
+      <span class="nav-icon" aria-hidden="true">👥</span>
+      Team View
+    </button>
+
+    <hr class="nav-divider" />
+    <span class="nav-section-label">System</span>
+    <button type="button" class="nav-item" id="nav-admin" onclick="showView('admin')">
+      <span class="nav-icon" aria-hidden="true">⚙</span>
+      Administration
+    </button>
+  </nav>
+
+  <!-- ─── Main area ─────────────────────────────────────────────── -->
+  <main class="main-area" id="main-content" tabindex="-1">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         VIEW: MY TASKS
+    ══════════════════════════════════════════════════════════════════ -->
+    <div class="view active" id="view-tasks" role="region" aria-label="My Tasks">
+
+      <div class="ptr-wrapper">
+        <div class="ptr-indicator" id="ptrIndicator" aria-hidden="true" role="presentation">
+          <span class="ptr-arrow" aria-hidden="true">↓</span>
+          <span class="ptr-spinner" aria-hidden="true"></span>
+          <span class="ptr-label" id="ptrLabel">Pull down to refresh</span>
+        </div>
+      </div>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">My Tasks</h1>
+          <p class="page-subtitle">Tasks assigned to or available for you</p>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <section aria-labelledby="stats-heading">
+        <h2 id="stats-heading" class="section-title">Task overview</h2>
+        <div class="stats-row" role="group" aria-label="Filter tasks by category">
+          <button type="button" class="stat-card stat-card--overdue" data-filter="overdue" aria-pressed="false" onclick="setFilter('overdue')">
+            <div class="stat-label" aria-hidden="true">Overdue</div>
+            <div class="stat-count" id="statOverdue">—</div>
+            <div class="stat-desc">Past due date</div>
+          </button>
+          <button type="button" class="stat-card stat-card--atrisk" data-filter="atrisk" aria-pressed="false" onclick="setFilter('atrisk')">
+            <div class="stat-label" aria-hidden="true">At Risk</div>
+            <div class="stat-count" id="statAtrisk">—</div>
+            <div class="stat-desc">Due within 24 hours</div>
+          </button>
+          <button type="button" class="stat-card stat-card--active" data-filter="active" aria-pressed="false" onclick="setFilter('active')">
+            <div class="stat-label" aria-hidden="true">Active</div>
+            <div class="stat-count" id="statActive">—</div>
+            <div class="stat-desc">Claimed by you</div>
+          </button>
+          <button type="button" class="stat-card stat-card--all active-filter" data-filter="all" aria-pressed="true" onclick="setFilter('all')">
+            <div class="stat-label" aria-hidden="true">All Tasks</div>
+            <div class="stat-count" id="statAll">—</div>
+            <div class="stat-desc">Assigned to you</div>
+          </button>
+        </div>
+      </section>
+
+      <!-- Toolbar -->
+      <section aria-label="Task search and filters">
+        <div class="toolbar" role="toolbar" aria-label="Task filters">
+          <div class="search-wrap">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+              <path d="M29 27.6L21 19.6A11 11 0 1 0 19.6 21l8 8ZM5 14a9 9 0 1 1 9 9A9 9 0 0 1 5 14Z"/>
+            </svg>
+            <label for="searchInput" class="sr-only">Search tasks</label>
+            <input class="search-input" id="searchInput" type="search"
+              placeholder="Search tasks, processes…" aria-label="Search tasks"
+              oninput="handleSearch()" />
+          </div>
+          <label for="priorityFilter" class="sr-only">Priority filter</label>
+          <select class="filter-select" id="priorityFilter" aria-label="Filter by priority" onchange="applyFilters()">
+            <option value="">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <label for="statusFilter" class="sr-only">Status filter</label>
+          <select class="filter-select" id="statusFilter" aria-label="Filter by status" onchange="applyFilters()">
+            <option value="">All Statuses</option>
+            <option value="claimed">Claimed</option>
+            <option value="ready">Ready</option>
+            <option value="received">Received</option>
+          </select>
+          <button type="button" class="btn btn-ghost" onclick="clearAllFilters()">Clear filters</button>
+          <button type="button" class="btn btn-primary" id="refreshBtn" onclick="triggerRefresh()" aria-label="Refresh tasks">
+            <span class="refresh-icon" aria-hidden="true">↻</span> Refresh
+          </button>
+          <span class="result-count" id="resultCount" role="status" aria-live="polite" aria-atomic="true"></span>
+        </div>
+      </section>
+
+      <!-- Last-updated / stale bar -->
+      <div class="refresh-bar" id="refreshBar" aria-live="polite" aria-atomic="true">
+        <span id="lastUpdatedLabel"></span>
+        <span class="refresh-stale-msg" id="staleMsg" role="status">Data may be stale — click Refresh</span>
+      </div>
+
+      <!-- Truncation banner — shown when totalCount > returned items -->
+      <div class="truncation-banner" id="truncationBanner" role="status" aria-live="polite">
+        <span aria-hidden="true">⚠</span>
+        <span id="truncationMsg"></span>
+      </div>
+
+      <!-- Desktop table -->
+      <section aria-label="Task list">
+        <div class="table-wrap">
+          <table aria-label="Tasks" aria-describedby="resultCount">
+            <thead>
+              <tr>
+                <th class="sortable" id="th-name" aria-sort="none" scope="col">
+                  <button type="button" class="sort-btn" onclick="sortBy('name')">
+                    Task Name<span class="sort-indicator" aria-hidden="true">↕</span>
+                  </button>
+                </th>
+                <th scope="col">Process</th>
+                <th class="sortable" id="th-priority" aria-sort="none" scope="col">
+                  <button type="button" class="sort-btn" onclick="sortBy('priority')">
+                    Priority<span class="sort-indicator" aria-hidden="true">↕</span>
+                  </button>
+                </th>
+                <th class="sortable" id="th-due" aria-sort="none" scope="col">
+                  <button type="button" class="sort-btn" onclick="sortBy('due')">
+                    Due Date<span class="sort-indicator" aria-hidden="true">↕</span>
+                  </button>
+                </th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="taskTableBody">
+              <tr class="state-row">
+                <td colspan="6">
+                  <span class="spinner" role="status" aria-label="Loading tasks"></span>
+                  <p style="margin-top:10px">Loading your tasks…</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <nav class="pagination" id="paginationBar" aria-label="Task list pagination"></nav>
+        </div>
+
+        <!-- Mobile cards -->
+        <div class="mobile-task-list" id="mobileTaskList" aria-label="Task cards"></div>
+        <nav class="mobile-pagination" id="mobilePaginationBar" aria-label="Task list pagination" style="display:none"></nav>
+      </section>
+    </div><!-- /view-tasks -->
+
+    <!-- ══════════════════════════════════════════════════════════════
+         VIEW: START PROCESS
+    ══════════════════════════════════════════════════════════════════ -->
+    <div class="view" id="view-launch" role="region" aria-label="Start Process">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Start Process</h1>
+          <p class="page-subtitle">Launch an available business process</p>
+        </div>
+        <button type="button" class="btn btn-ghost" id="refreshLaunchBtn" onclick="loadLaunchableProcesses()">↻ Refresh</button>
+      </div>
+      <div class="search-wrap" style="margin-bottom:16px;max-width:400px;">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+          <path d="M29 27.6L21 19.6A11 11 0 1 0 19.6 21l8 8ZM5 14a9 9 0 1 1 9 9A9 9 0 0 1 5 14Z"/>
+        </svg>
+        <label for="processSearch" class="sr-only">Search processes</label>
+        <input class="search-input" id="processSearch" type="search"
+          placeholder="Search processes…" aria-label="Search processes"
+          oninput="filterProcesses()" />
+      </div>
+      <div id="processGrid" class="process-grid">
+        <p style="color:var(--ibm-gray-60);font-size:13px;">Loading available processes…</p>
+      </div>
+    </div><!-- /view-launch -->
+
+    <!-- ══════════════════════════════════════════════════════════════
+         VIEW: TASK SEARCH
+    ══════════════════════════════════════════════════════════════════ -->
+    <div class="view" id="view-search" role="region" aria-label="Task Search">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Task Search</h1>
+          <p class="page-subtitle">Ad hoc and saved task searches</p>
+        </div>
+      </div>
+      <!-- Saved searches -->
+      <section aria-labelledby="saved-searches-heading" style="margin-bottom:24px;">
+        <h2 id="saved-searches-heading" class="section-title">Saved searches</h2>
+        <div id="savedSearchList" class="saved-search-list">
+          <span style="font-size:12px;color:var(--ibm-gray-60);">Loading saved searches…</span>
+        </div>
+        <button type="button" class="btn btn-ghost" id="saveCurrentSearchBtn" onclick="openSaveSearchDialog()" style="margin-top:4px;" disabled>
+          + Save current search
+        </button>
+      </section>
+
+      <!-- Ad hoc search form -->
+      <section aria-labelledby="adhoc-search-heading">
+        <h2 id="adhoc-search-heading" class="section-title">Search tasks</h2>
+        <div class="toolbar" style="flex-wrap:wrap;">
+          <div class="search-wrap">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+              <path d="M29 27.6L21 19.6A11 11 0 1 0 19.6 21l8 8ZM5 14a9 9 0 1 1 9 9A9 9 0 0 1 5 14Z"/>
+            </svg>
+            <label for="adHocSearchInput" class="sr-only">Search term</label>
+            <input class="search-input" id="adHocSearchInput" type="search"
+              placeholder="Search by task name or process" aria-label="Search term" />
+          </div>
+          <label for="adHocStatusFilter" class="sr-only">Status filter</label>
+          <select class="filter-select" id="adHocStatusFilter" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option value="STATE_CLAIMED">Claimed</option>
+            <option value="STATE_READY">Ready</option>
+            <option value="STATE_RECEIVED">Received</option>
+          </select>
+          <label for="adHocPriorityFilter" class="sr-only">Priority filter</label>
+          <select class="filter-select" id="adHocPriorityFilter" aria-label="Filter by priority">
+            <option value="">All Priorities</option>
+            <option value="10">Critical (10)</option>
+            <option value="20">High (20)</option>
+            <option value="30">Medium (30)</option>
+            <option value="40">Low (40)</option>
+            <option value="50">Very Low (50)</option>
+          </select>
+          <button type="button" class="btn btn-primary" onclick="runAdHocSearch()">Search</button>
+        </div>
+
+        <!-- Search results table -->
+        <div class="table-wrap" style="margin-top:16px;">
+          <table aria-label="Search results">
+            <thead>
+              <tr>
+                <th scope="col">Task Name</th>
+                <th scope="col">Process</th>
+                <th scope="col">Priority</th>
+                <th scope="col">Due Date</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="searchResultsBody">
+              <tr class="state-row">
+                <td colspan="6">
+                  <span class="state-icon" aria-hidden="true">🔍</span>
+                  <p>Enter a search term and click Search.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <nav class="pagination" id="searchPaginationBar" aria-label="Search results pagination"></nav>
+        </div>
+      </section>
+    </div><!-- /view-search -->
+
+    <!-- ══════════════════════════════════════════════════════════════
+         VIEW: TEAM VIEW
+    ══════════════════════════════════════════════════════════════════ -->
+    <div class="view" id="view-team" role="region" aria-label="Team View">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Team View</h1>
+          <p class="page-subtitle">Team workload and member overview</p>
+        </div>
+      </div>
+      <!-- Teams list (runtime-verified) -->
+      <section aria-labelledby="teams-heading" style="margin-bottom:24px;">
+        <h2 id="teams-heading" class="section-title">Your teams</h2>
+        <div id="teamsList" class="info-card">
+          <p style="font-size:13px;color:var(--ibm-gray-60);">Loading teams…</p>
+        </div>
+      </section>
+
+      <!-- Team workload dashboard (requires team selection) -->
+      <section aria-labelledby="team-workload-heading">
+        <h2 id="team-workload-heading" class="section-title">Team workload dashboard</h2>
+        <div class="info-card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <label for="teamSelect" class="sr-only">Select team</label>
+            <select class="filter-select" id="teamSelect" aria-label="Select team" onchange="loadTeamDashboard()" style="min-width:180px;">
+              <option value="">Select a team…</option>
+            </select>
+            <button type="button" class="btn btn-primary" onclick="loadTeamDashboard()">Load Dashboard</button>
+          </div>
+          <div id="teamDashboardResult"></div>
+        </div>
+      </section>
+    </div><!-- /view-team -->
+
+    <!-- ══════════════════════════════════════════════════════════════
+         VIEW: ADMINISTRATION
+    ══════════════════════════════════════════════════════════════════ -->
+    <div class="view" id="view-admin" role="region" aria-label="Administration">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Administration</h1>
+          <p class="page-subtitle">Admin tools and system configuration</p>
+        </div>
+      </div>
+      <div class="info-card" style="text-align:center;padding:48px 24px;">
+        <p style="font-size:13px;color:var(--ibm-gray-60);">Administration features are coming soon.</p>
+      </div>
+    </div><!-- /view-admin -->
+
+  </main><!-- /main-area -->
+</div><!-- /app-shell -->
+
+<!-- ─── Task Modal ───────────────────────────────────────────────────── -->
+<!--
+  iframe sandbox: TODO — sandbox compatibility MUST be tested against the real BAW task UI
+  before adding a sandbox attribute. BAW heritage coach forms use inline scripts,
+  postMessage, and same-origin redirects that may be blocked by sandbox restrictions.
+  See Gap G7.
+-->
+<div class="modal-backdrop" id="taskModal" role="dialog" aria-modal="true"
+  aria-labelledby="modalTitle" aria-describedby="modalTaskDesc"
+  onclick="handleBackdropClick(event)">
+  <div class="modal">
+    <span class="focus-sentinel" id="modalSentinelStart" tabindex="0" aria-hidden="true" onfocus="trapFocusToEnd()"></span>
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Task</span>
+      <button class="modal-close" id="modalCloseBtn" type="button" aria-label="Close task" onclick="closeModal()">✕</button>
+    </div>
+    <p id="modalTaskDesc" class="sr-only">Task form loaded in embedded view.</p>
+    <iframe class="modal-iframe" id="taskIframe" title="Task form" src="about:blank"></iframe>
+    <span class="focus-sentinel" id="modalSentinelEnd" tabindex="0" aria-hidden="true" onfocus="trapFocusToStart()"></span>
+  </div>
+</div>
+
+<!-- ─── Confirm dialog ───────────────────────────────────────────────── -->
+<div class="confirm-dialog" id="confirmDialog" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirmTitle">Confirm</div>
+    <div class="confirm-body" id="confirmBody"></div>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-ghost" onclick="resolveConfirm(false)">Cancel</button>
+      <button type="button" class="btn btn-primary" id="confirmOkBtn" onclick="resolveConfirm(true)">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Save search dialog ───────────────────────────────────────────── -->
+<div class="confirm-dialog" id="saveSearchDialog" role="dialog" aria-modal="true" aria-labelledby="saveSearchTitle">
+  <div class="confirm-box">
+    <div class="confirm-title" id="saveSearchTitle">Save Search</div>
+    <div class="confirm-body">
+      <label for="saveSearchName" style="font-size:13px;display:block;margin-bottom:6px;">Search name</label>
+      <input type="text" id="saveSearchName" class="search-input" style="width:100%;" placeholder="My saved search…" />
+    </div>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-ghost" onclick="closeSaveSearchDialog()">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="doSaveSearch()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Reassign dialog ───────────────────────────────────────────────── -->
+<!--
+  API: PUT /rest/bpm/wle/v1/task/{taskId}?action=assign&toUser=<user>
+       PUT /rest/bpm/wle/v1/task/{taskId}?action=assign&toMe=true
+       PUT /rest/bpm/wle/v1/task/{taskId}?action=assign&back=true
+  T2.16 — VERIFIED IN LOCAL BAW
+-->
+<div class="confirm-dialog" id="reassignDialog" role="dialog" aria-modal="true" aria-labelledby="reassignDialogTitle">
+  <div class="reassign-box">
+    <div class="confirm-title" id="reassignDialogTitle">Reassign Task</div>
+    <div class="form-row">
+      <label class="form-label" for="reassignUserInput">Assign to username</label>
+      <input type="text" id="reassignUserInput" class="form-input"
+        placeholder="Enter BAW username…"
+        aria-describedby="reassignUserHint" />
+      <span id="reassignUserHint" style="font-size:11px;color:var(--ibm-gray-60);">
+        Enter the BAW login username of the target user.
+      </span>
+    </div>
+    <div class="form-check-group">
+      <label class="form-check">
+        <input type="checkbox" id="reassignToMeChk"
+          onchange="if(this.checked){document.getElementById('reassignUserInput').value='';document.getElementById('reassignUserInput').disabled=true;}else{document.getElementById('reassignUserInput').disabled=false;}" />
+        Assign to me
+      </label>
+      <label class="form-check">
+        <input type="checkbox" id="reassignBackChk" />
+        Return to previous owner (back=true)
+      </label>
+    </div>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-ghost" onclick="closeReassignDialog()">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="doReassign()">Reassign</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Rename saved search dialog ───────────────────────────────────── -->
+<div class="confirm-dialog" id="renameSearchDialog" role="dialog" aria-modal="true" aria-labelledby="renameSearchTitle">
+  <div class="confirm-box">
+    <div class="confirm-title" id="renameSearchTitle">Rename Search</div>
+    <div class="confirm-body">
+      <label for="renameSearchOldName" style="font-size:12px;color:var(--ibm-gray-60);display:block;margin-bottom:4px;">Current name</label>
+      <p id="renameSearchOldName" style="font-size:13px;font-weight:500;margin-bottom:12px;"></p>
+      <label for="renameSearchNewName" style="font-size:13px;display:block;margin-bottom:6px;">New name</label>
+      <input type="text" id="renameSearchNewName" class="search-input" style="width:100%;" placeholder="New search name…" />
+    </div>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-ghost" onclick="closeRenameSearchDialog()">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="doRenameSearch()">Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast container ──────────────────────────────────────────────── -->
+<div class="toast-container" id="toastContainer" role="status" aria-live="assertive" aria-atomic="true"></div>
+
+<!-- ─── JavaScript ───────────────────────────────────────────────────── -->
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CONFIGURATION
+═══════════════════════════════════════════════════════════════════════ */
+const PAGE_SIZE        = 10;
+const SEARCH_PAGE_SIZE = 10;
+const POLL_INTERVAL    = 60_000;   // 60 s background poll
+const STALE_THRESHOLD  = 90_000;   // 90 s before stale warning
+
+/* ═══════════════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════════════ */
+let state = {
+  /* My Tasks view */
+  allTasks:        [],
+  filteredTasks:   [],
+  sortField:       'due',
+  sortDir:         'asc',
+  currentFilter:   'all',
+  searchQuery:     '',
+  priorityFilter:  '',
+  statusFilter:    '',
+  currentPage:     1,
+  loading:         false,
+  lastUpdatedAt:   null,
+  taskFingerprint: '',
+  pollTimer:       null,
+  staleTimer:      null,
+  apiTotalCount:   0,    // totalCount from API (for truncation banner)
+
+  /* Launch view */
+  allProcesses:    [],
+  filteredProcesses: [],
+
+  /* Search view */
+  savedSearches:       [],
+  searchResults:       [],
+  searchCurrentPage:   1,
+  lastSearchPayload:   null,
+
+  /* Team view */
+  teams:  [],
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════════════════ */
+function announceSR(msg) {
+  const el = document.getElementById('srTableStatus');
+  if (!el) return;
+  el.textContent = '';
+  requestAnimationFrame(() => { el.textContent = msg; });
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+const MAX_TOASTS = 3;
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  while (container.children.length >= MAX_TOASTS) {
+    container.firstElementChild.remove();
+  }
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════════════════════════ */
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+    n.removeAttribute('aria-current');
+  });
+  const view = document.getElementById(`view-${name}`);
+  if (view) view.classList.add('active');
+  const navBtn = document.getElementById(`nav-${name}`);
+  if (navBtn) { navBtn.classList.add('active'); navBtn.setAttribute('aria-current', 'page'); }
+  closeSidebar();
+
+  /* Lazy-load data on first navigation */
+  if (name === 'launch' && state.allProcesses.length === 0) loadLaunchableProcesses();
+  if (name === 'search' && state.savedSearches.length === 0) loadSavedSearches();
+  if (name === 'search') loadSearchMetadata();   // idempotent — loads once
+  if (name === 'team'   && state.teams.length === 0) loadTeams();
+}
+
+/* Sidebar (mobile) */
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarBackdrop').classList.add('open');
+  document.getElementById('sidebarToggle').setAttribute('aria-expanded', 'true');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('open');
+  document.getElementById('sidebarToggle').setAttribute('aria-expanded', 'false');
+}
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  const isOpen = document.getElementById('sidebar').classList.contains('open');
+  isOpen ? closeSidebar() : openSidebar();
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DATE HELPERS
+═══════════════════════════════════════════════════════════════════════ */
+const MS_HOUR = 3_600_000;
+const MS_DAY  = 86_400_000;
+
+function parseDue(raw) {
+  if (!raw) return null;
+  const d = new Date(raw);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function dueStatus(due) {
+  if (!due) return 'none';
+  const diff = due - Date.now();
+  if (diff < 0) return 'overdue';
+  if (diff < MS_DAY) return 'atrisk';
+  return 'ok';
+}
+
+function formatDue(due) {
+  if (!due) return '—';
+  const diff = due - Date.now();
+  const days = Math.round(diff / MS_DAY);
+  if (diff < 0) {
+    const ago = Math.round(-diff / MS_DAY);
+    return ago === 0 ? 'Today (overdue)' : `${ago}d overdue`;
+  }
+  if (diff < MS_HOUR) return 'Due < 1 hr';
+  if (diff < MS_DAY)  return `Due in ${Math.round(diff / MS_HOUR)}h`;
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Tomorrow';
+  return `In ${days} days`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PRIORITY & STATE HELPERS
+═══════════════════════════════════════════════════════════════════════ */
+function priorityLabel(val) {
+  const n = Number(val);
+  if (n <= 20) return 'high';
+  if (n <= 30) return 'medium';
+  return 'low';
+}
+
+function normState(task) {
+  return (task.STATE || task.STATUS || '').toLowerCase().replace(/^state_/, '');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CURRENT USER  (T1.1 — VERIFIED IN LOCAL BAW)
+═══════════════════════════════════════════════════════════════════════ */
+/* Cached profile data — populated once on load, reused by the dropdown */
+let _userProfile = null;
+
+async function loadUser() {
+  try {
+    const res = await fetch('/rest/bpm/wle/v1/user/current?parts=all', {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const data = json.data || json;
+    _userProfile = data;   // cache the full profile for the dropdown
+
+    const fullName = data.fullName || data.displayName || data.userName || 'BAW User';
+    const initials = fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+    /* Header button */
+    document.getElementById('userName').textContent   = fullName;
+    document.getElementById('userAvatar').textContent = initials;
+
+    /* Pre-populate dropdown header */
+    document.getElementById('dropdownFullName').textContent = fullName;
+    document.getElementById('dropdownUserName').textContent = data.userName || '';
+    document.getElementById('dropdownAvatar').textContent   = initials;
+
+    /* Build profile rows from whatever fields the server returned */
+    renderProfileDropdown(data);
+
+  } catch {
+    document.getElementById('userName').textContent   = 'BAW User';
+    document.getElementById('userAvatar').textContent = 'U';
+    document.getElementById('dropdownBody').innerHTML =
+      '<p style="font-size:12px;color:var(--ibm-gray-60);">Profile unavailable.</p>';
+  }
+}
+
+/* Build the profile field rows from the API response.
+   Only renders fields that are actually present — no fabrication. */
+function renderProfileDropdown(data) {
+  const body = document.getElementById('dropdownBody');
+  if (!body) return;
+
+  /* Fields to show if present, in display order.
+     Source: IBM BAW documentation for /rest/bpm/wle/v1/user/current?parts=all
+     Runtime-verified fields: fullName, displayName, userName
+     Documented but not runtime-tested: emailAddress, userPreferences, membersOf, isAdmin
+     All rendered only when present in the actual response. */
+  const fields = [
+    { key: 'fullName',      label: 'Full name' },
+    { key: 'displayName',   label: 'Display name' },
+    { key: 'userName',      label: 'Username' },
+    { key: 'emailAddress',  label: 'Email' },
+    { key: 'primaryGroup',  label: 'Primary group' },
+    { key: 'isAdmin',       label: 'Admin' },
+  ];
+
+  const rows = fields
+    .filter(f => data[f.key] !== undefined && data[f.key] !== null && data[f.key] !== '')
+    .map(f => {
+      const val = f.key === 'isAdmin' ? (data[f.key] ? 'Yes' : 'No') : String(data[f.key]);
+      return `<div class="profile-row">
+        <span class="profile-label">${escHtml(f.label)}</span>
+        <span class="profile-value">${escHtml(val)}</span>
+      </div>`;
+    });
+
+  /* Groups / memberships — shown as a comma-separated list if present */
+  if (Array.isArray(data.membersOf) && data.membersOf.length) {
+    const groupNames = data.membersOf.map(g => g.groupName || g.name || g).join(', ');
+    rows.push(`<div class="profile-row">
+      <span class="profile-label">Groups</span>
+      <span class="profile-value">${escHtml(groupNames)}</span>
+    </div>`);
+  }
+
+  if (!rows.length) {
+    body.innerHTML = '<p style="font-size:12px;color:var(--ibm-gray-60);">No additional profile fields returned by server.</p>';
+    return;
+  }
+  body.innerHTML = rows.join('');
+}
+
+/* Toggle the profile dropdown */
+function toggleProfileDropdown() {
+  const dropdown = document.getElementById('userDropdown');
+  const btn      = document.getElementById('userProfileBtn');
+  if (!dropdown || !btn) return;
+  const isOpen = dropdown.classList.contains('open');
+  dropdown.classList.toggle('open', !isOpen);
+  btn.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+}
+
+/* Close the dropdown when clicking outside it */
+document.addEventListener('click', e => {
+  const dropdown = document.getElementById('userDropdown');
+  const btn      = document.getElementById('userProfileBtn');
+  if (!dropdown || !btn) return;
+  if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+    dropdown.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   REFRESH PIPELINE  (MY TASKS)
+═══════════════════════════════════════════════════════════════════════ */
+function triggerRefresh(silent = false) {
+  if (state.loading) return;
+  resetPollTimer();
+  _doLoad(silent);
+}
+
+async function _doLoad(silent) {
+  state.loading = true;
+  if (!silent) {
+    renderTableLoading();
+    setRefreshBtnSpinning(true);
+  }
+  try {
+    const res = await fetch(
+      '/rest/bpm/wle/v1/tasks?interaction=claimed_and_available&calcStats=true&size=500&offset=0',
+      { method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' } }
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+
+    /* Defensive extraction — handles multiple BAW response shapes */
+    let raw = [];
+    if (Array.isArray(json))             raw = json;
+    else if (Array.isArray(json.items))  raw = json.items;
+    else if (Array.isArray(json.data?.items)) raw = json.data.items;
+    else if (Array.isArray(json.data))   raw = json.data;
+
+    /* totalCount for truncation banner */
+    const totalCount = json.data?.totalCount || json.totalCount || raw.length;
+    state.apiTotalCount = totalCount;
+
+    /* Exclude terminal states */
+    const EXCLUDE_STATES = ['finished', 'terminated', 'completed', 'closed', 'failed'];
+    const fresh = raw.filter(t => {
+      const st = (t.STATE || t.STATUS || '').toLowerCase();
+      return !EXCLUDE_STATES.some(x => st.includes(x));
+    });
+
+    const newFp = computeFingerprint(fresh);
+    const changed = newFp !== state.taskFingerprint;
+
+    if (changed || !silent) {
+      state.allTasks        = fresh;
+      state.taskFingerprint = newFp;
+      computeStats();
+      applyFilters();
+      updateTruncationBanner(totalCount, raw.length);
+      if (silent && changed) announceSR('Task list updated.');
+    }
+
+    state.lastUpdatedAt = new Date();
+    updateLastUpdatedBar();
+    scheduleStaleWarning();
+
+    /* Update nav badge */
+    const overdueCnt = fresh.filter(t => dueStatus(parseDue(t.DUE)) === 'overdue').length;
+    const badge = document.getElementById('navTaskBadge');
+    if (badge) {
+      if (overdueCnt > 0) { badge.textContent = overdueCnt; badge.style.display = ''; }
+      else { badge.style.display = 'none'; }
+    }
+
+  } catch (e) {
+    if (!silent) {
+      renderTableError(e.message);
+      toast(`Failed to load tasks: ${e.message}`, 'error');
+    } else {
+      markStale();
+      toast(`Background refresh failed: ${e.message}`, 'error');
+    }
+  } finally {
+    state.loading = false;
+    setRefreshBtnSpinning(false);
+  }
+}
+
+function updateTruncationBanner(totalCount, returnedCount) {
+  const banner = document.getElementById('truncationBanner');
+  const msg    = document.getElementById('truncationMsg');
+  if (!banner || !msg) return;
+  if (totalCount > returnedCount) {
+    msg.textContent = `Showing ${returnedCount.toLocaleString()} of ${totalCount.toLocaleString()} tasks. Use pagination or task search to view more.`;
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
+}
+
+function computeFingerprint(tasks) {
+  return tasks
+    .map(t => `${t.TKIID}:${(t.STATE || t.STATUS || '').toLowerCase()}:${t.DUE || ''}`)
+    .sort().join('|');
+}
+
+/* ── Polling ──────────────────────────────────────────────────────────── */
+function startPolling() {
+  stopPolling();
+  state.pollTimer = setInterval(() => {
+    if (document.visibilityState === 'hidden') return;
+    triggerRefresh(true);
+  }, POLL_INTERVAL);
+}
+function stopPolling() {
+  if (state.pollTimer !== null) { clearInterval(state.pollTimer); state.pollTimer = null; }
+}
+function resetPollTimer() { startPolling(); }
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') triggerRefresh(true);
+});
+
+/* ── Stale bar ─────────────────────────────────────────────────────────── */
+function updateLastUpdatedBar() {
+  const label = document.getElementById('lastUpdatedLabel');
+  const bar   = document.getElementById('refreshBar');
+  if (!label || !bar) return;
+  if (!state.lastUpdatedAt) { label.textContent = ''; return; }
+  const secs = Math.round((Date.now() - state.lastUpdatedAt.getTime()) / 1000);
+  const mins = Math.floor(secs / 60);
+  let txt = secs < 10 ? 'Updated just now'
+          : secs < 60 ? `Updated ${secs}s ago`
+          : mins === 1 ? 'Updated 1 min ago' : `Updated ${mins} mins ago`;
+  label.textContent = txt;
+  bar.classList.remove('stale');
+}
+function scheduleStaleWarning() {
+  clearTimeout(state.staleTimer);
+  state.staleTimer = setTimeout(markStale, STALE_THRESHOLD);
+}
+function markStale() {
+  const bar = document.getElementById('refreshBar');
+  if (bar) bar.classList.add('stale');
+  updateLastUpdatedBar();
+}
+function setRefreshBtnSpinning(on) {
+  const btn = document.getElementById('refreshBtn');
+  if (!btn) return;
+  btn.classList.toggle('refreshing', on);
+  btn.disabled = on;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   STATISTICS
+═══════════════════════════════════════════════════════════════════════ */
+function computeStats() {
+  let overdue = 0, atrisk = 0, active = 0;
+  state.allTasks.forEach(t => {
+    const ds = dueStatus(parseDue(t.DUE));
+    if (ds === 'overdue') overdue++;
+    else if (ds === 'atrisk') atrisk++;
+    if (normState(t) === 'claimed') active++;
+  });
+  const all = state.allTasks.length;
+  document.getElementById('statOverdue').textContent = overdue;
+  document.getElementById('statAtrisk').textContent  = atrisk;
+  document.getElementById('statActive').textContent  = active;
+  document.getElementById('statAll').textContent     = all;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FILTERS
+═══════════════════════════════════════════════════════════════════════ */
+function setFilter(filter) {
+  state.currentFilter = filter;
+  state.currentPage   = 1;
+  document.querySelectorAll('.stat-card').forEach(card => {
+    const isActive = card.dataset.filter === filter;
+    card.classList.toggle('active-filter', isActive);
+    card.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+  applyFilters();
+}
+
+function applyFilters() {
+  const search  = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+  const priF    = document.getElementById('priorityFilter')?.value || '';
+  const statusF = document.getElementById('statusFilter')?.value || '';
+  state.searchQuery    = search;
+  state.priorityFilter = priF;
+  state.statusFilter   = statusF;
+  state.currentPage    = 1;
+
+  let tasks = [...state.allTasks];
+  const cf = state.currentFilter;
+  if (cf === 'overdue') tasks = tasks.filter(t => dueStatus(parseDue(t.DUE)) === 'overdue');
+  else if (cf === 'atrisk') tasks = tasks.filter(t => dueStatus(parseDue(t.DUE)) === 'atrisk');
+  else if (cf === 'active') tasks = tasks.filter(t => normState(t) === 'claimed');
+
+  if (search) {
+    tasks = tasks.filter(t => {
+      const hay = [t.TAD_DISPLAY_NAME, t.NAME, t.PT_NAME, t.TAD_DESCRIPTION]
+        .map(s => (s || '').toLowerCase()).join(' ');
+      return hay.includes(search);
+    });
+  }
+  if (priF)    tasks = tasks.filter(t => priorityLabel(t.PRIORITY) === priF);
+  if (statusF) tasks = tasks.filter(t => normState(t) === statusF);
+
+  state.filteredTasks = tasks;
+  sortTasks();
+}
+
+let _searchTimer = null;
+function handleSearch() {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(applyFilters, 300);
+}
+
+function clearAllFilters() {
+  document.getElementById('searchInput').value     = '';
+  document.getElementById('priorityFilter').value  = '';
+  document.getElementById('statusFilter').value    = '';
+  state.currentFilter = 'all';
+  document.querySelectorAll('.stat-card').forEach(card => {
+    const isActive = card.dataset.filter === 'all';
+    card.classList.toggle('active-filter', isActive);
+    card.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+  applyFilters();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SORTING
+═══════════════════════════════════════════════════════════════════════ */
+function sortBy(field) {
+  state.sortDir   = state.sortField === field ? (state.sortDir === 'asc' ? 'desc' : 'asc') : 'asc';
+  state.sortField = field;
+  sortTasks();
+}
+
+function sortTasks() {
+  const { sortField, sortDir } = state;
+  const dir = sortDir === 'asc' ? 1 : -1;
+  state.filteredTasks.sort((a, b) => {
+    switch (sortField) {
+      case 'priority': return (Number(b.PRIORITY) - Number(a.PRIORITY)) * dir;
+      case 'due': {
+        const da = parseDue(a.DUE), db = parseDue(b.DUE);
+        if (!da && !db) return 0; if (!da) return 1; if (!db) return -1;
+        return (da - db) * dir;
+      }
+      case 'name': {
+        const na = (a.TAD_DISPLAY_NAME || a.NAME || '').toLowerCase();
+        const nb = (b.TAD_DISPLAY_NAME || b.NAME || '').toLowerCase();
+        return na < nb ? -dir : na > nb ? dir : 0;
+      }
+      default: return 0;
+    }
+  });
+  ['name', 'priority', 'due'].forEach(f => {
+    const th = document.getElementById(`th-${f}`);
+    if (!th) return;
+    if (f === sortField) {
+      th.classList.add('sorted');
+      th.setAttribute('aria-sort', sortDir === 'asc' ? 'ascending' : 'descending');
+      th.querySelector('.sort-indicator').textContent = sortDir === 'asc' ? '↑' : '↓';
+    } else {
+      th.classList.remove('sorted');
+      th.setAttribute('aria-sort', 'none');
+      th.querySelector('.sort-indicator').textContent = '↕';
+    }
+  });
+  renderTable();
+  renderMobileCards();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   RENDER — MY TASKS
+═══════════════════════════════════════════════════════════════════════ */
+function getPageSlice() {
+  const tasks = state.filteredTasks;
+  const total = tasks.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (state.currentPage > pages) state.currentPage = pages;
+  const start = (state.currentPage - 1) * PAGE_SIZE;
+  return { tasks, total, pages, start, slice: tasks.slice(start, start + PAGE_SIZE) };
+}
+
+function normaliseTaskFields(task) {
+  const taskId   = task.TKIID || '';
+  const taskName = task.TAD_DISPLAY_NAME || task.NAME || 'Untitled Task';
+  const procName = task.PT_NAME || '—';
+  const priLevel = priorityLabel(task.PRIORITY);
+  const due      = parseDue(task.DUE);
+  const ds       = dueStatus(due);
+  const dueCls   = ds === 'overdue' ? 'due-overdue' : ds === 'atrisk' ? 'due-atrisk' : 'due-ok';
+  const dueText  = formatDue(due);
+  const stNorm   = normState(task);
+  const stClass  = ['claimed','ready','received'].includes(stNorm) ? `status-${stNorm}` : 'status-other';
+  const stLabel  = stNorm ? stNorm.charAt(0).toUpperCase() + stNorm.slice(1) : '—';
+  return { taskId, taskName, procName, priLevel, due, ds, dueCls, dueText, stNorm, stClass, stLabel };
+}
+
+function taskRowHtml(task, colspan) {
+  const { taskId, taskName, procName, priLevel, dueCls, dueText, stNorm, stClass, stLabel } = normaliseTaskFields(task);
+  const eid = escHtml(taskId), en = escHtml(taskName), ep = escHtml(procName);
+  const priNum = Number(task.PRIORITY) || 30;
+  /* action=cancel on a claimed task releases the claim back to Ready (BAW
+     cancelClaim semantics) — it does NOT terminate the task. Show "Release".
+     action=cancel on a ready/received task requires admin/instance-owner
+     authority (CWTBG0549E for a standard task owner) — hide that button. */
+  const canClaim   = stNorm === 'ready' || stNorm === 'received';
+  const canRelease = stNorm === 'claimed';
+  return `
+    <tr>
+      <td class="task-name-cell">
+        <a class="task-name-link" href="javascript:void(0)"
+           data-taskid="${eid}" data-taskname="${en}"
+           onclick="openTaskFromLink(this)" title="${en}">${en}</a>
+      </td>
+      <td><span class="process-name" title="${ep}">${ep}</span></td>
+      <td>
+        <span class="priority-badge priority-${priLevel}">
+          <span class="sr-only">Priority: </span>${priLevel}
+        </span>
+      </td>
+      <td><span class="${dueCls}">${escHtml(dueText)}</span></td>
+      <td>
+        <span class="status-badge ${stClass}">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span class="sr-only">Status: </span>${escHtml(stLabel)}
+        </span>
+      </td>
+      <td>
+        <div class="row-actions">
+          <button type="button" class="btn-sm btn-sm-primary"
+            data-taskid="${eid}" data-taskname="${en}"
+            onclick="openTaskFromBtn(this)">Open</button>
+          ${canClaim ? `<button type="button" class="btn-sm"
+            data-taskid="${eid}" onclick="claimTask(this)">Claim</button>` : ''}
+          ${canRelease ? `<button type="button" class="btn-sm"
+            data-taskid="${eid}" onclick="releaseTask(this)"
+            aria-label="Release task ${en} back to queue">Release</button>` : ''}
+          <button type="button" class="btn-sm"
+            data-taskid="${eid}" data-taskname="${en}"
+            onclick="openReassignDialog(this)" aria-label="Reassign task ${en}">Reassign</button>
+          <select class="filter-select" style="height:28px;font-size:11px;padding:0 22px 0 6px;"
+            aria-label="Set priority for task ${en}"
+            data-taskid="${eid}"
+            onchange="updatePriority(this)">
+            <option value="">Priority…</option>
+            <option value="10" ${priNum===10?'selected':''}>Critical</option>
+            <option value="20" ${priNum===20?'selected':''}>High</option>
+            <option value="30" ${priNum===30?'selected':''}>Medium</option>
+            <option value="40" ${priNum===40?'selected':''}>Low</option>
+            <option value="50" ${priNum===50?'selected':''}>Very Low</option>
+          </select>
+        </div>
+      </td>
+    </tr>`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('taskTableBody');
+  const { total, pages, slice } = getPageSlice();
+  document.getElementById('resultCount').textContent = total === 1 ? '1 task' : `${total} tasks`;
+
+  if (!slice.length) {
+    tbody.innerHTML = `<tr class="state-row"><td colspan="6"><span class="state-icon" aria-hidden="true">📭</span><p>No tasks match your filters.</p></td></tr>`;
+    renderPagination(pages, total);
+    return;
+  }
+  tbody.innerHTML = slice.map(t => taskRowHtml(t, 6)).join('');
+  renderPagination(pages, total);
+}
+
+function renderMobileCards() {
+  const container = document.getElementById('mobileTaskList');
+  const mobileNav = document.getElementById('mobilePaginationBar');
+  if (!container) return;
+  const { total, pages, slice } = getPageSlice();
+
+  if (!slice.length) {
+    container.innerHTML = `<div class="mobile-task-card" role="status"><p style="color:var(--ibm-gray-60);text-align:center;padding:24px 0">No tasks match your filters.</p></div>`;
+    if (mobileNav) mobileNav.style.display = 'none';
+    return;
+  }
+  container.innerHTML = slice.map(task => {
+    const { taskId, taskName, procName, priLevel, dueCls, dueText, stClass, stLabel } = normaliseTaskFields(task);
+    const eid = escHtml(taskId), en = escHtml(taskName), ep = escHtml(procName);
+    return `
+      <div class="mobile-task-card">
+        <div class="mobile-task-card-header">
+          <button type="button" class="mobile-task-name-btn" data-taskid="${eid}" data-taskname="${en}" onclick="openTaskFromBtn(this)">${en}</button>
+          <span class="priority-badge priority-${priLevel}"><span class="sr-only">Priority: </span>${priLevel}</span>
+        </div>
+        <div class="mobile-task-meta">
+          <span class="mobile-task-meta-item"><span class="sr-only">Process:</span>${ep}</span>
+          <span class="mobile-task-meta-item ${dueCls}"><span class="sr-only">Due: </span>${escHtml(dueText)}</span>
+        </div>
+        <div class="mobile-task-footer">
+          <span class="status-badge ${stClass}"><span class="status-dot" aria-hidden="true"></span><span class="sr-only">Status: </span>${escHtml(stLabel)}</span>
+          <button type="button" class="mobile-open-btn" data-taskid="${eid}" data-taskname="${en}" onclick="openTaskFromBtn(this)">Open</button>
+        </div>
+      </div>`;
+  }).join('');
+  if (mobileNav) { renderPaginationInto(mobileNav, pages, total); mobileNav.style.display = total > 0 ? 'flex' : 'none'; }
+}
+
+function renderTableLoading() {
+  document.getElementById('taskTableBody').innerHTML = `<tr class="state-row"><td colspan="6"><span class="spinner" role="status" aria-label="Loading tasks"></span><p style="margin-top:10px">Loading your tasks…</p></td></tr>`;
+  document.getElementById('paginationBar').innerHTML = '';
+  document.getElementById('resultCount').textContent = '';
+  const ml = document.getElementById('mobileTaskList'); if (ml) ml.innerHTML = '';
+  const mp = document.getElementById('mobilePaginationBar'); if (mp) { mp.innerHTML = ''; mp.style.display = 'none'; }
+  announceSR('Loading your tasks…');
+}
+
+function renderTableError(msg) {
+  const safeMsg = escHtml(msg);
+  document.getElementById('taskTableBody').innerHTML = `<tr class="state-row"><td colspan="6"><span class="state-icon" aria-hidden="true">⚠️</span><p role="alert">Could not load tasks.</p><p style="font-size:11px;color:var(--ibm-gray-60);margin-top:4px">${safeMsg}</p><button type="button" class="btn btn-ghost" onclick="triggerRefresh()" style="margin-top:12px">Retry</button></td></tr>`;
+  document.getElementById('paginationBar').innerHTML = '';
+  const ml = document.getElementById('mobileTaskList');
+  if (ml) ml.innerHTML = `<div class="mobile-task-card" role="alert"><p style="color:var(--ibm-gray-60);text-align:center">Could not load tasks. ${safeMsg}</p><div style="text-align:center;margin-top:12px"><button type="button" class="mobile-open-btn" onclick="triggerRefresh()">Retry</button></div></div>`;
+  announceSR('Error loading tasks: ' + msg);
+}
+
+/* ── Pagination helpers ─────────────────────────────────────────────── */
+function renderPagination(pages, total) {
+  renderPaginationInto(document.getElementById('paginationBar'), pages, total);
+}
+
+function renderPaginationInto(bar, pages, total) {
+  if (!bar || total === 0) { if (bar) bar.innerHTML = ''; return; }
+  const cur   = state.currentPage;
+  const start = (cur - 1) * PAGE_SIZE + 1;
+  const end   = Math.min(cur * PAGE_SIZE, total);
+  let btnHtml = '';
+  btnHtml += `<button type="button" class="page-btn" onclick="goPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''} aria-label="Previous page">‹</button>`;
+  pageRange(cur, pages).forEach(p => {
+    if (p === '…') btnHtml += `<span class="page-btn" aria-hidden="true" style="cursor:default;border:none">…</span>`;
+    else btnHtml += `<button type="button" class="page-btn ${p === cur ? 'current' : ''}" onclick="goPage(${p})" aria-label="Page ${p}" ${p === cur ? 'aria-current="page"' : ''}>${p}</button>`;
+  });
+  btnHtml += `<button type="button" class="page-btn" onclick="goPage(${cur + 1})" ${cur === pages ? 'disabled' : ''} aria-label="Next page">›</button>`;
+  bar.innerHTML = `<span class="page-info">${start}–${end} of ${total}</span><div class="page-btns">${btnHtml}</div>`;
+}
+
+function pageRange(cur, pages) {
+  if (pages <= 7) return Array.from({ length: pages }, (_, i) => i + 1);
+  if (cur <= 4)         return [1,2,3,4,5,'…',pages];
+  if (cur >= pages - 3) return [1,'…',pages-4,pages-3,pages-2,pages-1,pages];
+  return [1,'…',cur-1,cur,cur+1,'…',pages];
+}
+
+function goPage(p) {
+  const pages = Math.ceil(state.filteredTasks.length / PAGE_SIZE);
+  if (p < 1 || p > pages) return;
+  state.currentPage = p;
+  renderTable(); renderMobileCards();
+  document.getElementById('main-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TASK MUTATIONS  (T2.15-T2.17 — VERIFIED IN LOCAL BAW)
+   XSRF: session cookie (credentials:same-origin) is sufficient for WLE v1.
+   No bpm-csrf-token header required.
+═══════════════════════════════════════════════════════════════════════ */
+async function mutateTask(taskId, params) {
+  const url = `/rest/bpm/wle/v1/task/${encodeURIComponent(taskId)}?${params}`;
+  const res = await fetch(url, {
+    method: 'PUT',
+    credentials: 'same-origin',
+    headers: { 'Accept': 'application/json' }
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status}: ${body.slice(0, 120)}`);
+  }
+  /* Some BAW actions (e.g. action=cancel on a claimed task) return HTTP 200
+     with an empty body — guard against SyntaxError from res.json(). */
+  const text = await res.text().catch(() => '');
+  if (!text.trim()) return {};
+  try { return JSON.parse(text); } catch { return {}; }
+}
+
+async function claimTask(btn) {
+  const taskId = btn.dataset.taskid;
+  if (!taskId || !/^\d+$/.test(String(taskId))) return;
+  btn.disabled = true;
+  try {
+    await mutateTask(taskId, 'action=claim');
+    toast('Task claimed.', 'success');
+    triggerRefresh(true);
+  } catch (e) {
+    toast(`Could not claim task: ${e.message}`, 'error');
+    btn.disabled = false;
+  }
+}
+
+/* action=cancel on a claimed task releases the claim back to Ready (BAW
+   cancelClaim semantics) — it does NOT terminate the task. The button is
+   labelled "Release" and only shown for claimed tasks. action=cancel on a
+   ready/received task requires admin/instance-owner rights (CWTBG0549E for
+   a standard task owner) — that button is not rendered in taskRowHtml. */
+async function releaseTask(btn) {
+  const taskId = btn.dataset.taskid;
+  if (!taskId || !/^\d+$/.test(String(taskId))) return;
+  const ok = await confirm('Release this task back to the queue? It will return to Ready and can be claimed by another user.', 'Release Task');
+  if (!ok) return;
+  btn.disabled = true;
+  try {
+    await mutateTask(taskId, 'action=cancel');
+    toast('Task released back to queue.', 'info');
+    triggerRefresh(true);
+  } catch (e) {
+    toast(`Could not release task: ${e.message}`, 'error');
+    btn.disabled = false;
+  }
+}
+
+/* ─── Reassign task  (T2.16 — VERIFIED IN LOCAL BAW)
+   PUT /rest/bpm/wle/v1/task/{taskId}?action=assign&toUser=<user>
+   toMe=true assigns back to self; back=true returns to previous user ─── */
+let _reassignTaskId = null;
+
+function openReassignDialog(btn) {
+  const taskId = btn.dataset.taskid;
+  if (!taskId || !/^\d+$/.test(String(taskId))) return;
+  _reassignTaskId = taskId;
+  document.getElementById('reassignUserInput').value = '';
+  document.getElementById('reassignToMeChk').checked  = false;
+  document.getElementById('reassignBackChk').checked  = false;
+  document.getElementById('reassignDialog').classList.add('open');
+  requestAnimationFrame(() => document.getElementById('reassignUserInput').focus());
+}
+
+function closeReassignDialog() {
+  document.getElementById('reassignDialog').classList.remove('open');
+  _reassignTaskId = null;
+}
+
+async function doReassign() {
+  const taskId = _reassignTaskId;
+  if (!taskId || !/^\d+$/.test(String(taskId))) return;
+  const toUser  = document.getElementById('reassignUserInput').value.trim();
+  const toMe    = document.getElementById('reassignToMeChk').checked;
+  const backOpt = document.getElementById('reassignBackChk').checked;
+
+  if (!toUser && !toMe) {
+    toast('Enter a username or check "Assign to me".', 'error');
+    return;
+  }
+
+  let params = 'action=assign';
+  if (toMe)    { params += '&toMe=true'; }
+  else         { params += `&toUser=${encodeURIComponent(toUser)}`; }
+  if (backOpt) { params += '&back=true'; }
+
+  closeReassignDialog();
+  try {
+    await mutateTask(taskId, params);
+    toast('Task reassigned.', 'success');
+    triggerRefresh(true);
+  } catch (e) {
+    toast(`Could not reassign task: ${e.message}`, 'error');
+  }
+}
+
+/* ─── Inline priority update  (T2.17 — VERIFIED IN LOCAL BAW)
+   PUT /rest/bpm/wle/v1/task/{taskId}?action=update&priority={10|20|30|40|50} ─── */
+async function updatePriority(select) {
+  const taskId = select.dataset.taskid;
+  const value  = select.value;
+  if (!taskId || !/^\d+$/.test(String(taskId))) return;
+  if (!value) return;   // "Priority…" placeholder — no-op
+  const prev = select.dataset.prev || '';
+  select.dataset.prev = value;
+  select.disabled = true;
+  try {
+    await mutateTask(taskId, `action=update&priority=${encodeURIComponent(value)}`);
+    toast('Priority updated.', 'success');
+    triggerRefresh(true);
+  } catch (e) {
+    toast(`Could not update priority: ${e.message}`, 'error');
+    /* Revert to previous value */
+    if (prev) select.value = prev;
+    select.disabled = false;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CONFIRM DIALOG (async helper)
+═══════════════════════════════════════════════════════════════════════ */
+let _confirmResolve = null;
+function confirm(body, title = 'Confirm') {
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmBody').textContent  = body;
+    document.getElementById('confirmDialog').classList.add('open');
+    document.getElementById('confirmOkBtn').focus();
+  });
+}
+function resolveConfirm(result) {
+  document.getElementById('confirmDialog').classList.remove('open');
+  if (_confirmResolve) { _confirmResolve(result); _confirmResolve = null; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MODAL — task iframe  (T1.3 — VERIFIED IN LOCAL BAW)
+═══════════════════════════════════════════════════════════════════════ */
+let _modalTrigger = null;
+
+function openTaskFromLink(el) { _modalTrigger = el; openTask(el.dataset.taskid, el.dataset.taskname); }
+function openTaskFromBtn(el)  { _modalTrigger = el; openTask(el.dataset.taskid, el.dataset.taskname); }
+
+function openTask(taskId, taskName) {
+  if (!taskId) return;
+  if (!/^\d+$/.test(String(taskId))) { console.warn('openTask: invalid taskId — must be numeric', taskId); return; }
+  const url = `/teamworks/process.lsw?zWorkflowState=1&zTaskId=${encodeURIComponent(taskId)}&zResetContext=true`;
+  document.getElementById('modalTitle').textContent = taskName || 'Task';
+  document.getElementById('taskIframe').src = url;
+  document.getElementById('taskModal').classList.add('open');
+  requestAnimationFrame(() => document.getElementById('modalCloseBtn').focus());
+}
+
+function trapFocusToEnd()   { document.getElementById('modalCloseBtn').focus(); }
+function trapFocusToStart() { document.getElementById('modalCloseBtn').focus(); }
+
+function closeModal() {
+  document.getElementById('taskModal').classList.remove('open');
+  try { document.getElementById('taskIframe').src = 'about:blank'; } catch (_) {}
+  if (_modalTrigger && typeof _modalTrigger.focus === 'function') {
+    try { _modalTrigger.focus(); } catch (_) {}
+    _modalTrigger = null;
+  }
+  triggerRefresh(true);
+}
+
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById('taskModal')) closeModal();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('taskModal').classList.contains('open')) closeModal();
+    if (document.getElementById('confirmDialog').classList.contains('open')) resolveConfirm(false);
+    if (document.getElementById('saveSearchDialog').classList.contains('open')) closeSaveSearchDialog();
+    if (document.getElementById('reassignDialog').classList.contains('open')) closeReassignDialog();
+    if (document.getElementById('renameSearchDialog').classList.contains('open')) closeRenameSearchDialog();
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PROCESS LAUNCHER  (T2.18-T2.19 — VERIFIED IN LOCAL BAW)
+═══════════════════════════════════════════════════════════════════════ */
+async function loadLaunchableProcesses() {
+  const grid = document.getElementById('processGrid');
+  grid.innerHTML = '<p style="color:var(--ibm-gray-60);font-size:13px;">Loading…</p>';
+  try {
+    const res = await fetch('/rest/bpm/wle/v1/exposed', {
+      method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const items = (json.data?.exposedItemsList || json.exposedItemsList || [])
+      .filter(i => (i.type || '').toLowerCase() === 'process');
+    state.allProcesses      = items;
+    state.filteredProcesses = items;
+    renderProcessGrid();
+  } catch (e) {
+    grid.innerHTML = `<p style="color:var(--ibm-red-60);font-size:13px;">Could not load processes: ${escHtml(e.message)}</p>`;
+  }
+}
+
+function filterProcesses() {
+  const q = (document.getElementById('processSearch')?.value || '').toLowerCase().trim();
+  state.filteredProcesses = q
+    ? state.allProcesses.filter(p => (p.display || p.title || '').toLowerCase().includes(q))
+    : [...state.allProcesses];
+  renderProcessGrid();
+}
+
+function renderProcessGrid() {
+  const grid = document.getElementById('processGrid');
+  const items = state.filteredProcesses;
+  if (!items.length) {
+    grid.innerHTML = `<p style="color:var(--ibm-gray-60);font-size:13px;">No processes available.</p>`;
+    return;
+  }
+  grid.innerHTML = items.map(p => {
+    const name     = escHtml(p.display || p.title || 'Unnamed Process');
+    const app      = escHtml(p.processAppAcronym || p.processAppName || '');
+    /* Use startURL as the canonical parameter source — parsing bpdId and
+       processAppId from it is the only approach verified to work at runtime.
+       Passing itemID directly as bpdId → HTTP 409.
+       Passing processAppID directly as processAppId → HTTP 400 CWTBG0012E.
+       Passing any snapshotId → HTTP 400 CWTBG0012E. Omit snapshotId entirely. */
+    const startUrl = escHtml(p.startURL || '');
+    return `
+      <div class="process-card">
+        <div class="process-card-header">
+          <div class="process-card-icon" aria-hidden="true">▶</div>
+          <div>
+            <div class="process-card-name">${name}</div>
+            ${app ? `<div class="process-card-app">${app}</div>` : ''}
+          </div>
+        </div>
+        <div class="process-card-actions">
+          <button type="button" class="btn btn-primary"
+            data-starturl="${startUrl}" data-name="${name}"
+            onclick="startProcess(this)">Start Process</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function startProcess(btn) {
+  const startUrl = btn.dataset.starturl;
+  const name     = btn.dataset.name;
+  /* Parse bpdId and processAppId from startURL — these are the exact values
+     BAW's action=start accepts. Do not pass snapshotId (causes CWTBG0012E). */
+  if (!startUrl) { toast('Missing process start URL.', 'error'); return; }
+  let bpdId, processAppId;
+  try {
+    const u = new URL(startUrl, 'https://x');
+    bpdId        = u.searchParams.get('bpdId')        || u.searchParams.get('bpd_id') || '';
+    processAppId = u.searchParams.get('processAppId') || u.searchParams.get('appId')  || '';
+  } catch {
+    toast('Could not parse process start URL.', 'error'); return;
+  }
+  if (!bpdId || !processAppId) { toast('Missing process identifiers in start URL.', 'error'); return; }
+  btn.disabled = true;
+  try {
+    const qs = `action=start&bpdId=${encodeURIComponent(bpdId)}&processAppId=${encodeURIComponent(processAppId)}`;
+    const res = await fetch(`/rest/bpm/wle/v1/process?${qs}`, {
+      method: 'POST', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const piid  = json.data?.piid || json.piid || '—';
+    const tkiid = json.data?.tasks?.[0]?.tkiid || json.data?.tasks?.[0]?.TKIID;
+    toast(`Process started (ID: ${piid})`, 'success');
+    if (tkiid) {
+      const openNow = await confirm(`Process started. Open the first task now?`, 'Process Started');
+      if (openNow) openTask(tkiid, name);
+    }
+    /* Refresh task list silently in case the new task arrived */
+    triggerRefresh(true);
+  } catch (e) {
+    toast(`Could not start process: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TASK SEARCH  (T2.2-T2.5 — VERIFIED IN LOCAL BAW)
+═══════════════════════════════════════════════════════════════════════ */
+async function loadSavedSearches() {
+  const container = document.getElementById('savedSearchList');
+  try {
+    const res = await fetch('/rest/bpm/wle/v1/searches/tasks', {
+      method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    state.savedSearches = json.data?.searches || json.searches || [];
+    renderSavedSearches();
+    const saveBtn = document.getElementById('saveCurrentSearchBtn');
+    if (saveBtn) saveBtn.disabled = false;
+  } catch (e) {
+    container.innerHTML = `<span style="font-size:12px;color:var(--ibm-red-60);">Could not load saved searches: ${escHtml(e.message)}</span>`;
+  }
+}
+
+function renderSavedSearches() {
+  const container = document.getElementById('savedSearchList');
+  if (!state.savedSearches.length) {
+    container.innerHTML = `<span style="font-size:12px;color:var(--ibm-gray-60);">No saved searches.</span>`;
+    return;
+  }
+  container.innerHTML = state.savedSearches.map(s => {
+    const n = escHtml(s.name || s.searchName || 'Unnamed');
+    return `
+      <span class="saved-search-chip" tabindex="0" role="button"
+        aria-label="Run saved search: ${n}"
+        data-name="${n}" onkeydown="if(event.key==='Enter'||event.key===' ')runSavedSearch(this)"
+        onclick="runSavedSearch(this)">
+        ${n}
+        <button type="button" class="chip-rename" title="Rename" aria-label="Rename search ${n}"
+          data-name="${n}" onclick="event.stopPropagation();openRenameSearchDialog(this)">✎</button>
+        <button type="button" class="chip-del" aria-label="Delete search ${n}"
+          data-name="${n}" onclick="event.stopPropagation();deleteSavedSearch(this)">✕</button>
+      </span>`;
+  }).join('');
+}
+
+async function runSavedSearch(el) {
+  const name = el.dataset.name;
+  if (!name) return;
+  try {
+    const res = await fetch(`/rest/bpm/wle/v1/searches/tasks/${encodeURIComponent(name)}`, {
+      method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    /* The saved search definition contains criteria — run an ad hoc search using them */
+    const criteria = json.data?.search || json.search || {};
+    state.lastSearchPayload = buildSearchPayload(criteria.conditions || []);
+    await executeSearch(state.lastSearchPayload);
+  } catch (e) {
+    toast(`Could not run search: ${e.message}`, 'error');
+  }
+}
+
+async function deleteSavedSearch(btn) {
+  const name = btn.dataset.name;
+  if (!name) return;
+  const ok = await confirm(`Delete saved search "${name}"?`, 'Delete Search');
+  if (!ok) return;
+  try {
+    const res = await fetch(`/rest/bpm/wle/v1/searches/tasks/${encodeURIComponent(name)}`, {
+      method: 'DELETE', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    toast(`Saved search "${name}" deleted.`, 'info');
+    await loadSavedSearches();
+  } catch (e) {
+    toast(`Could not delete search: ${e.message}`, 'error');
+  }
+}
+
+function buildSearchPayload(conditions = []) {
+  /* Build minimal search payload for PUT /rest/bpm/wle/v1/tasks */
+  return {
+    interaction: 'all_claimed_and_available',
+    size: 100,
+    offset: 0,
+    calcStats: true,
+    conditions
+  };
+}
+
+async function runAdHocSearch() {
+  const q          = document.getElementById('adHocSearchInput').value.trim();
+  const statusVal  = document.getElementById('adHocStatusFilter').value;
+  const priVal     = document.getElementById('adHocPriorityFilter').value;
+  const procVal    = document.getElementById('adHocProcessFilter')?.value.trim() || '';
+
+  const conditions = [];
+  if (q)        conditions.push({ field: 'TAD_DISPLAY_NAME', operator: 'LIKE', value: `%${q}%` });
+  if (statusVal) conditions.push({ field: 'STATE',    operator: 'EQUALS', value: statusVal });
+  if (priVal)    conditions.push({ field: 'PRIORITY', operator: 'EQUALS', value: priVal });
+  if (procVal)   conditions.push({ field: 'PT_NAME',  operator: 'LIKE',   value: `%${procVal}%` });
+
+  const payload = buildSearchPayload(conditions);
+  state.lastSearchPayload = payload;
+  await executeSearch(payload);
+
+  /* Enable "Save current search" */
+  const saveBtn = document.getElementById('saveCurrentSearchBtn');
+  if (saveBtn) saveBtn.disabled = false;
+}
+
+async function executeSearch(payload) {
+  const tbody = document.getElementById('searchResultsBody');
+  tbody.innerHTML = `<tr class="state-row"><td colspan="6"><span class="spinner" role="status" aria-label="Searching"></span><p style="margin-top:10px">Searching…</p></td></tr>`;
+  try {
+    const res = await fetch('/rest/bpm/wle/v1/tasks', {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    let raw = [];
+    if (Array.isArray(json))             raw = json;
+    else if (Array.isArray(json.items))  raw = json.items;
+    else if (Array.isArray(json.data?.items)) raw = json.data.items;
+    else if (Array.isArray(json.data))   raw = json.data;
+    state.searchResults    = raw;
+    state.searchCurrentPage = 1;
+    renderSearchResults();
+  } catch (e) {
+    tbody.innerHTML = `<tr class="state-row"><td colspan="6"><span class="state-icon" aria-hidden="true">⚠️</span><p role="alert">Search failed: ${escHtml(e.message)}</p></td></tr>`;
+  }
+}
+
+function renderSearchResults() {
+  const tbody = document.getElementById('searchResultsBody');
+  const pBar  = document.getElementById('searchPaginationBar');
+  const tasks = state.searchResults;
+  const total = tasks.length;
+  const pages = Math.max(1, Math.ceil(total / SEARCH_PAGE_SIZE));
+  if (state.searchCurrentPage > pages) state.searchCurrentPage = pages;
+  const start = (state.searchCurrentPage - 1) * SEARCH_PAGE_SIZE;
+  const slice = tasks.slice(start, start + SEARCH_PAGE_SIZE);
+
+  if (!slice.length) {
+    tbody.innerHTML = `<tr class="state-row"><td colspan="6"><span class="state-icon" aria-hidden="true">📭</span><p>No results found.</p></td></tr>`;
+    if (pBar) pBar.innerHTML = '';
+    return;
+  }
+  tbody.innerHTML = slice.map(task => {
+    const { taskId, taskName, procName, priLevel, dueCls, dueText, stClass, stLabel } = normaliseTaskFields(task);
+    const eid = escHtml(taskId), en = escHtml(taskName), ep = escHtml(procName);
+    return `
+      <tr>
+        <td class="task-name-cell"><a class="task-name-link" href="javascript:void(0)" data-taskid="${eid}" data-taskname="${en}" onclick="openTaskFromLink(this)" title="${en}">${en}</a></td>
+        <td><span class="process-name" title="${ep}">${ep}</span></td>
+        <td><span class="priority-badge priority-${priLevel}"><span class="sr-only">Priority: </span>${priLevel}</span></td>
+        <td><span class="${dueCls}">${escHtml(dueText)}</span></td>
+        <td><span class="status-badge ${stClass}"><span class="status-dot" aria-hidden="true"></span><span class="sr-only">Status: </span>${escHtml(stLabel)}</span></td>
+        <td><button type="button" class="btn-sm btn-sm-primary" data-taskid="${eid}" data-taskname="${en}" onclick="openTaskFromBtn(this)">Open</button></td>
+      </tr>`;
+  }).join('');
+
+  /* Pagination for search results */
+  if (pBar && total > SEARCH_PAGE_SIZE) {
+    const cur   = state.searchCurrentPage;
+    const s     = (cur - 1) * SEARCH_PAGE_SIZE + 1;
+    const e     = Math.min(cur * SEARCH_PAGE_SIZE, total);
+    let btns = `<button type="button" class="page-btn" ${cur===1?'disabled':''} onclick="goSearchPage(${cur-1})" aria-label="Previous page">‹</button>`;
+    pageRange(cur, pages).forEach(p => {
+      if (p === '…') btns += `<span class="page-btn" aria-hidden="true" style="cursor:default;border:none">…</span>`;
+      else btns += `<button type="button" class="page-btn ${p===cur?'current':''}" onclick="goSearchPage(${p})" aria-label="Page ${p}">${p}</button>`;
+    });
+    btns += `<button type="button" class="page-btn" ${cur===pages?'disabled':''} onclick="goSearchPage(${cur+1})" aria-label="Next page">›</button>`;
+    pBar.innerHTML = `<span class="page-info">${s}–${e} of ${total}</span><div class="page-btns">${btns}</div>`;
+  } else if (pBar) { pBar.innerHTML = ''; }
+}
+
+function goSearchPage(p) {
+  const pages = Math.ceil(state.searchResults.length / SEARCH_PAGE_SIZE);
+  if (p < 1 || p > pages) return;
+  state.searchCurrentPage = p;
+  renderSearchResults();
+}
+
+/* Save current search */
+function openSaveSearchDialog() {
+  document.getElementById('saveSearchName').value = '';
+  document.getElementById('saveSearchDialog').classList.add('open');
+  requestAnimationFrame(() => document.getElementById('saveSearchName').focus());
+}
+function closeSaveSearchDialog() {
+  document.getElementById('saveSearchDialog').classList.remove('open');
+}
+async function doSaveSearch() {
+  const name = document.getElementById('saveSearchName').value.trim();
+  if (!name) { toast('Enter a name for the search.', 'error'); return; }
+  if (!state.lastSearchPayload) { toast('Run a search first.', 'error'); return; }
+  closeSaveSearchDialog();
+  try {
+    const payload = Object.assign({}, state.lastSearchPayload, { name });
+    const res = await fetch('/rest/bpm/wle/v1/searches/tasks', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    toast(`Search "${escHtml(name)}" saved.`, 'success');
+    await loadSavedSearches();
+  } catch (e) {
+    toast(`Could not save search: ${e.message}`, 'error');
+  }
+}
+
+/* ─── Rename saved search  (T2.4 — VERIFIED IN LOCAL BAW)
+   PUT /rest/bpm/wle/v1/searches/tasks/{name}  with updated name in body ─── */
+let _renameSearchOldName = null;
+
+function openRenameSearchDialog(btn) {
+  const oldName = btn.dataset.name;
+  if (!oldName) return;
+  _renameSearchOldName = oldName;
+  document.getElementById('renameSearchOldName').textContent = oldName;
+  document.getElementById('renameSearchNewName').value = oldName;
+  document.getElementById('renameSearchDialog').classList.add('open');
+  requestAnimationFrame(() => {
+    const inp = document.getElementById('renameSearchNewName');
+    inp.focus(); inp.select();
+  });
+}
+
+function closeRenameSearchDialog() {
+  document.getElementById('renameSearchDialog').classList.remove('open');
+  _renameSearchOldName = null;
+}
+
+async function doRenameSearch() {
+  const oldName = _renameSearchOldName;
+  const newName = document.getElementById('renameSearchNewName').value.trim();
+  if (!oldName || !newName) { toast('Enter a new name.', 'error'); return; }
+  if (newName === oldName)  { closeRenameSearchDialog(); return; }
+  closeRenameSearchDialog();
+  try {
+    /* PUT replaces the saved search definition — include the new name in the payload */
+    const existing = state.savedSearches.find(s => (s.name || s.searchName) === oldName) || {};
+    const payload  = Object.assign({}, existing, { name: newName });
+    const res = await fetch(`/rest/bpm/wle/v1/searches/tasks/${encodeURIComponent(oldName)}`, {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    toast(`Search renamed to "${escHtml(newName)}".`, 'success');
+    await loadSavedSearches();
+  } catch (e) {
+    toast(`Could not rename search: ${e.message}`, 'error');
+  }
+}
+
+/* ─── Search field metadata  (T2.5 — VERIFIED PATH: /searches/tasks/meta/fields)
+   GET /rest/bpm/wle/v1/searches/tasks/meta/fields
+   GET /rest/bpm/wle/v1/searches/tasks/meta/constraintFields
+   Augments ad hoc search filter dropdowns with server-provided field names.
+   Falls back gracefully to hardcoded defaults if the API is unavailable. ─── */
+let _searchMetaLoaded = false;
+
+async function loadSearchMetadata() {
+  if (_searchMetaLoaded) return;
+  try {
+    const [fieldsRes, constraintRes] = await Promise.all([
+      fetch('/rest/bpm/wle/v1/searches/tasks/meta/fields', {
+        method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+      }),
+      fetch('/rest/bpm/wle/v1/searches/tasks/meta/constraintFields', {
+        method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+      })
+    ]);
+    _searchMetaLoaded = true;
+
+    if (!fieldsRes.ok || !constraintRes.ok) return;   // fall back silently
+
+    const fJson = await fieldsRes.json();
+    const cJson = await constraintRes.json();
+
+    const fields      = fJson.data?.fields      || fJson.fields      || [];
+    const constraints = cJson.data?.fields      || cJson.fields      || [];
+
+    /* Inject process-name filter input if BAW reports a process-name field */
+    const hasProcField = [...fields, ...constraints].some(f =>
+      (f.fieldName || '').toLowerCase().includes('pt_name') ||
+      (f.fieldName || '').toLowerCase().includes('process')
+    );
+    if (hasProcField && !document.getElementById('adHocProcessFilter')) {
+      const toolbar = document.querySelector('#view-search .toolbar');
+      if (toolbar) {
+        const wrap = document.createElement('div');
+        wrap.className = 'search-wrap';
+        wrap.style.minWidth = '160px';
+        wrap.innerHTML = `
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+            <path d="M29 27.6L21 19.6A11 11 0 1 0 19.6 21l8 8ZM5 14a9 9 0 1 1 9 9A9 9 0 0 1 5 14Z"/>
+          </svg>
+          <label for="adHocProcessFilter" class="sr-only">Filter by process name</label>
+          <input class="search-input" id="adHocProcessFilter" type="search"
+            placeholder="Process name…" aria-label="Filter by process name" />`;
+        const searchBtn = toolbar.querySelector('button[onclick="runAdHocSearch()"]');
+        if (searchBtn) toolbar.insertBefore(wrap, searchBtn);
+      }
+    }
+  } catch {
+    /* Non-critical — hardcoded filters still work */
+    _searchMetaLoaded = true;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TEAM VIEW  (T2.6 — managedGlobalTeams VERIFIED IN LOCAL BAW)
+   globalTeams fallback when managedGlobalTeams returns empty array
+   WLE v2 dashboard APIs — documented, NOT runtime-tested (gap G5)
+═══════════════════════════════════════════════════════════════════════ */
+async function loadTeams() {
+  const container = document.getElementById('teamsList');
+  const select    = document.getElementById('teamSelect');
+  try {
+    const res = await fetch('/rest/bpm/wle/v1/managedGlobalTeams', {
+      method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    let teams = json.data?.teams || json.teams || [];
+
+    /* Fallback: if managedGlobalTeams returns empty, try globalTeams */
+    if (!teams.length) {
+      try {
+        const fallbackRes = await fetch('/rest/bpm/wle/v1/globalTeams', {
+          method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+        });
+        if (fallbackRes.ok) {
+          const fbJson = await fallbackRes.json();
+          teams = fbJson.data?.teams || fbJson.teams || [];
+        }
+      } catch { /* ignore — show empty state below */ }
+    }
+
+    state.teams = teams;
+
+    if (!teams.length) {
+      container.innerHTML = '<p style="font-size:13px;color:var(--ibm-gray-60);">No teams found for your account.</p>';
+      return;
+    }
+
+    /* Render team cards with member counts */
+    container.innerHTML = '';
+    for (const team of teams) {
+      const tName = escHtml(team.teamName || team.name || 'Unnamed Team');
+      const tId   = team.teamId || team.id || '';
+      const div = document.createElement('div');
+      div.className = 'team-member-row';
+      div.innerHTML = `
+        <div class="member-avatar" aria-hidden="true">${tName.charAt(0)}</div>
+        <div class="member-name">${tName}</div>
+        <div class="member-count" id="teamMemberCount-${escHtml(String(tId))}">Loading members…</div>`;
+      container.appendChild(div);
+
+      /* Add to select */
+      if (select) {
+        const opt = document.createElement('option');
+        opt.value = tId;
+        opt.textContent = team.teamName || team.name || 'Unnamed Team';
+        select.appendChild(opt);
+      }
+
+      /* Load member count for each team */
+      if (tId) loadTeamMemberCount(tId);
+    }
+  } catch (e) {
+    container.innerHTML = `<p style="font-size:13px;color:var(--ibm-red-60);">Could not load teams: ${escHtml(e.message)}</p>`;
+  }
+}
+
+async function loadTeamMemberCount(teamId) {
+  const countEl = document.getElementById(`teamMemberCount-${teamId}`);
+  try {
+    const res = await fetch(`/rest/bpm/wle/v1/globalTeamUsers/${encodeURIComponent(teamId)}`, {
+      method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const users = json.data?.users || json.users || [];
+    if (countEl) countEl.textContent = `${users.length} member${users.length !== 1 ? 's' : ''}`;
+  } catch {
+    if (countEl) countEl.textContent = 'Members unavailable';
+  }
+}
+
+async function loadTeamDashboard() {
+  const teamId = document.getElementById('teamSelect')?.value;
+  const result = document.getElementById('teamDashboardResult');
+  if (!teamId || !result) return;
+  result.innerHTML = '<p style="font-size:13px;color:var(--ibm-gray-60);">Loading dashboard…</p>';
+
+  /* WLE v2 dashboard APIs require BAW 24.0.0.1+ with FDR enabled. */
+  try {
+    const res = await fetch(`/rest/bpm/wle/v2/dashboards/teamsummary/${encodeURIComponent(teamId)}`, {
+      method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+    });
+    if (res.status === 503) {
+      result.innerHTML =
+        '<p style="font-size:13px;color:var(--ibm-gray-60);">Team workload data is unavailable. ' +
+        'Contact your BAW administrator.</p>';
+      return;
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const summary = json.data || json;
+    result.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px;">
+        <div class="info-card" style="text-align:center;">
+          <div class="stat-label">Overdue</div>
+          <div class="stat-count" style="color:var(--ibm-red-60);">${summary.overdueTasks ?? '—'}</div>
+        </div>
+        <div class="info-card" style="text-align:center;">
+          <div class="stat-label">Active</div>
+          <div class="stat-count" style="color:var(--ibm-blue-60);">${summary.activeTasks ?? '—'}</div>
+        </div>
+        <div class="info-card" style="text-align:center;">
+          <div class="stat-label">Total</div>
+          <div class="stat-count" style="color:var(--ibm-gray-80);">${summary.totalTasks ?? '—'}</div>
+        </div>
+      </div>`;
+  } catch (e) {
+    result.innerHTML = `<p style="font-size:13px;color:var(--ibm-red-60);">Dashboard unavailable: ${escHtml(e.message)}</p>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PULL-TO-REFRESH  (touch devices only — aria-hidden on indicator)
+═══════════════════════════════════════════════════════════════════════ */
+(function initPullToRefresh() {
+  if (!('ontouchstart' in window)) return;
+  const PTR_THRESHOLD = 72;
+  const PTR_MAX_DRAG  = 96;
+  const PTR_SETTLE_MS = 600;
+  const PTR_H         = 56;
+
+  const scroller  = document.getElementById('main-content');
+  const indicator = document.getElementById('ptrIndicator');
+  const label     = document.getElementById('ptrLabel');
+  if (!scroller || !indicator || !label) return;
+
+  let ptrState = { active: false, startY: 0, currentY: 0, triggered: false };
+
+  function setPtrClass(cls) {
+    indicator.classList.remove('ptr-dragging', 'ptr-ready', 'ptr-loading');
+    if (cls) indicator.classList.add(cls);
+  }
+  function revealIndicator(px) {
+    const clamped = Math.min(Math.max(px, 0), PTR_H);
+    indicator.style.transform = `translateY(${clamped}px)`;
+  }
+  function resetIndicator() {
+    setPtrClass(null); revealIndicator(0); label.textContent = 'Pull down to refresh';
+  }
+  function fireRefresh() {
+    setPtrClass('ptr-loading'); revealIndicator(PTR_H); label.textContent = 'Refreshing…';
+    triggerRefresh(false);
+    setTimeout(resetIndicator, PTR_SETTLE_MS);
+  }
+
+  scroller.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    if (document.getElementById('taskModal').classList.contains('open')) return;
+    if (scroller.scrollTop !== 0) return;
+    ptrState = { active: false, startY: e.touches[0].clientY, currentY: e.touches[0].clientY, triggered: false };
+  }, { passive: true });
+
+  scroller.addEventListener('touchmove', e => {
+    if (e.touches.length !== 1) return;
+    if (document.getElementById('taskModal').classList.contains('open')) return;
+    const touchY = e.touches[0].clientY;
+    const delta  = touchY - ptrState.startY;
+    if (delta <= 0 || scroller.scrollTop > 0) { if (ptrState.active) resetIndicator(); ptrState.active = false; return; }
+    ptrState.active = true; ptrState.currentY = touchY;
+    const pull = Math.sqrt(delta) * 8;
+    revealIndicator(pull);
+    if (pull >= PTR_THRESHOLD) { setPtrClass('ptr-ready'); label.textContent = 'Release to refresh'; ptrState.triggered = true; }
+    else                        { setPtrClass('ptr-dragging'); label.textContent = 'Pull down to refresh'; ptrState.triggered = false; }
+  }, { passive: true });
+
+  scroller.addEventListener('touchend', () => {
+    if (!ptrState.active) return;
+    ptrState.active = false;
+    ptrState.triggered ? fireRefresh() : resetIndicator();
+  }, { passive: true });
+
+  scroller.addEventListener('touchcancel', () => {
+    ptrState.active = false; ptrState.triggered = false; resetIndicator();
+  }, { passive: true });
+})();
+
+/* ═══════════════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════════════ */
+(async function init() {
+  await loadUser();
+  triggerRefresh(false);
+  startPolling();
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.stat-card').forEach(card => {
+    card.setAttribute('aria-pressed', card.dataset.filter === state.currentFilter ? 'true' : 'false');
+  });
+});
+</script>
+</body>
+</html>

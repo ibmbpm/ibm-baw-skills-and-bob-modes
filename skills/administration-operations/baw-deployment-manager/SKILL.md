@@ -1,6 +1,6 @@
 ---
 name: baw-deployment-manager
-description: Deploy a Process App or Toolkit snapshot into a target IBM BAW (Business Automation Workflow) environment, list available process apps and toolkits with their snapshots, check available workflow servers, and monitor installation progress. Uses the BAW REST API to list containers, check workflow servers, POST a snapshot installation request, and poll the returned queue URL until the operation completes or fails. Use whenever the user wants to deploy, install, or promote a snapshot to a workflow environment, list process apps or toolkits, browse available snapshots, check deployment status, monitor an in-progress install, check available servers, list workflow servers, or when phrases like "deploy snapshot", "install process app", "promote to environment", "list process apps", "what toolkits are available", "show me the snapshots", "deployment status", "monitor deployment", "check install progress", "available servers", "workflow servers", or "what servers can I deploy to" appear. Also triggers on CP4BA.
+description: Deploy a process app or toolkit snapshot into a target IBM BAW (Business Automation Workflow) environment, list available process apps and toolkits with their snapshots, check available workflow servers, and monitor installation progress. Uses the BAW REST API to list containers, check workflow servers, POST a snapshot installation request, and poll the returned queue URL until the operation completes or fails. Use whenever the user wants to deploy, install, or promote a snapshot to a workflow environment, list process apps or toolkits, browse available snapshots, check deployment status, monitor an in-progress install, check available servers, list workflow servers, or when phrases like "deploy snapshot", "install process app", "promote to environment", "list process apps", "what toolkits are available", "show me the snapshots", "deployment status", "monitor deployment", "check install progress", "available servers", "workflow servers", or "what servers can I deploy to" appear. Also triggers on CP4BA.
 license: Apache-2.0
 compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
 allowed-tools:
@@ -8,22 +8,22 @@ allowed-tools:
 metadata:
   version: "1.0.0"
   display_name: BAW Deployment Manager
-  short_description: Deploy a BAW Process App or Toolkit snapshot to a target environment and monitor the installation to completion.
+  short_description: Deploy a BAW process app or toolkit snapshot to a target environment and monitor the installation to completion.
   author: IBM BAW Team
 ---
 <!-- baw-rest-ops: baw-ops.26.0.0.json: /std/bpm/containers, /std/bpm/containers/{container}/versions/{version}/install, /std/bpm/servers/workflow, /system/queue/{id} -->
 
-> **⚠️ REST only — MCP is not supported by this skill.** All BAW interactions use the BAW REST API exclusively via HTTP calls using `curl`. Do not call any MCP tools at any point — regardless of whether an MCP server is connected or not. Never tell the user to connect an MCP server; this skill does not use one. If you find yourself reaching for an MCP tool, stop and use the REST calls described in this skill instead.
+> **⚠️ REST only — this skill does not support MCP.** All BAW interactions use the BAW REST API exclusively via HTTP calls using `curl`. Do not call any MCP tools at any point — regardless of whether an MCP server is connected or not. Never tell the user to connect an MCP server; this skill does not use one. If you find yourself reaching for an MCP tool, stop and use the REST calls described in this skill instead.
 
 # BAW Deployer
 
-Deploy a BAW Process App or Toolkit snapshot to a target environment and monitor the installation to completion. Optionally list available containers and snapshots first if the user does not know what is on the server.
+Deploy a BAW process app or toolkit snapshot to a target environment and monitor the installation to completion. Optionally list available containers and snapshots first if the user does not know what is on the server.
 
 ## Execution mode
 
 This skill operates in **REST mode only**. All calls use the BAW REST API directly via `curl`.
 
-Before taking any action, confirm `baw_url`, `username`, and `password` are known for this session. If not, ask for them together in a single prompt before making any REST call. Store them and never ask again within the same session.
+Before making any REST call, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically. Do this once per session only.
 
 This skill makes up to three REST calls:
 
@@ -31,11 +31,18 @@ This skill makes up to three REST calls:
 2. **Install** — `POST /std/bpm/containers/{container}/versions/{version}/install`
 3. **Poll** — `GET <queueUrl>` (URL returned directly by the install response)
 
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+
+---
 ## Step 0 — List available containers (optional)
 
 Perform this step when the user does not know the container acronym or available snapshot versions, or when they ask to "list process apps", "show toolkits", "what can I deploy", or similar.
 
-The `baw_url`, `username`, and `password` inputs are used. If the target environment is a CP4BA Zen deployment (e.g. `https://<cpd-host>/<instance_name>`), obtain a Zen Bearer token and CSRF token first (see Authentication section below).
+This step uses the `baw_url`, `username`, and `password` inputs. If the target environment is a CP4BA Zen deployment (e.g. `https://<cpd-host>/<instance_name>`), obtain a Zen Bearer token and CSRF token first (see Authentication section below).
 
 ### Authentication & Endpoints
 
@@ -145,7 +152,7 @@ Depending on the environment topology:
 }
 ```
 
-*Note:* For Schema B, snapshots/versions can be queried per container using `GET <baw_url>/ops/std/bpm/containers/{container}/versions`.
+> **Note:** For Schema B, query snapshots and versions per container using `GET <baw_url>/ops/std/bpm/containers/{container}/versions`.
 
 ### Key fields mapping
 
@@ -326,7 +333,7 @@ Collect these before making any REST call. Use `ask_followup_question` for anyth
 | `baw_url` | Base URL of the target BAW/CP4BA server, e.g. `https://baw.example.com/bas` or `https://cpd.example.com/bas/`. Strip any trailing slash before building URLs. |
 | `username` | BAW user with deployment authority |
 | `password` | Password — treat as sensitive; do not log or echo it |
-| `container` | Process App or Toolkit acronym (container ID), e.g. `BILLPAY` |
+| `container` | Process app or toolkit acronym (container ID), e.g. `BILLPAY` |
 | `version` | Snapshot ID or acronym, e.g. `2024.04.1` or `TIP` |
 | `target_env` | Deployment environment name, e.g. `Production`, `QA` (passed as the `install_to` query parameter) |
 | `server` | *(CP4BA/some configs)* Registered Workflow Server name, e.g. `dev`. Required when the server returns `CWTBG0011E`. Discover using Step 0b. |
@@ -401,7 +408,7 @@ The response body contains a `status_url` (or equivalent) field — a fully qual
 }
 ```
 
-Extract the `status_url` value verbatim. Do **not** reconstruct the URL from only the queue ID — use the `status_url` exactly as returned. Proceed to Step 2.
+Extract the `status_url` value verbatim. Do **not** reconstruct the URL from only the queue ID — use the `status_url` exactly as the response returns it. Proceed to Step 2.
 
 **Synchronous success (HTTP 200 with `status: "Completed"`):**
 
@@ -423,7 +430,7 @@ Do not proceed to polling if the install POST fails.
 
 ## Step 2 — Poll for completion
 
-Poll the `status_url` returned in Step 1 at the configured interval until the status reaches a terminal state or the timeout is reached.
+Poll the `status_url` that Step 1 returns at the configured interval until the status reaches a terminal state or the timeout elapses.
 
 For **CP4BA** the queue endpoint also requires `BPMCSRFToken`. The `status_url` is a fully-qualified URL to `<baw_url>/ops/system/queue/<id>` — use the same `$TOKEN` and `$CSRF` variables:
 
@@ -461,7 +468,7 @@ The queue item response looks like:
 |---|---|---|
 | `Completed` | Install succeeded | Report success with any message from the response |
 | `Failed` | Install failed | Report failure with `message` and `errorDetails` from the response |
-| `Cancelled` | Install was cancelled | Report cancellation |
+| `Cancelled` | Install cancelled | Report cancellation |
 
 Continue polling for all other status values (`Queued`, `Running`, etc.).
 
@@ -485,7 +492,7 @@ If `timeout_sec` elapses without reaching a terminal state, report:
 
 ## Step 3 — Final report
 
-When a terminal state is reached, present a summary:
+When the status reaches a terminal state, present a summary:
 
 ```
 ✅ Deployment complete
@@ -510,14 +517,14 @@ For failures:
 
 ## Resuming a monitor session
 
-If the user already has a queue URL from a previous install (the server returned it but Bob was not tracking it), skip Step 1 and go directly to Step 2 with the provided URL. Ask:
+If the user already has a queue URL from a previous install (the server returned a queue URL but this session did not capture it), skip Step 1 and go directly to Step 2 with the provided URL. Ask:
 
 > "Do you have the queue status URL from the install response? If so I can monitor it directly."
 
 ## Security notes
 
 - Never reveal the password in any output — this covers both command stdout and any curl commands shown to the user. Always display credentials as `-u "<username>:<password>"` (placeholder form) or `-u "$BAW_USER:$BAW_PASS"` (env var form), never substituting the real password value.
-- If the server uses a self-signed certificate, append `-k` to curl commands and warn the user that certificate validation is disabled.
+- If the server uses a self-signed certificate, append `-k` to curl commands and warn the user that `-k` disables certificate validation.
 
 ## Boundaries
 

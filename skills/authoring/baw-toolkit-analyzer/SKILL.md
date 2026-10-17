@@ -16,13 +16,21 @@ metadata:
 
 # BAW Toolkit Dependency and Usage Analyzer
 
-Analyse the toolkit dependencies inside a BAW process application TWX export and produce a full dependency report: direct and transitive dependencies, snapshot tracking, conflict and gap detection, and impact assessment.
+Analyze the toolkit dependencies inside a BAW process application TWX export and produce a full dependency report: direct and transitive dependencies, snapshot tracking, conflict and gap detection, and upgrade impact analysis.
+
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+
+---
 
 ## Input requirements
 
 Before running the script, collect from the user:
 
-1. **Process app and snapshot** — the process app acronym and snapshot acronym to analyse. If the user does not know the acronym, ask for the process app name or URL and resolve it via the export API.
+1. **Process app and snapshot** — the process app acronym and snapshot acronym to analyze. If the user does not know the acronym, ask for the process app name or URL and resolve it via the export API.
 2. **Analysis mode** — one of:
    - `full` (default) — maps all toolkit dependencies for the process app in the TWX.
    - `where-used <toolkit-name>` — finds which artifacts inside the process app reference items from the named toolkit.
@@ -43,38 +51,9 @@ Use the first path that succeeds.
 
 **Path 1 — Export API (preferred)**
 
-Ask for the server URL and credentials only at this point, immediately before making the login call — do not ask earlier:
-> *"To export the app artifacts I'll need your BAW server URL and credentials — these are only used to get a session token for this conversation and are not stored."*
+#### Step 1 — Resolve container and version acronyms
 
-#### Step A — Determine the context root
-
-The login endpoint path varies by deployment type:
-
-| Deployment | Login endpoint |
-|---|---|
-| Standalone BAW | `{BAW_BASE_URL}/ops/system/login` |
-| CP4BA / Cloud Pak (common) | `{BAW_BASE_URL}/bas/ops/system/login` |
-| CP4BA alternate context roots | `{BAW_BASE_URL}/baw/ops/system/login`, `{BAW_BASE_URL}/bpm/ops/system/login` |
-
-If the user has not told you the deployment type, probe the known paths in order with a GET request (expect 401, not 404) to discover the active context root. Store it as `{CTX}` (e.g. `/bas`). All subsequent REST calls use `{BAW_BASE_URL}{CTX}/...`.
-
-#### Step B — Login
-
-Call `POST {BAW_BASE_URL}{CTX}/ops/system/login` with `Authorization: Basic <base64(user:pass)>`, `Content-Type: application/json`, body `{"refresh_groups": false}`. On HTTP 201 store `csrf_token` as `{BAW_CSRF}` and all `Set-Cookie` values (`LtpaToken2`/`JSESSIONID` or their prefixed equivalents such as `basLtpaToken2`/`BAS-JSESSIONID`) as `{BAW_SESSION}` — send both on all subsequent REST calls.
-
-Use **Python (`requests`)** for all HTTP calls — it works on Windows, macOS, and Linux without any shell-specific setup. For environments with self-signed or private CA certificates (typical in CP4BA on-prem), disable certificate verification:
-
-```python
-requests.post(..., verify=False)
-```
-
-Suppress the resulting `InsecureRequestWarning` by calling `urllib3.disable_warnings()` at the top of every script block.
-
-If login returns 401/400, ask the user to re-enter credentials.
-
-#### Step C — Resolve container and version acronyms
-
-If the user provided an acronym (e.g. `TAT`) and snapshot, skip to Step D. Otherwise:
+If the user provided an acronym (e.g. `TAT`) and snapshot, skip to Step 2. Otherwise:
 
 1. **List containers:**
    ```
@@ -88,7 +67,7 @@ If the user provided an acronym (e.g. `TAT`) and snapshot, skip to Step D. Other
    ```
    Pick the most recent non-archived version. Record its `version` field as `{VERSION}`. If there are multiple snapshots, show the user a brief table and ask which to export.
 
-#### Step D — Export the TWX
+#### Step 2 — Export the TWX
 
 ```
 GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers/{CONTAINER}/versions/{VERSION}/export?use_enhanced_filenames=true
@@ -112,12 +91,12 @@ python -c "import tempfile; print(tempfile.gettempdir())"
 
 Save as `<temp_dir>/<CONTAINER>_<VERSION>.twx` and use that path as `<path-to-file.twx>` in all subsequent steps.
 
-If the export returns 403/404, re-check `{CONTAINER}` and `{VERSION}` via the listing calls in Step C.
+If the export returns 403/404, re-check `{CONTAINER}` and `{VERSION}` via the listing calls in Step 1.
 
 **Path 2 — Local file (fall back after Path 1 has visibly failed)**
 
 If the REST export fails or errors more than once, offer:
-> *"If you already have the `.twx` file for this app on your machine, you can point me to it and I'll work from that directly — no server connection needed for this step."*
+> *"If you already have the `.twx` file for this app on your machine, you can point the skill to it and it works from that file directly — no server connection needed for this step."*
 
 If the user provides a path, use it directly as `<path-to-file.twx>`. Do not ask for a file path pre-emptively — only after a real failure.
 
@@ -221,7 +200,7 @@ If the artifact has no cross-toolkit references, say so explicitly.
 
 ## Issues: Missing dependencies
 
-A toolkit is referenced in artifact code (e.g. a service call, BO field type, variable type) but does not appear in the process app's declared dependency list. Flag with ❌.
+Artifact code references a toolkit (for example, in a service call, BO field type, or variable type) that does not appear in the process app's declared dependency list. Flag with ❌.
 
 > ❌ **Missing dependency:** `Customer Utilities` is referenced in `ValidateCustomer` (service task) but is not declared as a dependency of this process app.
 
@@ -274,7 +253,7 @@ After presenting all sections, offer to save the Mermaid diagram as a standalone
 - Snapshot tracking and Tip-reference detection.
 - Missing, conflicting, circular, outdated, and unused dependency detection.
 - "Where used" and "what this uses" analysis.
-- Impact assessment for toolkit snapshot changes or removal.
+- Upgrade impact analysis for toolkit snapshot changes or removal.
 
 **Out of scope — redirect clearly:**
 - **Updating toolkit dependencies at runtime.** Changing which toolkit snapshot a process app references must be done in Process Designer.

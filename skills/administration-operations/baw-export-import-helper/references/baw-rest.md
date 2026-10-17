@@ -4,15 +4,13 @@
 
 ## IBM Business Automation Workflow operations REST interface
 
-*Source: `apis/baw-ops.26.0.0.json`*
-
 ### `POST /ops/system/login`
 **Obtain an IBM Business Automation Workflow cross-site request forgery (CSRF) prevention token**
 
 Obtains a CSRF prevention token and optionally refreshes the user's group membership information.
 
 **Parameters:**
-- `login_request` (body) *(required)* — Mandatory parameter that specifies whether the caller's group membership data is refreshed.
+- `login_request` (body) *(required)* — Mandatory parameter that allows you to specify whether the caller's group membership data is refreshed
 
 **Responses:**
 - `201` — The request was processed successfully and returned a new CSRF token.
@@ -27,12 +25,12 @@ Obtains a CSRF prevention token and optionally refreshes the user's group member
 Retrieves a list of all process applications and toolkits on the Workflow Center server or Workflow Server that the user can see. Only IBM Business Automation Workflow (BAW) users are authorized to perform this call.
 
 **Parameters:**
-- `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery (CSRF) prevention token for IBM Business Automation Workflow REST APIs.
-- `type` (query, string) — Valid values (mutually exclusive): `PA`, `TK`. Specify `PA` to view only process applications and `TK` to view only toolkits.
-- `ids` (query, array) — A comma-separated list of IDs of process applications or toolkits. This parameter restricts the results to the specified process applications or toolkits.
+- `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs.
+- `type` (query, string) — Valid values (mutually exclusive): 'PA', 'TK'. Specify 'PA' to view only process applications and 'TK' to view only toolkits. If the value is not set, both are returned.
+- `ids` (query, array) — A comma-separated list of IDs of process applications or toolkits. This parameter restricts the results to the process applications or toolkits with the specified IDs.
 - `offset` (query, integer) — In a list of entries, the offset specifies the position of the first process application or toolkit to return from the query result set.
 - `size` (query, integer) — Maximum number of process applications or toolkits to return.
-- `optional_parts` (query, array) — Valid values: `branches`, `versions`. Specify `branches` to see the list of tracks in a process application or toolkit.
+- `optional_parts` (query, array) — Valid values: 'branches', 'versions'. Specify 'branches' to see the list of tracks in a process application or toolkit. Specify 'versions' to see, both, the list of tracks and snapshots. Valid values are: 'branches', 'versions'.
 
 **Responses:**
 - `200` — The information was successfully retrieved.
@@ -48,7 +46,7 @@ Creates a process application or toolkit. Only BAW authors are authorized to per
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
-- `container_details` (body) — The body parameters for creating a new process application or toolkit.
+- `container_details` (body) — The body parameters for creating a new process app or toolkit.
 
 **Responses:**
 - `200` — The process application or toolkit was created successfully.
@@ -67,7 +65,7 @@ Retrieves detailed information for a specified process application or toolkit, i
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
 - `container` (path, string) *(required)* — The acronym of the process application or toolkit.
-- `optional_parts` (query, array) — Valid values: `branches`, `versions`. Specify `branches` to see the list of tracks in a process application or toolkit.
+- `optional_parts` (query, array) — Valid values: 'branches' and 'versions'. Specify 'branches' to see the list of tracks in a process application or toolkit. Specify 'versions' to see, both, the list of tracks and snapshots. Valid values are: 'branches', 'versions'.
 
 **Responses:**
 - `200` — The information was successfully retrieved.
@@ -84,15 +82,13 @@ Deletes an archived process application or toolkit and all its snapshots from th
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
 - `container` (path, string) *(required)* — The acronym of the process application or toolkit that you want to delete.
-- `ignoreLocks` (query, boolean) — Set this parameter to `true` to delete projects with case features that have locked artifacts.
+- `ignoreLocks` (query, boolean) — Set this parameter to true to delete projects with Case features that have locked artifacts.
 
 **Responses:**
 - `204` — The process application or toolkit was successfully deleted.
-- `400` — The request contains invalid or missing parameters.
+- `400` — The request contains invalid parameters.
 - `403` — The caller is not authorized to perform the request.
 - `404` — The requested resource does not exist.
-- `405` — The requested method is not allowed on this resource.
-- `423` — The process application or toolkit contains locked artifacts.
 - `500` — Internal server error.
 
 ---
@@ -108,7 +104,7 @@ Retrieves information about all the tracks or a subset of the tracks of a specif
 - `ids` (query, array) — A comma-separated list of track IDs. This parameter restricts the results to the tracks with the specified IDs.
 - `offset` (query, integer) — In a list of entries, the offset specifies the position of the first track to return from the query result set.
 - `size` (query, integer) — Maximum number of tracks to return.
-- `optional_parts` (query, array) — Valid value: `versions`. Specify this parameter to view the snapshots in a track.
+- `optional_parts` (query, array) — Valid values: 'versions'. Specify this parameter to view the snapshots in a track. Valid values are: 'versions'.
 
 **Responses:**
 - `200` — The information was successfully retrieved.
@@ -131,6 +127,7 @@ Creates a track in a process application or toolkit. Only BAW administrators or 
 - `200` — The track was created successfully.
 - `400` — The request contains invalid or missing parameters.
 - `403` — The caller is not authorized to perform the request.
+- `404` — The requested operation does not exist.
 - `500` — Internal server error.
 
 ---
@@ -147,7 +144,7 @@ Creates snapshots of process applications or toolkits on the Workflow Center ser
 
 **Responses:**
 - `200` — The specified snapshot was created successfully.
-- `400` — The request contains invalid or missing parameters.
+- `400` — The request contains invalid parameters, or they are missing.
 - `403` — The caller is not authorized to perform the request.
 - `404` — The requested operation does not exist.
 - `500` — Internal server error.
@@ -163,13 +160,13 @@ Retrieves information about all the snapshots or a subset of the snapshots of a 
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
 - `container` (path, string) *(required)* — The acronym of the process application or toolkit.
 - `version_ids` (query, array) — A comma-separated list of snapshot IDs. This parameter restricts the results to the snapshots with the specified IDs.
-- `branch` (query, string) — Specify the track acronym to view only those snapshots that belong to the track. If a track is not specified, all snapshots are returned.
+- `branch` (query, string) — Specify the track acronym to view only those snapshots that belong to the track. If a track is not specified, all the snapshots of the specified process application or toolkit are returned.
 - `offset` (query, integer) — In a list of entries, the offset specifies the position of the first snapshot to return from the query result set.
 - `size` (query, integer) — Maximum number of snapshots to return.
 
 **Responses:**
 - `200` — The information was successfully retrieved.
-- `400` — The request contains invalid or missing parameters.
+- `400` — The request contains invalid parameters, or they are missing.
 - `403` — The caller is not authorized to perform the request.
 - `404` — The requested resource does not exist.
 - `500` — Internal server error.
@@ -183,22 +180,21 @@ Deletes process application or toolkit snapshots that match the specified criter
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
 - `container` (path, string) *(required)* — The acronym of the process application or toolkit.
 - `branch_name` (query, string) — Workflow Center server only. The name of the track that is associated with the process application or toolkit.
-- `versions` (query, array) — Required for Workflow Server. Optional for Workflow Center server. Use a comma-separated list to specify multiple snapshot acronyms.
-- `force` (query, boolean) — Workflow Server only. To delete the last and default snapshot of a process application, set this value to `true`.
-- `kept_number` (query, integer) — Workflow Center server only. Specifies the number of unnamed snapshots to keep when a snapshot cleanup is performed.
-- `created_before` (query, string) — Workflow Center server only. Specifies the time before which all unnamed snapshots are deleted.
-- `created_after` (query, string) — Workflow Center server only. Specifies the time after which all unnamed snapshots are deleted.
-- `created_before_version` (query, string) — Workflow Center server only. Specifies the acronym of a named snapshot. Unnamed snapshots created before this named snapshot are deleted.
-- `delete_archived` (query, boolean) — Workflow Center server only. To delete archived snapshots and unnamed snapshots that match the filter criteria, set this value to `true`.
-- `caseDosName` (query, string) — Workflow Server only. If you are removing the last snapshot from a server, specify the case design object store name if the process application includes case artifacts.
-- `continueOnError` (query, boolean) — Workflow Server only. Indicates whether the operation continues if an error occurs while deleting a snapshot.
+- `versions` (query, array) — Required for Workflow Server. Optional for Workflow Center server. Use a comma-separated list to specify multiple snapshot acronyms. For a Workflow Center server, if this parameter is specified, you cannot specify any other filters, such as values for the kept_number, created_before, created_after, created_before_version, or delete_archived parameters.
+- `force` (query, boolean) — Workflow Server only. To delete the last and default snapshot of a process application, set this value to 'true'. The default snapshot can be deleted only if it is the last existing snapshot of the process application. When its last snapshot is deleted, the process application is removed.
+- `kept_number` (query, integer) — Workflow Center server only. This parameter specifies the number of unnamed snapshots to keep when a snapshot cleanup is run. The most recent snapshots are kept. The tip snapshot is not counted in kept_number. If kept_number is greater than or equal to the total number of unnamed snapshots, no snapshots are deleted. If kept_number equals 0, all the unnamed snapshots are deleted except the tip snapshot. The kept_number parameter cannot be specified with the created_before or created_after parameters.
+- `created_before` (query, string) — Workflow Center server only. This parameter specifies the time before which all unnamed snapshots must be deleted. Specify the time in ISO 8601 format 'yyyy-MM-dd'T'HH:mm:ss.sssz'.
+- `created_after` (query, string) — Workflow Center server only. This parameter specifies the time after which all unnamed snapshots must be deleted. Specify the time in ISO 8601 format 'yyyy-MM-dd'T'HH:mm:ss.sssz'.
+- `created_before_version` (query, string) — Workflow Center server only. This parameter specifies the acronym of a named snapshot. Unnamed snapshots are deleted if they were created before the specified snapshot. When created_before_version is used with the kept_number parameter, the specified number of snapshots is retained. When created_before_version is used with the created_before or created_after parameters, unnamed snapshots are deleted that were created between the time when the named snapshot was created and the time that is specified by the created_before or created_after parameter.
+- `delete_archived` (query, boolean) — Workflow Center server only. To delete archived snapshots and unnamed snapshots that match the filter criteria, set this value to 'true'.
+- `caseDosName` (query, string) — Workflow Server only. If you are removing the last snapshot off a server, specify the case design object store name if the content engine is not using the default name 'dos'.
+- `continueOnError` (query, boolean) — Workflow Server only. This parameter indicates whether the operation should continue even if an error occurs while deleting one or more versions. When set to 'true', the API will attempt to process all items in the request, skipping over any errors encountered and proceeding with the next item. If set to 'false' (default behaviour), the operation will halt upon encountering the first error, and no further items will be processed. The 'versions' parameter must also be speicied. Refer to the system log to view specific results of which versions were successfully deleted and which encountered errors.
 
 **Responses:**
 - `202` — The request to delete the specified snapshots was submitted. You can check the progress of the deletion in the system log.
 - `400` — The request contains invalid or missing parameters.
 - `403` — The caller is not authorized to perform the request.
 - `404` — The requested resource does not exist.
-- `405` — The requested method is not allowed on this resource.
 - `500` — Internal server error.
 
 ---
@@ -215,7 +211,7 @@ Retrieves detailed information about a specified process application or toolkit 
 
 **Responses:**
 - `200` — The information was successfully retrieved.
-- `400` — The request contains invalid or missing parameters.
+- `400` — The request contains invalid parameters, or they are missing.
 - `403` — The caller is not authorized to perform the request.
 - `404` — The requested resource does not exist.
 - `500` — Internal server error.
@@ -233,14 +229,14 @@ Enables the exchange of a process application or toolkit between Workflow Center
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
 - `container` (path, string) *(required)* — The acronym of the process application or toolkit associated with the specified snapshot.
 - `version` (path, string) *(required)* — The acronym of the snapshot to export.
-- `format` (query, string) — The format of the export. If the value is not specified, system toolkits are included. A value of `twxWithoutToolkits` skips system toolkit dependencies.
-- `use_enhanced_filenames` (query, boolean) — A value of `true` produces more meaningful file names within the exported file. If the value is `false` or not specified, default file names are used.
+- `format` (query, string) — The format of the export. If the value is not specified, system toolkits are exported. A value of twxWithoutToolkits skips exporting system toolkits that are not versioned (the latest version is already on the server).
+- `use_enhanced_filenames` (query, boolean) — A value of true produces more meaningful file names within the exported file. If the value is false or unspecified, the default internal format is used.
 
 **Responses:**
 - `200` — The specified snapshot was exported successfully.
-- `400` — The request contains invalid or missing parameters.
+- `400` — The request contains invalid parameters, or they are missing.
 - `403` — The caller is not authorized to perform the request.
-- `404` — The requested operation does not exist.
+- `404` — The requested resource does not exist.
 - `500` — Internal server error.
 
 ---
@@ -255,10 +251,10 @@ Installs the application from the installation package file (a `.zip` file for W
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
 - `install_file` (formData, file) *(required)* — The file to install.
-- `inactive` (query, boolean) — Deactivates the snapshot after installation. The default value is `false` and is ignored in Workflow Center.
+- `inactive` (query, boolean) — Deactivates the snapshot after you install it. The default value is false and is ignored in Workflow Center. When the application is a case solution, see the implementation Notes.
 - `caseDosName` (query, string) — Specifies the name of the case design object store.
 - `caseProjectArea` (query, string) — Target environment or project area for case artifacts. You can omit this value if the default project area is defined.
-- `caseOverwrite` (query, boolean) — Specifies whether to overwrite artifacts in the case store if they already exist. The default value is `false`.
+- `caseOverwrite` (query, boolean) — Specifies to overwrite artifacts in the case store if they already exist. The default value is false.
 
 **Responses:**
 - `202` — A request to install the specified file was submitted. This operation is asynchronous. You can see the messages for it in the system log or by using `GET /ops/system/queue/{id}` to periodically query its status. You can find the `id` value in the `url` field of the JSON response body.
@@ -277,7 +273,7 @@ Obtains information about the status of an asynchronous operation, such as group
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
 - `id` (path, string) *(required)* — Identifier of the operation, obtained from the REST API that started the asynchronous operation.
-- `key` (query, string) — Authorization key, obtained from the REST API that started the asynchronous operation. Administrators can query an operation without this key.
+- `key` (query, string) — Authorization key, obtained from the REST API that started the asynchronous operation. Administrators can query an operation status without any authorization key; in all other cases, the authorization key is mandatory to ensure that only callers who started the operation can query its status.
 
 **Responses:**
 - `200` — The status of the specified operation is returned in the response.

@@ -1,6 +1,6 @@
 ---
 name: inspect-baw-processes
-description: "Use when a BAW administrator or operator wants to find, investigate, or take action on running IBM BAW process instances — retry failed processes, suspend or resume instances, change due dates, or answer questions like \"what's broken right now?\", \"show me everything overdue in the Claims app\", or \"why did this instance fail?\" Covers the full Process Inspector workflow: searching by status/app/owner/date, drilling into instance details and business data, and executing lifecycle actions. Do not use for authoring new processes (generate-baw-bpmn), creating coach widgets (create-baw-widget), or building custom portals (create-baw-portal). Do NOT use for audit readiness, compliance checks, or questions about whether a process application is ready for an audit — use audit-baw-readiness for those."
+description: "Use when a BAW administrator or operator wants to find, investigate, or take action on running IBM BAW process instances: retry failed processes, suspend or resume instances, change due dates, or answer questions like \"what's broken right now?\", \"show me everything overdue in the Claims app\", or \"why did this instance fail?\" Covers the full Process Inspector workflow: searching by status/app/owner/date, drilling into instance details and business data, and executing lifecycle actions. Do not use for authoring new processes (generate-baw-bpmn), creating coach widgets (create-baw-widget), or building custom portals (create-baw-portal). Do not use for audit readiness, compliance checks, or questions about whether a process application is ready for an audit. Use audit-baw-readiness for those."
 license: Apache-2.0
 compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
 allowed-tools:
@@ -10,15 +10,14 @@ allowed-tools:
 metadata:
   version: "1.0.0"
   display_name: Inspect BAW Processes
-  short_description: Find, investigate, and act on running IBM BAW process instances — retry failures, suspend, resume, and change due dates.
+  short_description: "Find, investigate, and act on running IBM BAW process instances: retry failures, suspend, resume, and change due dates."
   author: IBM BAW Team
 ---
-
 # Inspect BAW Processes
 
-Search, inspect, and act on IBM BAW process instances at runtime. This skill covers three categories of work: finding instances by filter, inspecting the details of a specific instance, and taking lifecycle actions (suspend, resume, retry, terminate, change due date).
+Search, inspect, and act on IBM Business Automation Workflow (BAW) process instances at runtime. This skill covers three categories of work: finding instances by filter, inspecting the details of a specific instance, and taking lifecycle actions (suspend, resume, retry, terminate, change due date).
 
-One rule applies to all categories: **always resolve the instance ID by searching first** — the instance ID must always come from a search result, not from the user.
+One rule applies to all categories: **always resolve the instance ID by searching first**. The instance ID must always come from a search result, not from the user.
 
 ---
 
@@ -29,13 +28,20 @@ At the start of the session, check your tool list once and pick a path:
 - If you have tools for **process instance and task** operations → MCP path. Use the MCP operations described in this skill.
 - If no such tools are visible → REST path (see `references/baw-rest.md`).
 
-Stay on the chosen path for the entire session. Do not use a failed tool call as evidence of absence — only absence from the tool list counts.
+Stay on the chosen path for the entire session. Do not use a failed tool call as evidence of absence. Only absence from the tool list counts.
+
+---
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
 
 ---
 
 ## Semantic operations
 
-The capability logic below uses transport-agnostic operation names. When you need to execute one, look it up in the appropriate reference file:
+The capability logic in this skill uses transport-agnostic operation names. When you need to run one, look it up in the appropriate reference file. The following table describes each operation:
 
 | Operation | What it does |
 |---|---|
@@ -49,7 +55,9 @@ The capability logic below uses transport-agnostic operation names. When you nee
 | `modify_process_due_date(id, date)` | Change the due date |
 | `terminate_process(id)` | Permanently end an instance |
 
-**Valid state transitions:**
+**Valid state transitions**
+
+The following table shows the instance status that each operation requires:
 
 | Operation | Only valid when instance status is |
 |---|---|
@@ -59,7 +67,9 @@ The capability logic below uses transport-agnostic operation names. When you nee
 | `modify_process_due_date` | Any |
 | `terminate_process` | Any |
 
-**Status vocabulary** — translate user language before filtering:
+**Status vocabulary**
+
+Translate user language to a status value before filtering:
 
 | User says | Status value |
 |---|---|
@@ -73,69 +83,69 @@ The capability logic below uses transport-agnostic operation names. When you nee
 
 ---
 
-## Category A — Finding / searching instances
+## Category A: Finding instances
 
-1. **Translate intent to filter parameters.** Map natural language to the status vocabulary above. If the user names a process app by full name, note that `search_processes_by_filter` requires an acronym — go to step 2. If no app name was given, skip to step 3.
+1. **Translate intent to filter parameters.** Map natural language to the status vocabulary above. If the user names a process app by full name, note that `search_processes_by_filter` requires an acronym, and go to step 2. If no app name was given, skip to step 3.
 
-2. **Resolve app name to acronym.** Execute `list_exposed_processes`. Find the entry whose app name matches what the user said and read its acronym (e.g. `HSS`). If no match is found, tell the user and offer to search without the app filter.
+2. **Resolve app name to acronym.** Run `list_exposed_processes`. Find the entry whose app name matches what the user said and read its acronym (for example, `HSS`). If no match is found, tell the user and offer to search without the app filter.
 
-3. **Execute `search_processes_by_filter`** with the resolved parameters. All filters are optional — omitting all returns all instances. Never call `search_processes` (advanced DSL) for natural-language requests.
+3. **Run `search_processes_by_filter`** with the resolved parameters. All filters are optional. Omitting all filters returns all instances. Never call `search_processes` (advanced DSL) for natural-language requests.
 
 4. **Present results** as a clean table: Instance ID, Name, Status, Due Date. Do not show raw JSON. If the list is empty, say so and suggest loosening the filter.
 
-5. **Offer next steps** — inspect a specific instance, or take a lifecycle action. Wait for the user to choose.
+5. **Offer next steps:** inspect a specific instance, or take a lifecycle action. Wait for the user to choose.
 
 ---
 
-## Category B — Inspecting a specific instance
+## Category B: Inspecting a specific instance
 
 1. **Get the instance ID.** Use results from Category A if available. Resolve the ID from search results. Asking the user to type a raw ID is a last resort.
 
-2. **Execute `get_process_details`.** Present in labelled sections:
+2. **Run `get_process_details`.** Present the results in labeled sections:
    - **Instance Info:** name, status, due date, start time
-   - **Business Data:** key/value list — not raw JSON
+   - **Business Data:** key/value list, not raw JSON
    - **Open Tasks:** task name, assigned to, due date
 
-3. **Offer documents.** If the user mentioned documents, execute `get_process_documents` immediately. Otherwise ask: *"Would you also like to see documents attached to this instance?"*
+3. **Offer documents.** If the user mentioned documents, run `get_process_documents` immediately. Otherwise ask: "Would you also like to see documents attached to this instance?"
 
-4. **Offer next steps** — offer applicable lifecycle actions based on the instance's current status.
+4. **Offer next steps:** offer applicable lifecycle actions based on the current status of the instance.
 
 ---
 
-## Category C — Taking an action on an instance
+## Category C: Taking an action on an instance
 
 1. **Confirm the instance ID.** If not already known, run Category A first. If the user described a process by name, search and present matches before acting.
 
-2. **Check the instance is in the right state** using the state transitions table. If the user asks to resume an Active instance, stop: *"This instance is Active — it doesn't need to be resumed. Did you mean to suspend it?"*
+2. **Check the instance is in the right state** by using the state transitions table. If the user asks to resume an Active instance, stop and say: "This instance is Active. It does not need to be resumed. Did you mean to suspend it?"
 
 3. **Apply the right confirmation level:**
-   - **Suspend** — halts active work, may block people. Always ask: *"This will suspend [name] ([id]), stopping any active tasks. Proceed?"* Wait for confirmation.
-   - **Retry** — first note: *"Before retrying, make sure the underlying issue has been resolved — retrying against an unresolved problem will fail again and may trigger duplicate side-effects."* Then ask: *"Retry [name] ([id])?"* Wait for confirmation.
-   - **Resume** — low risk and reversible. Confirmation is not needed.
-   - **Modify due date** — no state change. Confirmation is not needed.
-   - **Terminate** — irreversible. Always ask explicitly with the instance name and ID. Do not proceed without a clear "yes."
+   - **Suspend:** Halts active work and might block people. Always ask: "This will suspend [name] ([id]), stopping any active tasks. Proceed?" Wait for confirmation.
+   - **Retry:** First note: "Before retrying, make sure the underlying issue is resolved. Retrying against an unresolved problem fails again and might trigger duplicate side effects." Then ask: "Retry [name] ([id])?" Wait for confirmation.
+   - **Resume:** Low risk and reversible. Confirmation is not needed.
+   - **Modify due date:** No state change. Confirmation is not needed.
+   - **Terminate:** Irreversible. Always ask explicitly with the instance name and ID. Do not proceed without a clear "yes."
 
-4. **Execute the operation** via the appropriate reference file.
+4. **Run the operation** by using the appropriate reference file.
 
-5. **Report the result** as one line: *"Instance [name] ([id]) is now [state]."* If the call fails with a state-conflict error (e.g. 400), check the transitions table and explain what went wrong.
+5. **Report the result** as one line: "Instance [name] ([id]) is now [state]." If the call fails with a state-conflict error (for example, 400), check the transitions table and explain what went wrong.
 
 6. **Offer follow-up:**
-   - After suspending → *"Would you like to resume it later, or inspect its current tasks?"*
-   - After resuming → *"Would you like to monitor its progress?"*
-   - After retrying → *"Would you like to check its status in a moment?"*
-   - After changing due date → *"Would you like to update any other instances?"*
+   - After suspending: "Would you like to resume it later, or inspect its current tasks?"
+   - After resuming: "Would you like to monitor its progress?"
+   - After retrying: "Would you like to check its status in a moment?"
+   - After changing due date: "Would you like to update any other instances?"
 
-**Bulk actions:** Action operations work on one instance at a time. For bulk requests (e.g. "retry all failed instances"), present the full list, confirm the count, then iterate one by one. Apply the confirmation level to the batch as a whole, not to each individual item.
+**Bulk actions:** Action operations work on one instance at a time. For bulk requests (for example, "retry all failed instances"), present the full list, confirm the count, then iterate one by one. Apply the confirmation level to the batch as a whole, not to each individual item.
 
 ---
 
 ## Disambiguation rules
 
 **`search_processes_by_filter` vs `search_processes` (advanced DSL)**
-Always call `search_processes_by_filter` first for all natural-language requests — it maps directly to the v1 BAW endpoint and is the reliable default. Only call `search_processes` when the user explicitly needs a complex boolean condition that `search_processes_by_filter` cannot express (e.g. combining AND/OR across multiple fields). Never use `search_processes` as the default.
+Always call `search_processes_by_filter` first for all natural-language requests. It maps directly to the v1 BAW endpoint and is the reliable default. Call `search_processes` only when the user explicitly needs a complex boolean condition that `search_processes_by_filter` cannot express (for example, combining AND/OR across multiple fields). Never use `search_processes` as the default.
 
 **App name vs acronym**
-The user will give a full name. The operation needs the acronym. Always resolve via `list_exposed_processes` — never guess.
+The user gives a full name, but the operation needs the acronym. Always resolve the acronym by calling `list_exposed_processes`. Never guess.
 
 ---
 
@@ -143,9 +153,9 @@ The user will give a full name. The operation needs the acronym. Always resolve 
 
 **No owner/starter filter.** There is no way to filter instances by who started them. Explain this if the user asks.
 
-**All action operations work on one instance at a time.** No bulk operation exists — iterate for bulk requests.
+**All action operations work on one instance at a time.** No bulk operation exists. Iterate for bulk requests.
 
-**Non-federated environments.** In CP4BA federated deployments, instance results from the advanced search include a `system_id` that must be passed through to action operations. On standalone BAW, omit it. See `references/mcp.md` for details.
+**Non-federated environments.** In IBM Cloud Pak for Business Automation (CP4BA) federated deployments, instance results from the advanced search include a `system_id`, which you must pass to action operations. On standalone BAW, omit it. See `references/mcp.md` for details.
 
 ---
 
@@ -153,7 +163,7 @@ The user will give a full name. The operation needs the acronym. Always resolve 
 
 In scope: searching instances by filter, inspecting instance details and documents, lifecycle actions (suspend, resume, retry, terminate, modify due date).
 
-Out of scope — do not attempt:
+Out of scope (do not attempt):
 - **Authoring or generating new processes.** Use `generate-baw-bpmn`.
 - **Starting a new process instance.** Not covered by this skill.
 - **Modifying process design or business objects.** Runtime inspection only.
@@ -165,15 +175,16 @@ Out of scope — do not attempt:
 ## Output format
 
 **Search results:**
+
 | Instance ID | Name | Status | Due Date |
 |---|---|---|---|
 | 15 | Standard Employee Requisition for... | Active | 2026-07-21T22:00:00Z |
 
-**Instance details:** labelled sections (Instance Info, Business Data, Open Tasks). Business data as a readable key/value list.
+**Instance details:** Labeled sections (Instance Info, Business Data, Open Tasks). Business data as a readable key/value list.
 
-**Action confirmations:** *"Instance [name] ([id]) is now [state]."*
+**Action confirmations:** "Instance [name] ([id]) is now [state]."
 
-**Errors:** state what failed, likely cause, and what the user can try next. Never show a raw stack trace or JSON blob.
+**Errors:** State what failed, the likely cause, and what the user can try next. Never show a raw stack trace or JSON blob.
 
 ---
 
@@ -181,10 +192,10 @@ Out of scope — do not attempt:
 
 **Input:** "Show me everything stuck or late in the Hiring Sample app, then suspend the oldest one."
 
-1. "Stuck" → Suspended, "late" → Late. "Hiring Sample" needs an acronym — execute `list_exposed_processes`, find acronym `HSS`.
-2. Execute `search_processes(status=["Suspended","Late"], application="HSS")`. Get back instances 15, 22, 31.
-3. Present as table. Instance 15 has the earliest due date.
-4. Ask: *"Found 3 instances. Instance 15 (Standard Employee Requisition, due 2026-07-18) is most overdue. Suspend it?"*
-5. User confirms. Instance 15 is Active — suspend is valid. Execute `suspend_process("15")`.
-6. Report: *"Instance Standard Employee Requisition (15) is now Suspended."*
-7. Offer: *"Would you like to suspend the others, resume this one later, or inspect any of them?"*
+1. "Stuck" → Suspended, "late" → Late. "Hiring Sample" needs an acronym. Run `list_exposed_processes` and find acronym `HSS`.
+2. Run `search_processes(status=["Suspended","Late"], application="HSS")`. Get back instances 15, 22, 31.
+3. Present the results as a table. Instance 15 has the earliest due date.
+4. Ask: "Found 3 instances. Instance 15 (Standard Employee Requisition, due 2026-07-18) is most overdue. Suspend it?"
+5. User confirms. Instance 15 is Active, so suspend is valid. Run `suspend_process("15")`.
+6. Report: "Instance Standard Employee Requisition (15) is now Suspended."
+7. Offer: "Would you like to suspend the others, resume this one later, or inspect any of them?"

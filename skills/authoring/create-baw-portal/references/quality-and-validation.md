@@ -150,7 +150,7 @@ Visual review required at:
 | Tablet | 768–899 px |
 | Mobile | ≤ 600 px |
 
-Reference screenshot: `assets/examples/ibm-baw-task-dashboard/screenshots/desktop.jpeg`
+Reference screenshot: no screenshot is currently committed to this repository. Perform a visual review against a running instance at the breakpoints listed above.
 
 ---
 

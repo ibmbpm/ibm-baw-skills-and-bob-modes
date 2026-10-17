@@ -1,15 +1,15 @@
-# Review BAW Code — Documentation
+# Review BAW code — documentation
 
 > Perform automated, severity-ranked code quality reviews across IBM BAW artifacts — server scripts, coach (client-side) scripts, integration service scripts, HTML, CSS, and optionally a Checkstyle XML report.
 
 ## Purpose
 
-This skill scans JavaScript artifacts extracted from a BAW TWX application and produces a severity-ranked findings report. It is designed for BAW developers who want to catch real issues before deployment — hardcoded credentials and URLs that break across environments, undeclared `tw.local.*` variables, inconsistent or silenced error logging, and performance anti-patterns like synchronous `Thread.sleep` or unbounded loops. Use it whenever you want a structured code quality review of one or more BAW scripts, coach views, or an entire TWX project.
+This skill scans JavaScript artifacts extracted from a BAW TWX application and produces a severity-ranked findings report. BAW developers use it to catch real issues before deployment — hardcoded credentials and URLs that break across environments, undeclared `tw.local.*` variables, inconsistent or silenced error logging, and performance anti-patterns like synchronous `Thread.sleep` or unbounded loops. Use it whenever you want a structured code quality review of one or more BAW scripts, coach views, or an entire TWX project.
 
 ## Setup and configuration
 
 - No special setup required for reviewing pasted scripts, uploaded files, or Checkstyle XML.
-- The preferred way to supply a TWX is via the **REST export API**: provide your BAW server URL, container acronym, snapshot version, and credentials — the skill logs in, downloads the TWX, and extracts it automatically. Works for on-premises BAW and CP4BA.
+- The preferred way to supply a TWX is through the **REST export API**: provide your BAW server URL, container acronym, snapshot version, and credentials. The skill logs in, downloads the TWX, and extracts it automatically. This method works for on-premises BAW and CP4BA.
 - If server access is unavailable, you can upload the `.twx` file directly or point the skill at a path on disk as a fallback. The skill offers this option only after the REST export has visibly failed — not pre-emptively.
 - To review an already-extracted TWX directory or paste scripts directly, point the skill at the folder or paste the content — no TWX or server connection needed.
 
@@ -46,30 +46,32 @@ This skill scans JavaScript artifacts extracted from a BAW TWX application and p
 
 ---
 
-### Review a live process app via REST export (preferred)
+### Review a live process app through REST export (preferred)
+
+> **Note:** Replace the placeholder values with your own. Do not share production credentials in prompts.
 
 **Prompt:**
-> Review the BAW code for process app `HSS`, snapshot `0.1` on `https://c79815v1.fyre.ibm.com:9443/`. Credentials: `tw_admin` / `tw_admin`.
+> Review the BAW code for process app `HSS`, snapshot `0.1` on `https://baw.example.com:9443/`. Credentials: `<user>` / `<password>`.
 
-**What to expect:** The skill logs in to obtain a CSRF token, calls `GET /ops/std/bpm/containers/HSS/versions/0.1/export?use_enhanced_filenames=true` to download the TWX, extracts it, then scans all `.js`, `.html`, and `.css` artifacts it finds. A full severity-ranked report is returned with a summary table and Top 3 recommendations — no file upload needed.
+**What to expect:** The skill logs in to obtain a CSRF token, calls `GET /ops/std/bpm/containers/HSS/versions/0.1/export?use_enhanced_filenames=true` to download the TWX, extracts it, then scans all `.js`, `.html`, and `.css` artifacts it finds. The skill returns a full severity-ranked report with a summary table and Top 3 recommendations — no file upload needed.
 
 ---
 
 ### Review a process app — snapshot unknown
 
 **Prompt:**
-> I want to do a code review of the `HSS` process app on `https://c79815v1.fyre.ibm.com:9443/` (tw_admin/tw_admin) but I'm not sure what snapshot version to use.
+> I want to do a code review of the `HSS` process app on `https://baw.example.com:9443/` (`<user>`/`<password>`) but I am not sure what snapshot version to use.
 
-**What to expect:** The skill lists available snapshots via the containers API, lets you pick one, then proceeds with the REST export and review.
+**What to expect:** The skill lists available snapshots through the containers API, lets you pick one, then proceeds with the REST export and review.
 
 ---
 
 ### Review a locally uploaded or on-disk .twx file (fallback)
 
 **Prompt:**
-> Review my BAW code. I don't have server access but here's my TWX file: `/tmp/HSS_0.1.twx`.
+> Review my BAW code. I do not have server access, but here is my TWX file: `/tmp/HSS_0.1.twx`.
 
-**What to expect:** When no server URL is provided (or REST export has previously failed), the skill accepts a local file path or an uploaded file, extracts the TWX archive, and delivers the full severity-ranked report. The skill does not ask for server credentials in this path.
+**What to expect:** When you provide no server URL (or the REST export has previously failed), the skill accepts a local file path or an uploaded file, extracts the TWX archive, and delivers the full severity-ranked report. The skill does not ask for server credentials in this path.
 
 ---
 
@@ -85,7 +87,7 @@ This skill scans JavaScript artifacts extracted from a BAW TWX application and p
 ### Ingest a Checkstyle XML report
 
 **Prompt:**
-> Here is the Checkstyle report from our CI pipeline — please map it to BAW rule IDs and give me a severity-ranked report:
+> Here is the Checkstyle report from our CI pipeline. Map it to BAW rule IDs and give me a severity-ranked report:
 >
 > ```xml
 > <?xml version="1.0" encoding="UTF-8"?>
@@ -117,7 +119,7 @@ This skill scans JavaScript artifacts extracted from a BAW TWX application and p
 ### Iterative re-review after fixes
 
 **Prompt:**
-> I've fixed the Critical and High issues from your last review. Here is the updated version of `ProcessOrder.js`:
+> I fixed the Critical and High issues from your last review. Here is the updated version of `ProcessOrder.js`:
 >
 > ```js
 > // ProcessOrder.js — v2
@@ -153,4 +155,8 @@ This skill scans JavaScript artifacts extracted from a BAW TWX application and p
 **Prompt:**
 > Can you check whether any running process instances are stuck in the Approval step right now?
 
-**What to expect:** The skill explains that runtime process inspection is handled by the [`inspect-baw-processes`](../../../administration-operations/inspect-baw-processes/docs/inspect-baw-processes-doc.md) skill and redirects you there.
+**What to expect:** The skill explains that the [`inspect-baw-processes`](../../../administration-operations/inspect-baw-processes/docs/inspect-baw-processes-doc.md) skill handles runtime process inspection and redirects you there.
+
+## Related information
+
+- [`inspect-baw-processes`](../../../administration-operations/inspect-baw-processes/docs/inspect-baw-processes-doc.md)

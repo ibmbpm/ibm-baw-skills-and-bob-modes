@@ -163,7 +163,7 @@ Use ⚠️ when the flow is linear or purely branching (no parallel gateways, no
 Use one subsection per change type, with a coloured risk indicator:
 
 ```markdown
-### 🟢 Add Field — Low risk
+### 🟢 Add field — Low risk
 
 Adding a new field is backward-compatible. Existing consumers are unaffected.
 

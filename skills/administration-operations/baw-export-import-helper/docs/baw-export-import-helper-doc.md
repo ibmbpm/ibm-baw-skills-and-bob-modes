@@ -1,4 +1,4 @@
-# BAW Export and Import Helper — Documentation
+# BAW export and import helper — documentation
 
 > Migrate IBM BAW or CP4BA Process Apps, toolkits, case solutions, and Business Applications from one environment to another — automatically resolving toolkit dependencies and determining the correct import order.
 
@@ -9,8 +9,8 @@ This skill guides Bob through a complete, end-to-end migration of BAW or CP4BA p
 ## Setup and configuration
 
 - **Network access:** The machine running Bob must have HTTP/HTTPS access to both the source and target BAW servers simultaneously.
-- **Credentials:** A username and password with sufficient permissions to export snapshots on the source and import them on the target. Admin-level credentials are recommended.
-- **No MCP server required:** This skill uses the BAW REST API exclusively via direct HTTP calls. No BAW MCP server needs to be connected.
+- **Credentials:** A username and password with sufficient permissions to export snapshots on the source and import them on the target. Use admin-level credentials.
+- **No MCP server required:** This skill uses the BAW REST API exclusively via direct HTTP calls. You do not need to connect a BAW MCP server.
 - **Local disk space:** Bob writes exported Teamworks Exchange (TWX) files to a temporary local directory during the migration. Ensure sufficient disk space for the containers being migrated. Temporary files are deleted automatically after a successful migration run; if the run fails, Bob prompts you to clean them up manually.
 - **Self-signed certificates:** On-premises BAW and CP4BA environments commonly use self-signed TLS certificates. When detected, the skill appends `-k` to `curl` calls and warns you that certificate validation is disabled for that session. Do not disable certificate validation in production environments unless your security policy explicitly permits it.
 
@@ -38,7 +38,7 @@ This skill guides Bob through a complete, end-to-end migration of BAW or CP4BA p
 ### Migrate with all credentials provided upfront
 
 **Prompt:**
-> Migrate Process App HSS from https://baw-dev.example.com:9443 (bawadmin/password) to https://baw-test.example.com:9443 (bawadmin/password).
+> Migrate Process App HSS from https://baw-dev.example.com:9443 (<username>/<password>) to https://baw-test.example.com:9443 (<username>/<password>).
 
 **What to expect:** Bob skips the credential prompt, logs into both servers immediately, checks version compatibility, discovers all branches and snapshots, resolves toolkit dependencies, checks what already exists on the target, imports oldest-snapshot-first, polls each async job to completion, and prints the full migration report.
 
@@ -47,7 +47,7 @@ This skill guides Bob through a complete, end-to-end migration of BAW or CP4BA p
 ### Migrate multiple projects by acronym
 
 **Prompt:**
-> Migrate Process Apps COP, IRP, and OMS from https://source.example.com:9443 (bawadmin/password) to https://target.example.com:9443 (bawadmin/password).
+> Migrate Process Apps COP, IRP, and OMS from https://source.example.com:9443 (<username>/<password>) to https://target.example.com:9443 (<username>/<password>).
 
 **What to expect:** Bob authenticates to both servers, verifies each acronym exists on the source, and proceeds with all 3 — or tells you which acronym was not found and asks you to clarify before continuing.
 
@@ -56,7 +56,7 @@ This skill guides Bob through a complete, end-to-end migration of BAW or CP4BA p
 ### Migrate all projects
 
 **Prompt:**
-> Migrate all my Process Apps. Source: https://baw-dev.example.com:9443, target: https://baw-test.example.com:9443. Both use bawadmin/password.
+> Migrate all my Process Apps. Source: https://baw-dev.example.com:9443, target: https://baw-test.example.com:9443. Both use <username>/<password>.
 
 **What to expect:** Bob authenticates, lists all non-system containers on the source, presents them for your confirmation, and waits before exporting anything.
 
@@ -65,7 +65,7 @@ This skill guides Bob through a complete, end-to-end migration of BAW or CP4BA p
 ### Migrate only the default branch
 
 **Prompt:**
-> I want to migrate just the default branch of my Process App P1 from https://baw-dev.example.com:9443 (bawadmin/password) to https://baw-test.example.com:9443 (bawadmin/password).
+> I want to migrate just the default branch of my Process App P1 from https://baw-dev.example.com:9443 (<username>/<password>) to https://baw-test.example.com:9443 (<username>/<password>).
 
 **What to expect:** Bob migrates only snapshots from the default branch of P1 — since you specified this upfront, it does not ask the branch question again.
 
@@ -74,7 +74,7 @@ This skill guides Bob through a complete, end-to-end migration of BAW or CP4BA p
 ### Migrate a project that does not exist
 
 **Prompt:**
-> Migrate WRONGACRONYM from https://baw-dev.example.com:9443 (bawadmin/password) to https://baw-test.example.com:9443 (bawadmin/password).
+> Migrate WRONGACRONYM from https://baw-dev.example.com:9443 (<username>/<password>) to https://baw-test.example.com:9443 (<username>/<password>).
 
 **What to expect:** Bob authenticates, attempts to find the container, tells you it was not found, and offers to show the full list of available containers so you can identify the correct acronym.
 

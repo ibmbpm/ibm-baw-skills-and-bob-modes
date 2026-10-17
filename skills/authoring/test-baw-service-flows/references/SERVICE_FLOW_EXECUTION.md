@@ -221,7 +221,7 @@ For each key-value pair in `test_case.expected_output`:
    - **Exact string / number / boolean:** exact equality (case-sensitive for strings).
    - **`"any"` placeholder:** skip — do not assert.
    - **`"any_non_null"` placeholder:** assert the value is present and not null/undefined.
-   - **Range operator (e.g. `">= 100"`, `"< 0"`):** parse the operator, evaluate `actual_value op threshold`, assert true.
+   - **Range operator (for example, `">= 100"`, `"< 0"`):** parse the operator, evaluate `actual_value op threshold`, assert true.
    - **`"contains:<substring>"`:** assert `actual_value.toString().includes(substring)`.
    - **`"today"` (date field):** compare only the date portion of the ISO-8601 string to the execution date.
    - **`null`:** assert the field is absent or explicitly null in the actual output.
@@ -254,7 +254,7 @@ Re-authenticate via `POST {BAW_BASE_URL}/ops/system/login` and retry the failed 
 
 ### CSRF token issues (403)
 
-Ensure the `BPMCSRFToken` header is being sent. Re-read the token from the last login response and retry once.
+Ensure you are sending the `BPMCSRFToken` header. Re-read the token from the last login response and retry once.
 
 ### Service not found (404 on direct invocation)
 

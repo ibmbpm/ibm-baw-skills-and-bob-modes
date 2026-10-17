@@ -1,4 +1,4 @@
-# BAW/CP4BA Remediation Capability Map
+# BAW and CP4BA remediation capability map
 
 Use this mapping when selecting the appropriate platform capability for each Remediation Record in Phase 7.
 

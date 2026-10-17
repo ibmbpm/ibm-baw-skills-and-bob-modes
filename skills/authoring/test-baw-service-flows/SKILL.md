@@ -27,10 +27,10 @@ Generate comprehensive test suites for IBM BAW Service Flows and execute them ag
 
 ## Execution mode
 
-MCP is used when relevant tools are present; REST is the fallback.
+The skill uses MCP when relevant tools are present; REST is the fallback.
 
 - **Phase A:** If Authoring MCP tools are present → use MCP for service flow discovery. If absent → use REST per the steps in `references/SERVICE_FLOW_DISCOVERY.md`.
-- **Phase B:** Use the first available invocation path (see Priority Order below). Reuse the Phase A session — do not ask for credentials again.
+- **Phase B:** Use the first available invocation path (see Priority Order below). The Phase A login session (if it exists) is still valid.
 
 ### CP4BA URL — resolve before the first API call
 
@@ -41,7 +41,7 @@ When the user provides a CP4BA URL (contains `cpd-` or ends without a port), det
 | Path segment `/bas` | Workflow Authoring — has integrated playback server | Proceed directly using the BAS playback server — do not ask the user if they have a runtime. See Step 0 in `references/SERVICE_FLOW_DISCOVERY.md` for the full procedure. |
 | Path segment `/baw-<name>` | Workflow Runtime | Proceed with authentication |
 | User stated it is an authoring environment (any phrasing) | Workflow Authoring | Set `{BAW_BASE_URL}` to `https://<host>/bas` and proceed as Workflow Authoring. Do not ask the user to clarify. |
-| User stated it is a runtime environment (any phrasing) | Workflow Runtime | Ask for the runtime path (e.g. `/baw-<instance>`) if not already in the URL |
+| User stated it is a runtime environment (any phrasing) | Workflow Runtime | Ask for the runtime path (for example, `/baw-<instance>`) if not already in the URL |
 | No path segment, no prior context | Unknown | Probe `GET <url>/bas/ops/std/bpm/servers/workflow`. If `servers: []` → use BAS playback. If `servers: [...]` → ask which runtime. Only ask the user if the probe also fails. |
 
 > **Prior context takes precedence over URL inspection.** If the user has already described the environment type earlier in the conversation, treat that as authoritative and do not ask again. Only fall back to asking when neither the URL path nor the conversation provides a signal.
@@ -64,6 +64,13 @@ See `references/BAW_CONNECTION.md` for the full authentication procedure for eac
 
 ---
 
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+
+---
 ## Phase A — Test Suite Generation
 
 Full discovery protocol is in `references/SERVICE_FLOW_DISCOVERY.md`. Follow it step-by-step.
@@ -96,10 +103,10 @@ Resolve in this order — do not announce step names to the user, just act.
 
 ### Generating the tests
 
-1. **Analyze the I/O contract.** Follow `references/SERVICE_FLOW_TEST_GENERATION.md`. The goal is to enumerate every meaningful input combination: the minimal valid happy-path call, each documented error condition, and boundary values for any numeric, string-length, or date constraint.
+1. **Analyse the I/O contract.** Follow `references/SERVICE_FLOW_TEST_GENERATION.md`. The goal is to enumerate every meaningful input combination: the minimal valid happy-path call, each documented error condition, and boundary values for any numeric, string-length, or date constraint.
 
 2. **Generate the test suite.** Use the format in `references/SERVICE_FLOW_TEST_SUITE_FORMAT.md` exactly. Every test case must have a clear ID, human-readable name, path label, input data, and expected output or error assertion. Produce at minimum:
-   - One happy-path test per service flow — **unless the user explicitly requests a restricted scope** (e.g. "only error paths", "only validation tests"). If the user has explicitly excluded the happy path, skip it and record `"scope_note": "happy-path excluded at user request"` in the test suite metadata.
+   - One happy-path test per service flow — **unless the user explicitly requests a restricted scope** (for example, "only error paths", "only validation tests"). If the user has explicitly excluded the happy path, skip it and record `"scope_note": "happy-path excluded at user request"` in the test suite metadata.
    - At least one error-path test **for the same service flow**, if the service allows it — meaning it has any required input, declared fault, or input validation that can be triggered. A service flow "allows" an error path if omitting a required field, supplying an out-of-range value, or using a wrong variable name produces an error response. Only skip the error-path test if the I/O contract has no required fields, no declared faults, and no validatable constraints whatsoever.
    - Boundary tests for any numeric or string-length constraint — unless the user has restricted scope to exclude them.
 
@@ -135,9 +142,7 @@ Full execution protocol is in `references/SERVICE_FLOW_EXECUTION.md`. Key endpoi
    > *"⚠️ Running these tests will invoke the Service Flow on your BAW server. It is strongly recommended to run against a non-production environment to avoid unintended side effects. Do you want to continue? (yes / no)"*
 
    Wait for explicit "yes" before starting.
-5. **REST only — ask for server URL and credentials** (skip if session from Phase A is still valid):
-   *"What is your BAW server URL and credentials? — these are only used to get a session token and are not stored."*
-   Use **Python stdlib `urllib`** for all HTTP calls — never `curl` or PowerShell. For CP4BA: obtain a Zen token via `GET /v1/preauth/validateAuth`, then a CSRF token via `POST {BAW_BASE_URL}/ops/system/login`. For on-premises: use Basic auth on `POST {BAW_BASE_URL}/ops/system/login` and store the `{BAW_CSRF}` and `{BAW_SESSION}` cookies. See `references/BAW_CONNECTION.md` for the full authentication flow.
+5. **REST only — authenticate** (skip if session from Phase A is still valid): read `references/CREDENTIAL_HANDLING.md` to resolve credentials, then authenticate. Use **Python stdlib `urllib`** for all HTTP calls — never `curl` or PowerShell. For CP4BA: obtain a Zen token via `GET /v1/preauth/validateAuth`, then a CSRF token via `POST {BAW_BASE_URL}/ops/system/login`. For on-premises: use Basic auth on `POST {BAW_BASE_URL}/ops/system/login` and store the `{BAW_CSRF}` and `{BAW_SESSION}` cookies. See `references/BAW_CONNECTION.md` for the full authentication flow.
 6. **Production warning.** If the server URL contains `prod`, the user says it is production, or it matches a known production hostname, add:
    > *"This appears to be a production server. Invoking service flows here may trigger real integrations (email, database, external APIs). Are you sure you want to continue on production?"*
    Wait for explicit confirmation.

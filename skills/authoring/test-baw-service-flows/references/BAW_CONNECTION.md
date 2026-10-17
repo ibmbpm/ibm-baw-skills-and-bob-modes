@@ -31,15 +31,15 @@ Do not switch to REST mode after a single failed call — only switch if the too
 
 ---
 
-## REST mode — BAW server URL & Environment Resolution
+## REST mode — BAW server URL and environment resolution
 
 All paths in `references/baw-rest.md` are relative. Prepend `{BAW_BASE_URL}` to construct the full URL.
 
 ### Base URL Patterns
-- **On-premises / Standalone containers:** `{BAW_BASE_URL}` = `https://<host>:<port>` (e.g. `https://baw.example.com:9443`). Paths follow `/ops/...`, `/bpm/...`, `/rest/bpm/wle/v1/...`.
+- **On-premises / Standalone containers:** `{BAW_BASE_URL}` = `https://<host>:<port>` (for example, `https://baw.example.com:9443`). Paths follow `/ops/...`, `/bpm/...`, `/rest/bpm/wle/v1/...`.
 - **CP4BA (Cloud Pak for Business Automation):** `{BAW_BASE_URL}` includes the deployment instance route prefix:
   - Studio / Workflow Authoring: `https://<cpd-host>/bas`
-  - Runtime instances: `https://<cpd-host>/baw-<instance>` (e.g. `/baw-aut`, `/baw-dev`, `/baw-bawins1`)
+  - Runtime instances: `https://<cpd-host>/baw-<instance>` (for example, `/baw-aut`, `/baw-dev`, `/baw-bawins1`)
   Full API paths are appended directly: `{BAW_BASE_URL}/ops/...`, `{BAW_BASE_URL}/bpm/...`, etc.
 
 ### CP4BA — Disambiguate authoring vs runtime before proceeding
@@ -52,7 +52,7 @@ When the user provides a CP4BA URL, identify which type it is **before making an
 | `/baw-<anything>` | Workflow Runtime — execution-capable | ✅ Yes |
 | No path segment | Ambiguous — check by calling `GET /bas/ops/std/bpm/servers/workflow` | See below |
 
-If the URL has no path segment (e.g. `https://cpd-demo.example.com/`) and you cannot determine the type from context, call:
+If the URL has no path segment (for example, `https://cpd-demo.example.com/`) and you cannot determine the type from context, call:
 ```
 GET https://<cpd-host>/bas/ops/std/bpm/servers/workflow
   Authorization: Bearer <zen_token>
@@ -75,7 +75,7 @@ GET https://<cpd-host>/bas/ops/std/bpm/servers/workflow
 >
 > Once the BAS host is confirmed, obtain a **separate** Zen token from `GET https://<bas-host>/v1/preauth/validateAuth` — do not reuse the runtime token.
 
-### Authentication & Token Acquisition
+### Authentication and token acquisition
 
 > **Cross-platform HTTP — always use Python stdlib `urllib` for all HTTP calls.** Never use `curl` or PowerShell for REST calls — Python is available on all supported platforms (Windows, macOS, Linux) and avoids shell quoting and alias incompatibilities. No third-party packages are needed. For CP4BA environments with self-signed or private CA certificates, disable certificate verification:
 > ```python
@@ -100,7 +100,7 @@ Store it as `{BAW_BASE_URL}` and use it for all subsequent REST calls in the ses
 
 ### URL validation — resolve port ambiguity before proceeding
 
-On-premises BAW servers almost always listen on port **9443** (HTTPS) or 9080 (HTTP). When the user provides a URL with no port (e.g. `https://host.example.com/`), do **not** assume port 443 is the BAW runtime. Instead:
+On-premises BAW servers almost always listen on port **9443** (HTTPS) or 9080 (HTTP). When the user provides a URL with no port (for example, `https://host.example.com/`), do **not** assume port 443 is the BAW runtime. Instead:
 
 1. Attempt `POST {url}/ops/system/login` with Basic auth.
 2. If that returns HTTP 404 or a non-BAW HTML page, probe `https://<host>:9443/ops/system/login`.

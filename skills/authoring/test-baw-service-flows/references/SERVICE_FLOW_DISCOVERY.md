@@ -132,7 +132,7 @@ If the app is not listed, the user must deploy it first. Do not attempt to impor
 > *"The app '[name]' does not appear to be deployed on this server. Please deploy it first — you can use the `baw-deployment-manager` skill or the Process Admin Console to install the snapshot, then come back here to run the tests."*
 
 **TWX version mismatch (if the user attempts a manual import and it fails with `CWTBG0737E`):**
-Check the server API version from `/ops/docs` → `info.version` (e.g. `8.6.2.21021` = BAW v21) and compare it against the `buildVersion` attribute in the TWX's `META-INF/package.xml` (e.g. `buildVersion="8.6.12.26030"` = BAW 26.0.3). If the TWX version is newer than the server version, tell the user:
+Check the server API version from `/ops/docs` → `info.version` (for example, `8.6.2.21021` = BAW v21) and compare it against the `buildVersion` attribute in the TWX's `META-INF/package.xml` (for example, `buildVersion="8.6.12.26030"` = BAW 26.0.3). If the TWX version is newer than the server version, tell the user:
 > *"The TWX was exported from BAW [TWX version] but this server is running BAW [server version]. A TWX cannot be imported into an older server. You need a server running BAW [TWX version] or later."*
 
 **App exists on the runtime but not on Workflow Authoring (BAS):**
@@ -141,7 +141,7 @@ An app can be deployed directly to the runtime without going through Workflow Au
 If the user cannot provide a local TWX, offer to probe startability without a contract: the service IDs can be guessed from the `/exposed/service` endpoint and probed live, but typed test case generation will not be possible.
 
 **App exists on Workflow Authoring but not on the runtime:**
-The snapshot was never installed on this BAW runtime. The TWX can be exported from BAS for contract analysis, but service invocations will fail at Phase B. Tell the user:
+The snapshot was never installed on this BAW runtime. The TWX can be exported from BAS for contract analysis, but service invocations fail at Phase B. Tell the user:
 > *"I can read the service flow contract from Workflow Authoring, but this app isn't installed on the runtime (`{BAW_BASE_URL}`). Phase A test generation will work, but Phase B execution will fail until the snapshot is deployed. Would you like to proceed with generation only, or deploy the app first?"*
 
 ### Step 2 — Authenticate
@@ -344,7 +344,7 @@ Also record:
 
 Before proceeding to test generation, verify:
 
-- [ ] Environment confirmed as a Workflow Runtime **or** BAS playback server is being used.
+- [ ] Environment confirmed as a Workflow Runtime **or** you are using the BAS playback server.
 - [ ] Service Flow name confirmed with the user (do not guess).
 - [ ] `serviceId` (or Automation Service path) recorded.
 - [ ] All input variables listed with name, type, and required flag.

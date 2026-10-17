@@ -1,6 +1,6 @@
-## Business Data
+## Business data
 
-The widget expects an array of task items. Each item should be an object with the following structure:
+The widget expects an array of task items. Each item must be an object with the following structure:
 
 ```javascript
 [
@@ -11,16 +11,16 @@ The widget expects an array of task items. Each item should be an object with th
 ]
 ```
 
-### Status Values
+### Status values
 
 The `status` field accepts the following values (case-sensitive):
 
-- **Complete** - Task successfully completed (green badge with checkmark icon)
-- **Pending** - Task waiting to start (gray badge with circle icon)
-- **Processing** - Task currently in progress (blue badge with spinner icon)
-- **Failed** - Task encountered an error (red badge with error icon)
+- Complete: Task successfully completed (green badge with checkmark icon)
+- Pending: Task waiting to start (gray badge with circle icon)
+- Processing: Task currently in progress (blue badge with spinner icon)
+- Failed: Task encountered an error (red badge with error icon)
 
-### Example Data
+### Example data
 
 ```javascript
 [
@@ -31,9 +31,9 @@ The `status` field accepts the following values (case-sensitive):
 ]
 ```
 
-### Visual Presentation
+### Visual presentation
 
-The widget displays tasks in a professional table format with:
+The widget displays tasks in a table format with:
 - Status icons in the first column for quick visual identification
 - Task labels in the middle column with proper alignment
 - Status badges in the right column with color-coded styling

@@ -5,7 +5,7 @@ Mermaid diagrams easier to read at a glance, and how to publish them (plus the d
 model and role table) as a single reviewable artifact instead of scattered chat blocks.
 Everything here is additive: if the Artifact tool isn't available in this environment,
 skip the artifact-publishing parts and keep doing the plain chat-rendered Mermaid/YAML
-blocks the rest of `SKILL.md` already describes -- no other step changes.
+blocks the rest of `SKILL.md` already describes — no other step changes.
 
 ## Diagram conventions
 
@@ -28,7 +28,7 @@ class sf_validate system
 
 **Fake swimlanes — use with judgment.** `subgraph "Role Name" ... end` around a role's
 nodes visually groups them like a swimlane, with zero effect on the generated BPMN
-(diagram layout is ignored by BAW on import — see `references/BAW_BPMN_DIALECT.md`). This helps when a
+(diagram layout is ignored by BAW on import — see [BAW_BPMN_DIALECT.md](BAW_BPMN_DIALECT.md)). This helps when a
 process has clear blocks of same-actor work (e.g., all of intake is the agent, then all
 of review is underwriting). It hurts when actors interleave tightly (approve → reject →
 re-review → approve), because Mermaid clusters each subgraph spatially and the

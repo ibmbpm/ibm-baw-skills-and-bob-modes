@@ -1,7 +1,7 @@
 # Service Flow Test Generation — Artifact Analysis Instructions
 
 This file contains the detailed instructions for producing test cases in **Phase A** of the `test-baw-service-flows` skill.
-It describes how to analyze an I/O contract and author test cases covering every meaningful input combination.
+It describes how to analyse an I/O contract and author test cases covering every meaningful input combination.
 
 ---
 
@@ -67,7 +67,7 @@ The happy-path test is the minimal valid call that reaches a successful response
 
 **Expected output for the happy path:**
 - Set `expected_output` to the specific field values the service should return.
-- If the service returns a computed value (e.g. a calculated total, a generated ID), use a placeholder operator like `"any_non_null"` or `">= 0"` rather than a fixed value.
+- If the service returns a computed value (for example, a calculated total, a generated ID), use a placeholder operator like `"any_non_null"` or `">= 0"` rather than a fixed value.
 - Set `expected_status` to `success`.
 
 **Naming:** `SFTC-001` — happy path — [Service Flow name].
@@ -80,11 +80,11 @@ Generate one test case per distinct error condition. Sources of error conditions
 
 1. **Missing required field** — omit each required input variable one at a time. If there are many required fields, omit them in groups for efficiency (one test per group is acceptable, but prefer one test per field if the service validates them independently).
 
-2. **Invalid type or format** — pass a value of the wrong type (e.g. a string where an integer is expected, an invalid date format).
+2. **Invalid type or format** — pass a value of the wrong type (for example, a string where an integer is expected, an invalid date format).
 
-3. **Out-of-range value** — pass a value outside the declared valid range (e.g. `-1` for a field with `min: 0`, a string longer than `maxLength`).
+3. **Out-of-range value** — pass a value outside the declared valid range (for example, `-1` for a field with `min: 0`, a string longer than `maxLength`).
 
-4. **Declared fault outputs** — for each fault/error code documented in the I/O contract, craft the exact input combination that triggers it (e.g. a lookup that returns "not found", an authorisation check that returns "denied").
+4. **Declared fault outputs** — for each fault/error code documented in the I/O contract, craft the exact input combination that triggers it (for example, a lookup that returns "not found", an authorization check that returns "denied").
 
 5. **Empty required string** — pass an empty string `""` for a required string field.
 

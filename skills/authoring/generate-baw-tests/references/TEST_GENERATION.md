@@ -1,7 +1,7 @@
-# Test Generation — Artifact Analysis Instructions
+# Test generation: artifact analysis instructions
 
-This file contains the detailed instructions for **Phase A** of the `generate-baw-tests` skill.
-It is split by artifact type. Read the section that matches the artifacts being tested.
+This file contains the detailed instructions for Phase A of the `generate-baw-tests` skill.
+It is split by artifact type. Read the section that matches the artifacts that you are testing.
 
 ---
 
@@ -16,7 +16,7 @@ It is split by artifact type. Read the section that matches the artifacts being 
 
 ## 1. Acquiring and parsing TWX artifacts
 
-### Via REST export
+### By using the REST export
 
 1. Call `GET /std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true`.
 2. The response is a binary `.twx` file (which is a ZIP). Save it and unzip it.
@@ -24,12 +24,12 @@ It is split by artifact type. Read the section that matches the artifacts being 
 
 ### What to look for in the XML
 
-When enhanced filenames are used, files follow a pattern like:
-- `objects/<ProcessName>_BPD.xml` — process definition
-- `objects/<CoachName>_Coach.xml` — coach definition  
-- `objects/<ObjectName>_BusinessObject.xml` — business object / variable type
+When you use enhanced filenames, the files follow a pattern like this:
+- `objects/<ProcessName>_BPD.xml`: process definition
+- `objects/<CoachName>_Coach.xml`: coach definition
+- `objects/<ObjectName>_BusinessObject.xml`: business object or variable type
 
-If the user pastes raw XML or provides file content directly, parse it inline — no fetch needed.
+If the user pastes raw XML or provides file content directly, parse it inline. No fetch is needed.
 
 ---
 
@@ -41,62 +41,62 @@ Parse the process model and extract:
 
 | Element | What to capture |
 |---|---|
-| **Process name and ID** | The authoritative name for test case IDs and `app.process_model` |
-| **Start event** | Input variable types and their required fields |
-| **User tasks** | Task name, lane (role), input/output variable mappings |
-| **System tasks / services** | Name and whether they can fail (error boundary attached?) |
-| **Gateways** | Type (exclusive, parallel, inclusive), conditions on each outgoing sequence flow |
-| **Error boundary events** | Which task they attach to, what error code they catch |
-| **Timer boundary events** | Task, timeout duration, escalation path |
-| **End events** | Number of distinct end events and their labels (e.g. "Approved", "Rejected", "Cancelled") |
-| **Process data (variables)** | All private variables with their types and whether they are required |
+| Process name and ID | The authoritative name for test case IDs and `app.process_model` |
+| Start event | Input variable types and their required fields |
+| User tasks | Task name, lane (role), input and output variable mappings |
+| System tasks and services | Name and whether they can fail (error boundary attached?) |
+| Gateways | Type (exclusive, parallel, inclusive), conditions on each outgoing sequence flow |
+| Error boundary events | Which task they attach to, what error code they catch |
+| Timer boundary events | Task, timeout duration, escalation path |
+| End events | Number of distinct end events and their labels (for example, "Approved", "Rejected", "Cancelled") |
+| Process data (variables) | All private variables with their types and whether they are required |
 
 ### 2.2 Path enumeration
 
-For each exclusive gateway, enumerate every outgoing path separately. For parallel gateways, enumerate the join as a single combined path (parallel paths are not separate test cases).
+For each exclusive gateway, enumerate every outgoing path separately. For parallel gateways, enumerate the join as a single combined path. Do not treat parallel paths as separate test cases.
 
 For each path, trace it from the start event to one end event. Write that path down as an ordered list of task names with the gateway conditions that must be true to reach each branch.
 
-**Minimum required paths:**
+Minimum required paths:
 - One happy-path trace (all approvals granted, all thresholds met, reaches the primary "success" end event).
 - One trace per alternative branch created by each exclusive gateway.
 - One trace per error boundary event that has a distinct recovery flow.
-- One trace per timer/escalation path if the timeout has a distinct outcome.
+- One trace per timer or escalation path if the timeout has a distinct outcome.
 
-### 2.3 Test case authoring — Process
+### 2.3 Test case authoring for processes
 
 For each path, create one test case. Fill in the fields as follows:
 
-**`input.data`** — Set variables to values that will route the process down the intended path. For the happy path, use the minimal valid set of values. For alternative paths, change only the variables that drive the gateway decision.
+**`input.data`**: Set variables to values that route the process down the intended path. For the happy path, use the minimal valid set of values. For alternative paths, change only the variables that drive the gateway decision.
 
-**`steps`** — Walk the path from start to end event. Each user task the path reaches becomes one step. For system tasks that are transparent to the test (no user interaction, no branching), skip them in the step list — they will run automatically.
+**`steps`**: Walk the path from start to end event. Each user task that the path reaches becomes one step. For system tasks that are transparent to the test (no user interaction, no branching), skip them in the step list. They run automatically.
 
-**`expected_outcome`** — Set `final_status` to `Completed` unless the path ends at a specific error or timeout outcome. Set `output_variables` to the variables that should be set at the end of the instance.
+**`expected_outcome`**: Set `final_status` to `Completed` unless the path ends at a specific error or timeout outcome. Set `output_variables` to the variables that the instance should set at the end.
 
-**Naming convention:**
-- `TC-001` — happy path
-- `TC-002`, `TC-003`, ... — alternative paths in gateway order (left-to-right / top-to-bottom as modeled)
-- `TC-ERR-001`, `TC-ERR-002` — error paths
-- `TC-EDGE-001`, `TC-EDGE-002` — boundary/edge cases
+Naming convention:
+- `TC-001`: happy path
+- `TC-002`, `TC-003`, and so on: alternative paths in gateway order (left to right and top to bottom, as modeled)
+- `TC-ERR-001`, `TC-ERR-002`: error paths
+- `TC-EDGE-001`, `TC-EDGE-002`: boundary and edge cases
 
-### 2.4 Boundary and edge cases — Process
+### 2.4 Boundary and edge cases for processes
 
 After covering all structural paths, consider the following edge cases:
 
 | Scenario | What to test |
 |---|---|
-| **Null optional field** | Start the process with an optional variable omitted — verify the process still starts and routes correctly |
-| **Empty list variable** | Pass an empty array where a list variable is expected — verify graceful handling |
-| **Threshold boundary** | For any numeric gateway condition (e.g. `amount > 10000`), create two tests: one at `10000` (boundary, goes to lower path) and one at `10001` (boundary + 1, goes to upper path) |
-| **Maximum string length** | If a variable has a known max length, test exactly at the limit and one character over |
-| **Same-day dates** | If the process has a date comparison (e.g. due date vs. today), test the case where both dates are the same |
-| **Role boundary** | If the process routes differently based on the initiating user's group, include a test case for a user at the boundary between two roles |
+| Null optional field | Start the process with an optional variable omitted. Verify that the process still starts and routes correctly. |
+| Empty list variable | Pass an empty array where a list variable is expected. Verify graceful handling. |
+| Threshold boundary | For any numeric gateway condition (for example, `amount > 10000`), create two tests: one at `10000` (boundary, goes to lower path) and one at `10001` (boundary + 1, goes to upper path). |
+| Maximum string length | If a variable has a known maximum length, test exactly at the limit and one character over. |
+| Same-day dates | If the process has a date comparison (for example, due date compared with today), test the case where both dates are the same. |
+| Role boundary | If the process routes differently based on the initiating user's group, include a test case for a user at the boundary between two roles. |
 
 ---
 
 ## 3. Coach test generation
 
-Coach tests are static — they validate UI field behaviour from the artifact definition. They do not require a running process instance. The skill generates coach test cases as part of the test suite; execution is manual.
+Coach tests are static. They validate UI field behavior from the artifact definition and do not require a running process instance. The skill generates coach test cases as part of the test suite. You run them manually.
 
 ### 3.1 What to extract from coach definition XML
 
@@ -104,29 +104,29 @@ Parse the coach XML and extract:
 
 | Element | What to capture |
 |---|---|
-| **Coach view name** | Used in the test case header |
-| **Fields** | Each input element: ID/binding, label, field type (text, dropdown, date, checkbox, etc.) |
-| **Required bindings** | Fields with `required="true"` or a required validator configured |
-| **Read-only conditions** | Fields that become read-only under a visibility/configuration binding |
-| **Hidden conditions** | Fields that are hidden when a binding variable has a certain value |
-| **Validation rules** | Min/max length, regex pattern, custom validation service calls |
-| **Default values** | Pre-populated field values from a configuration option |
-| **User actions** | Buttons (OK, Submit, Save Draft, etc.) and which coach event they fire |
-| **Boundary conditions** | Any configured min/max numeric range or date range |
+| Coach view name | Used in the test case header |
+| Fields | Each input element: ID or binding, label, field type (text, dropdown, date, checkbox, and so on) |
+| Required bindings | Fields with `required="true"` or a required validator configured |
+| Read-only conditions | Fields that become read-only under a visibility or configuration binding |
+| Hidden conditions | Fields that are hidden when a binding variable has a certain value |
+| Validation rules | Minimum and maximum length, regex pattern, custom validation service calls |
+| Default values | Prepopulated field values from a configuration option |
+| User actions | Buttons (OK, Submit, Save Draft, and so on) and which coach event they fire |
+| Boundary conditions | Any configured minimum and maximum numeric range or date range |
 
-### 3.2 Test case authoring — Coach
+### 3.2 Test case authoring for coaches
 
 For each coach view (or sub-view if the Coach is composed of nested views), create a test case of `type: coach`. Populate `coach_assertions` with one assertion object per identifiable rule.
 
-**Mandatory assertions to generate:**
+Generate these mandatory assertions:
 
-1. **Required field validation** — for every field marked as required, assert that leaving it blank and clicking the primary submit button produces a validation error.
-2. **Hidden/shown by condition** — for every conditional visibility rule, assert the field is hidden when the driving variable is set to the hiding value and visible when set to the showing value.
-3. **Read-only by condition** — assert the field is not editable when the driving variable takes the read-only value.
-4. **Validation constraint** — for every regex, min/max length, or numeric range constraint, write one assertion for a value that should pass and one for a value that should fail.
-5. **Default value** — for every field with a configured default, assert that the default appears without the user entering a value.
+1. Required field validation: for every field marked as required, assert that leaving it blank and clicking the primary submit button produces a validation error.
+2. Hidden or shown by condition: for every conditional visibility rule, assert that the field is hidden when the driving variable has the hiding value and visible when it has the showing value.
+3. Read-only by condition: assert that the field is not editable when the driving variable takes the read-only value.
+4. Validation constraint: for every regex, minimum or maximum length, or numeric range constraint, write one assertion for a value that should pass and one for a value that should fail.
+5. Default value: for every field with a configured default, assert that the default appears without the user entering a value.
 
-**Format each assertion as:**
+Format each assertion as follows:
 ```json
 {
   "field_id": "binding path as referenced in the XML",
@@ -146,11 +146,11 @@ For each coach view (or sub-view if the Coach is composed of nested views), crea
 
 | Scenario | What to check |
 |---|---|
-| **All optional fields left blank** | The form can be submitted without error |
-| **Special characters in text fields** | Fields accept (or correctly reject) `< > & " '` and multi-byte characters |
-| **Date in the past** | If a date field has a "must be future date" rule, test with yesterday's date |
-| **Maximum field length** | Paste a string exactly at the field's max character limit; verify no error. Then exceed it by one character; verify the error appears. |
-| **Concurrent visibility conditions** | When two visibility conditions interact (e.g. Field B is hidden when A=true AND C=true), test both conditions independently and in combination. |
+| All optional fields left blank | The form can be submitted without error. |
+| Special characters in text fields | Fields accept (or correctly reject) `< > & " '` and multi-byte characters. |
+| Date in the past | If a date field has a "must be future date" rule, test with yesterday's date. |
+| Maximum field length | Paste a string exactly at the field's maximum character limit and verify that no error appears. Then exceed it by one character and verify that the error appears. |
+| Concurrent visibility conditions | When two visibility conditions interact (for example, Field B is hidden when A=true AND C=true), test both conditions independently and in combination. |
 
 ---
 

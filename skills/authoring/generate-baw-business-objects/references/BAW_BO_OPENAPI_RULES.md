@@ -1,6 +1,6 @@
-# BAW Business Object Import — OpenAPI 3.0 Format Rules
+# BAW Business Object Import — OpenAPI 3.0 format rules
 
-These rules are verified by manual test.
+IBM verified these rules by manual test.
 
 ---
 
@@ -91,7 +91,7 @@ Add a description on every schema. Keep it to one sentence. This description is 
 
 OpenAPI `format` values on `string` fields control the BAW BO field type created on import:
 
-| OpenAPI `format` | BAW BO field type | Coach view behaviour |
+| OpenAPI `format` | BAW BO field type | Coach view behavior |
 |---|---|---|
 | `"date"` | `Date` | Shows **date only** (no time component rendered) |
 | `"date-time"` | `Time` | Shows **date and time** |
@@ -208,7 +208,7 @@ BAW preserves the `enum` values for human readability; runtime enforcement is ha
 
 BAW **does** support self-referential BOs — a schema that contains a `$ref` to itself imports without errors. For example, an `Employee` with a `manager` field of type `$ref: Employee` is valid.
 
-At runtime, a recursive structure must bottom out somewhere (the top-level manager's `manager` field will simply be null/unset). This is normal BAW behaviour, not a defect.
+At runtime, a recursive structure must bottom out somewhere (the top-level manager's `manager` field will simply be null/unset). This is normal BAW behavior, not a defect.
 
 A flat alternative (storing `managerId` as a string rather than a nested object) is sometimes simpler to work with in process data mappings, but it is a design choice — not a requirement. Use whichever fits the process better.
 
@@ -290,4 +290,4 @@ The following keys are outside the scope of the BO import and should be omitted 
 }
 ```
 
-Verified by manual test to import into BAW WebPD without errors.
+This example imports into BAW WebPD without errors. Verified by manual test.

@@ -1,7 +1,7 @@
-# Test Result Format
+# Test result format
 
-This file defines the structure of the `<acronym>-test-results.json` file produced at the end of Phase B.
-The execution protocol in `TEST_EXECUTION.md` writes to this format. Use it when presenting results to the user.
+This file defines the structure of the `<acronym>-test-results.json` file that Phase B produces at the end.
+The execution protocol in `TEST_EXECUTION.md` writes to this format. Use it when you present results to the user.
 
 ---
 
@@ -48,11 +48,11 @@ The execution protocol in `TEST_EXECUTION.md` writes to this format. Use it when
 }
 ```
 
-**Result values:**
-- `PASS` — all step assertions and final state assertions passed.
-- `FAIL` — at least one assertion failed; execution completed (or was halted at the failure point).
-- `ERROR` — an API call or system failure prevented the test from completing; result is inconclusive.
-- `SKIPPED` — the test was excluded from this run (e.g. user requested only happy path tests).
+Result values:
+- `PASS`: all step assertions and final state assertions passed.
+- `FAIL`: at least one assertion failed. Execution either completed or halted at the failure point.
+- `ERROR`: an API call or system failure prevented the test from completing. The result is inconclusive.
+- `SKIPPED`: the run excluded the test (for example, the user requested only happy path tests).
 
 ---
 
@@ -79,7 +79,7 @@ The execution protocol in `TEST_EXECUTION.md` writes to this format. Use it when
 }
 ```
 
-**`task_found: false`** means the expected task was not in the task list for this instance at this point in the flow. `actual_task_name` records what was found instead (if anything). This always marks the step `FAIL` and halts execution of this test.
+`task_found: false` means the expected task was not in the task list for this instance at this point in the flow. `actual_task_name` records what the skill found instead (if anything). This value always marks the step `FAIL` and halts execution of this test.
 
 ---
 
@@ -100,7 +100,7 @@ One entry for `final_status` and one entry per variable in `expected_outcome.out
 
 ## Coach assertion result object (for `type: coach` tests)
 
-Coach tests are executed manually. Record the result after the user reviews and confirms each assertion.
+The user runs coach tests manually. Record the result after the user reviews and confirms each assertion.
 
 ```json
 {
@@ -118,7 +118,7 @@ Coach tests are executed manually. Record the result after the user reviews and 
 
 ## Summary table (for display to user)
 
-After Phase B completes, present this table to the user before showing failure details:
+After Phase B completes, present this table to the user before you show failure details:
 
 ```
 | Test ID  | Name                              | Result | Duration |
@@ -131,8 +131,8 @@ After Phase B completes, present this table to the user before showing failure d
 
 Then show the full detail block for each `FAIL` or `ERROR` test. Express failures in plain language:
 
-> **TC-002 FAIL** — Expected task "Finance Approval" after HR rejection, but found "End Event: Rejected" instead. The process terminated at step 2 rather than routing to Finance.
+> TC-002 FAIL: Expected task "Finance Approval" after HR rejection, but found "End Event: Rejected" instead. The process terminated at step 2 rather than routing to Finance.
 
-> **TC-ERR-1 ERROR** — Could not complete task "Process Refund" (task ID 1042). The BAW server returned HTTP 500 with "Internal service error". The test is inconclusive — check the server logs for errors in the RefundService integration service.
+> TC-ERR-1 ERROR: Could not complete task "Process Refund" (task ID 1042). The BAW server returned HTTP 500 with "Internal service error". The test is inconclusive. Check the server logs for errors in the RefundService integration service.
 
 Never show raw JSON error payloads to the user. Translate them into one sentence that describes what failed and what to investigate next.

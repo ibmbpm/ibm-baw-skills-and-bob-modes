@@ -1,6 +1,6 @@
 ---
 name: compare-baw-versions
-description: "Use when a BAW developer or administrator wants to compare two versions (snapshots or branches) of an IBM BAW process application. Exports both versions and produces a structured diff by artifact type — process steps, gateways, variables, business objects, services, scripts, and configuration. Flags artifacts modified in both versions as conflict hints so the developer knows what to reconcile manually in BAW Process Designer. Use when the user says 'what changed between snapshots', 'compare two versions', 'diff my branches', 'what changed in this release', 'show me what was added or removed', or 'help me understand what to merge'. Also use proactively when a developer describes divergent branches needing reconciliation. Applies under both BAW Author and BAW Admin modes. Do not use for generating processes (generate-baw-bpmn), running tests (generate-baw-tests), or inspecting live instances (inspect-baw-processes)."
+description: "Use when an IBM Business Automation Workflow (BAW) developer or administrator wants to compare two versions (snapshots or branches) of a process application. Exports both versions and produces a structured diff by artifact type: process steps, gateways, variables, business objects, services, scripts, and configuration. Flags artifacts that changed in both versions as conflict hints so the developer knows what to reconcile manually in BAW Process Designer. Use when the user says 'what changed between snapshots', 'compare two versions', 'diff my branches', 'what changed in this release', 'show me what was added or removed', or 'help me understand what to merge'. Also use proactively when a developer describes divergent branches needing reconciliation. Applies under both BAW Author and BAW Admin modes. Do not use for generating processes (generate-baw-bpmn), running tests (generate-baw-tests), or inspecting live instances (inspect-baw-processes)."
 license: Apache-2.0
 compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
 allowed-tools:
@@ -13,148 +13,131 @@ metadata:
   short_description: Diff two BAW process app snapshots or branches by artifact type and flag conflicting changes for manual reconciliation.
   author: IBM BAW Team
 ---
+> **Important: REST only. This skill does not support MCP.** All BAW interactions use the BAW REST API exclusively, through HTTP calls to `{BAW_BASE_URL}`. Do not call any MCP tools at any point, whether or not an MCP server is connected. This skill has no MCP dependency. If you are about to use an MCP tool, stop and use the REST equivalent from `references/baw-rest.md` instead.
 
-> **⚠️ REST only — MCP is not supported by this skill.** All BAW interactions use the BAW REST API exclusively via HTTP calls to `{BAW_BASE_URL}`. Do not call any MCP tools at any point — regardless of whether an MCP server is connected or not. This skill has no MCP dependency. If you find yourself reaching for an MCP tool, stop and use the REST equivalent from `references/baw-rest.md` instead.
+> **Important: always export the TWX file through REST, never through MCP.** Even if an Authoring MCP server is connected and its `export_solution` tool is visible in your tool list, do not call it for this skill. Always download the TWX file with `GET {BAW_BASE_URL}/ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true`. This rule applies even when MCP is fully connected. Do not mention the MCP export tool to the user. Do not reason that MCP is more reliable. REST is the required transport for this operation.
 
-> **⚠️ Hard rule — TWX export is always REST, never MCP.** Even if an Authoring MCP server is connected and its `export_solution` tool is visible in your tool list, do not call it — ever — for this skill. The TWX must always be downloaded via `GET {BAW_BASE_URL}/ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true`. This applies even when MCP is fully connected. Do not mention the MCP export tool to the user. Do not reason that MCP is "more reliable" — REST is the required transport for this operation, always.
+# Compare BAW versions
 
-# Compare BAW Versions
+Compare two versions of an IBM Business Automation Workflow (BAW) process application and produce a structured, human-readable diff. The output tells the developer exactly what changed. It also flags the artifacts that changed in both versions, so the developer knows what needs careful manual reconciliation in BAW Process Designer.
 
-Compare two versions of an IBM BAW process application and produce a structured, human-readable diff. The output tells the developer exactly what changed, and flags artifacts modified in both versions — so they know what needs careful manual reconciliation in BAW Process Designer.
-
-This skill does **not** perform merges. BAW has no merge API, and generating or modifying a TWX for import back into BAW is out of scope. The skill's job is to make the diff clear enough that the developer can merge confidently themselves.
+This skill does not perform merges. BAW has no merge API, and generating or modifying a TWX file for import back into BAW is out of scope. The skill makes the diff clear enough that the developer can merge confidently.
 
 ---
 
 ## Execution mode
 
-This skill operates in **REST mode only**. All calls use the BAW REST API documented in `references/baw-rest.md`.
+This skill operates in REST mode only. All calls use the BAW REST API documented in `references/baw-rest.md`.
 
-Before taking any action, confirm `{BAW_BASE_URL}` is known for this session. If not, ask:
-> *"What is your BAW server URL? (e.g. `https://baw.example.com:9443`)"*
-Store it and never ask again within the same session.
+---
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
 
 ---
 
 ## Semantic operations
 
-| Operation | What it does |
+| Operation | Description |
 |---|---|
-| `list containers` | `GET /ops/std/bpm/containers` — list all process apps |
-| `list versions` | `GET /ops/std/bpm/containers/{container}/versions` — list snapshots for a given app |
-| `export version` | `GET /ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true` — download a TWX |
+| `list containers` | `GET /ops/std/bpm/containers` lists all process applications. |
+| `list versions` | `GET /ops/std/bpm/containers/{container}/versions` lists the snapshots for a given application. |
+| `export version` | `GET /ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true` downloads a TWX file. |
 
-All three require an active session. Establish one first — see the discovery steps below.
+All three operations require an active session. Establish a session first, as described in the discovery steps.
 
 ---
 
 ## Guided discovery
 
-Work through these steps in order. Do not announce step labels to the user — ask the questions naturally.
+Work through these steps in order. Do not announce step labels to the user. Ask the questions naturally.
 
-**Step 0a — establish the BAW connection.**
+### Step 1: Identify the process application
 
-Ask for the server URL and credentials together in a single turn:
-> *"Before I get started, I need two things:*
-> *1. Your BAW server URL (e.g. `https://baw.example.com:9443`)*
-> *2. Your BAW username and password*
->
-> *Your credentials are only used to obtain a session token for this conversation — they are not stored anywhere."*
-
-Once the user replies, immediately call `POST {BAW_BASE_URL}/ops/system/login` with:
-- `Authorization: Basic <base64(username:password)>`
-- `Content-Type: application/json`
-- Body: `{"refresh_groups": false}`
-
-On success (HTTP 201): store `csrf_token` from the JSON body as `{BAW_CSRF}`, and the `LtpaToken2`/`JSESSIONID` cookies as `{BAW_SESSION}`. Send `BPMCSRFToken: {BAW_CSRF}` and the session cookie on every subsequent REST call. Discard the raw credentials immediately. Never ask again.
-
-If login returns 401 or 400, tell the user their credentials were not accepted and ask them to re-enter — do not proceed until login succeeds.
+If the user named the application, call `list containers` and find the match by name. If the name is ambiguous or missing, present a short numbered list from the response and ask which application the user means. Confirm the acronym before you proceed. Do not guess an acronym.
 
 ---
 
-**Step 1 — identify the process application.**
+### Step 2: Identify the two versions to compare
 
-If the user named the app, call `list containers` and find the match by name. If the name is ambiguous or not given, present a short numbered list from the response and ask which app they mean. Confirm the acronym before proceeding — never guess one.
-
----
-
-**Step 2 — identify the two versions to compare.**
-
-Call `list versions` for the identified app. Present the available snapshots with their names, acronyms, activation status, and creation dates in a concise table.
+Call `list versions` for the identified application. Present the available snapshots in a concise table with their names, acronyms, activation status, and creation dates.
 
 Ask the user which two to compare:
 > *"Which two versions would you like to compare? You can refer to them by name or acronym."*
 
-Label them **Version A** (older / base) and **Version B** (newer / target) — by convention, the diff shows what changed going from A to B. If the user doesn't specify which is older, use creation date order and confirm.
+Label them Version A (older or base) and Version B (newer or target). By convention, the diff shows what changed going from A to B. If the user does not specify which version is older, order them by creation date and confirm the order with the user.
 
 If the user says "latest" or "current" for one side, use the most recently activated snapshot.
 
 ---
 
-**Step 3 — export both versions.**
+### Step 3: Export both versions
 
-For each version, call `export version` with `use_enhanced_filenames=true`. This returns a binary `.twx` file (a ZIP archive). Extract both archives into memory.
+For each version, call `export version` with `use_enhanced_filenames=true`. The call returns a binary `.twx` file, which is a ZIP archive. Extract both archives into memory.
 
 If a REST export fails:
-- On 403: tell the user they may not have sufficient permissions to export this snapshot — admin access is usually required.
-- On 404: the snapshot acronym may be wrong — show what was used and ask them to confirm.
-- On other errors: show the status code and response body, and ask how they'd like to proceed.
+- On 403, tell the user that they might not have permission to export this snapshot. Export usually requires administrator access or project read permission.
+- On 404, show the snapshot acronym that you used and ask the user to confirm it.
+- On other errors, show the status code and the response body, and ask how the user wants to proceed.
 
-If REST export fails persistently after two attempts, offer the manual fallback:
+If the REST export fails twice, offer the manual fallback:
 > *"If you already have the `.twx` files for both versions on your machine, you can share the file paths and I'll work from those directly."*
-Accept local file paths and read them as ZIPs — process them identically to the REST exports.
+
+Accept local file paths, read them as ZIP archives, and process them the same way as the REST exports.
 
 ---
 
-**Step 4 — analyze and produce the diff.**
+### Step 4: Analyze and produce the diff
 
-Read `references/DIFF_OUTPUT.md` for the exact output structure before starting analysis.
+Read `references/DIFF_OUTPUT.md` for the exact output structure before you start the analysis.
 
-Parse the extracted XML files from both TWX archives. Organize your analysis by artifact type, working through each category in turn. For each artifact, classify every change as:
+Parse the extracted XML files from both TWX archives. Organize your analysis by artifact type, and work through each category in turn. Classify every change for each artifact as one of the following:
 
-- **Added** — exists in B but not A
-- **Removed** — exists in A but not B
-- **Modified** — exists in both but differs
-- **Conflict hint** — modified in both A and B relative to each other (same artifact name, different content on both sides). This is the set the developer must pay the most attention to during manual reconciliation.
+- **Added**: exists in B but not in A.
+- **Removed**: exists in A but not in B.
+- **Modified**: exists in both but differs.
+- **Conflict hint**: the same artifact name has different content in A and B. This set needs the most attention during manual reconciliation.
 
-> **On conflict hints:** You are doing a 2-way diff — you do not have a common ancestor, so you cannot detect true 3-way merge conflicts. A conflict hint means "this artifact differs between the two versions and the developer will need to choose which side's version to keep, or manually blend them." Present conflict hints prominently and separately from straightforward one-sided changes.
+> **Note on conflict hints:** This skill runs a two-way diff. Without a common ancestor, it cannot detect true three-way merge conflicts. A conflict hint means that the artifact differs between the two versions, and the developer must choose which version to keep or blend them manually. Present conflict hints prominently and separately from straightforward one-sided changes.
 
-**Artifact types to compare — work through these in order:**
+Compare these artifact types in this order:
 
-1. **Processes (BPMN)** — steps/activities (added, removed, reordered), gateways (condition changes), sequence flows, lanes/swimlanes, subprocess boundaries
-2. **Services and service flows** — integration services, decision services, human services added/removed/changed
-3. **Business objects** — parameters, field types, field additions/removals, nested BO changes
-4. **Variables** — process variables, exposed process values (EPVs), private variables — type changes, additions, removals
-5. **Scripts** — inline script bodies that changed (show a compact diff of the script content, not raw XML)
-6. **Configuration** — environment variables, team bindings, server configurations
+1. **Processes (BPMN)**: steps and activities (added, removed, reordered), gateways (condition changes), sequence flows, lanes and swimlanes, subprocess boundaries.
+2. **Services and service flows**: integration services, decision services, and human services that were added, removed, or changed.
+3. **Business objects**: parameters, field types, field additions and removals, nested business object changes.
+4. **Variables**: process variables, exposed process values (EPVs), and private variables, with their type changes, additions, and removals.
+5. **Scripts**: inline script bodies that changed. Show a compact diff of the script content, not raw XML.
+6. **Configuration**: environment variables, team bindings, and server configurations.
 
-For each category, skip it entirely (don't mention it) if there are zero changes — only show categories where something actually changed.
+Skip a category entirely, without mentioning it, if it has zero changes. Show only the categories where something changed.
 
 ---
 
-**Step 5 — present the diff and save the report file.**
+### Step 5: Present the diff and save the report file
 
-Follow the output format in `references/DIFF_OUTPUT.md` exactly. Lead with a summary header, then expand each artifact type that has changes. Present conflict hints in their own clearly marked section at the top, before the rest of the diff categories.
+Follow the output format in `references/DIFF_OUTPUT.md` exactly. Lead with a summary header, then expand each artifact type that has changes. Present conflict hints in their own clearly marked section at the top, before the other diff categories.
 
-**Always write the report to a file** at the same time as presenting it in chat — do not wait to be asked. Save it as:
+Write the report to a file at the same time that you present it in chat. Do not wait for the user to ask. Save it as:
 `<app-acronym>-<versionA-acronym>-vs-<versionB-acronym>-diff.md`
 
-After saving, tell the user:
+After you save the file, tell the user:
 > *"I've also saved the full report to `{filename}`. Let me know if you'd like a JSON version as well."*
 
-After presenting the diff, if there are **zero conflict hints**, close with:
-> *"The changes above are informational only — no modifications have been made to either version. To apply changes, open the target version in BAW Process Designer and make the edits manually."*
+If the diff has zero conflict hints, close with:
+> *"The changes above are informational only. I have not modified either version. To apply changes, open the target version in BAW Process Designer and make the edits manually."*
 
-If there **are conflict hints**, instead close with:
-> *"I found N conflict(s) — artifacts that differ on both sides and will need a decision when you reconcile. Want me to walk you through each one so you can decide which version to keep?"*
+If the diff has conflict hints, close with:
+> *"I found N conflict(s): artifacts that differ on both sides and need a decision when you reconcile. Want me to walk you through each one so you can decide which version to keep?"*
 
-Then proceed to Step 6 if they say yes.
+If the user agrees, proceed to Step 6.
 
 ---
 
-**Step 6 — interactive conflict resolution (only if the user agrees).**
+### Step 6: Resolve conflicts interactively (only if the user agrees)
 
-Work through each conflict hint one at a time. For each one, present a clean side-by-side and ask for a decision:
+Work through each conflict hint one at a time. For each conflict, present a clean side-by-side comparison and ask for a decision:
 
 ```
 ─────────────────────────────────────────
@@ -173,40 +156,40 @@ Conflict 1 of N: [Artifact Type] — [Artifact Name]
   (S) Skip for now
 ```
 
-Wait for the user's response before moving to the next conflict. Do not batch them.
+Wait for the user's response before you move to the next conflict. Do not batch the conflicts.
 
-**Handling each response:**
+Handle each response as follows:
 - **(A) or (B):** Record the decision and move to the next conflict.
-- **(C) Blend:** Ask the user to describe what the blended result should look like. Capture their description as the decision. Move on.
-- **(S) Skip:** Mark it as "to decide later" and move on without recording a decision.
+- **(C) Blend:** Ask the user to describe what the blended result should look like. Capture the description as the decision, and move on.
+- **(S) Skip:** Mark the conflict as "to decide later" and move on without recording a decision.
 
-After all conflicts have been addressed, produce a **reconciliation checklist** — see `references/DIFF_OUTPUT.md` for the format. Present it in chat and **always save it to a file** at the same time:
+After the user addresses all conflicts, produce a reconciliation checklist. See `references/DIFF_OUTPUT.md` for the format. Present the checklist in chat and save it to a file at the same time:
 `<app-acronym>-<versionA-acronym>-vs-<versionB-acronym>-reconciliation.md`
 
 The checklist covers:
-1. Every conflict decision the user made (what to change and to what value)
-2. All one-sided additions and removals from the diff (these are safe to apply without a decision — just list them as action items)
-3. Any skipped conflicts, flagged clearly as still needing a decision
+1. Every conflict decision that the user made, with what to change and the target value.
+2. All one-sided additions and removals from the diff. These are safe to apply without a decision, so list them as action items.
+3. Any skipped conflicts, flagged clearly as still needing a decision.
 
 Close with:
-> *"This checklist is your guide for reconciling the two versions manually in BAW Process Designer. No changes have been made to either version — all edits need to be applied by you in the designer."*
+> *"This checklist is your guide for reconciling the two versions manually in BAW Process Designer. I have not changed either version. You need to apply all edits in the designer."*
 
 ---
 
 ## Important boundaries
 
-- **Read-only.** This skill only exports and reads — it never imports, modifies, or writes back to BAW.
-- **No merge generation.** Do not generate a merged TWX or suggest importing a generated artifact. If the user asks you to perform the merge, explain that BAW does not have a merge API and direct them to reconcile manually in Process Designer using the diff output.
-- **2-way diff only.** Without a common ancestor snapshot, true merge conflict detection is not possible. Conflict hints surface same-artifact differences — they are not guaranteed to be conflicts in the strict 3-way-merge sense.
-- **Authoring environments only for export.** The export API requires an authoring environment — **Workflow Center** for traditional BAW, or **Business Automation Studio** for CP4BA containerized. It is not available on Workflow Server (runtime-only) environments.
-- **Process Apps only.** Toolkits can also be exported via the same API, but comparison across toolkit dependencies is out of scope for this skill.
+- **Read-only.** This skill only exports and reads. It never imports, modifies, or writes back to BAW.
+- **No merge generation.** Do not generate a merged TWX file or suggest importing a generated artifact. If the user asks you to perform the merge, explain that BAW has no merge API and direct the user to reconcile manually in Process Designer by using the diff output.
+- **Two-way diff only.** Without a common ancestor snapshot, true merge conflict detection is not possible. Conflict hints surface same-artifact differences. They are not guaranteed to be conflicts in the strict three-way-merge sense.
+- **Authoring environments only for export.** The export API requires an authoring environment: Workflow Center for traditional BAW, or Business Automation Studio for containerized CP4BA. Workflow Server (runtime-only) environments do not support export.
+- **Process applications only.** The same API can export toolkits, but comparing toolkit dependencies is out of scope for this skill.
 
 ---
 
 ## Disambiguation
 
-**"Compare" vs "document":** If the user wants documentation or a summary of a single version (not a diff between two), direct them to `baw-project-doc` or offer to describe one version at a time. This skill requires exactly two versions to compare.
+**Compare versus document:** If the user wants documentation or a summary of a single version instead of a diff between two versions, direct the user to `baw-project-doc` or offer to describe one version at a time. This skill requires exactly two versions.
 
-**"Compare" vs "audit":** If the user wants compliance or audit readiness analysis, not a version diff, this is the wrong skill. Direct them to `audit-baw-readiness` (for design-time scorecard analysis against 6 internal control domains) or `process-compliance-violation-detection` (for policy and regulatory compliance checks against external standards such as SOX, GDPR, ISO).
+**Compare versus audit:** If the user wants a compliance or audit readiness analysis instead of a version diff, this is the wrong skill. Direct the user to `audit-baw-readiness` (design-time scorecard analysis against six internal control domains) or `process-compliance-violation-detection` (policy and regulatory compliance checks against external standards such as SOX, GDPR, and ISO).
 
-**Same branch vs different branches:** Both are fully supported. Snapshot-to-snapshot comparisons on the same branch are the most common case (e.g., v1.0 vs v2.0). Cross-branch comparisons (e.g., `main` tip vs `feature/new-approval-flow`) work the same way — the skill exports a specific snapshot from each branch.
+**Same branch versus different branches:** The skill supports both. Snapshot-to-snapshot comparisons on the same branch are the most common case (for example, v1.0 versus v2.0). Cross-branch comparisons (for example, the `main` tip versus `feature/new-approval-flow`) work the same way. The skill exports a specific snapshot from each branch.

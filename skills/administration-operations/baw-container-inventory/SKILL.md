@@ -1,6 +1,6 @@
 ---
 name: baw-container-inventory
-description: "Inspect the container inventory of a live IBM BAW server — list all Process Apps and Toolkits, count them, search by name or acronym, view metadata, and confirm whether a specific container exists. Use when a BAW administrator wants to know what is installed on a server without opening Workflow Center (traditional BAW) or Business Automation Studio (CP4BA containerized). Trigger phrases: 'list process apps', 'list toolkits', 'what containers are installed', 'how many process apps', 'does this app exist', 'find container', 'show me the toolkits', 'container inventory', 'what's installed in BAW', 'show container details', 'look up acronym'. This skill is read-only — it queries and reports. For snapshot lifecycle operations use version-lifecycle-manager; for running process instances use inspect-baw-processes."
+description: "Inspect the container inventory of a live IBM BAW server — list all Process Apps and Toolkits, count them, search by name or acronym, view metadata, and confirm whether a specific container exists. Use when a BAW administrator wants to know what is installed on a server without opening Workflow Center or BAStudio. Trigger phrases: 'list process apps', 'list toolkits', 'what containers are installed', 'how many process apps', 'does this app exist', 'find container', 'show me the toolkits', 'container inventory', 'what is installed in BAW', 'show container details', 'look up acronym'. This skill is read-only — it queries and reports. For snapshot lifecycle operations use version-lifecycle-manager; for running process instances use inspect-baw-processes."
 license: Apache-2.0
 compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
 allowed-tools:
@@ -9,7 +9,7 @@ allowed-tools:
 metadata:
   version: "1.0.0"
   display_name: BAW Container Inventory
-  short_description: List and search all Process Apps and Toolkits installed on a live IBM BAW server without opening Workflow Center or Business Automation Studio.
+  short_description: List and search all Process Apps and Toolkits installed on a live IBM BAW server without opening Workflow Center.
   author: IBM BAW Team
 ---
 
@@ -27,12 +27,6 @@ This skill is **read-only**. It queries and reports — it never creates, archiv
 
 This skill operates in **REST mode only**. All calls use the BAW REST API documented in `references/baw-rest.md`.
 
-Before taking any action, confirm `{BAW_BASE_URL}` is known for this session. If not, ask:
-> *"What is your BAW server URL? (e.g. `https://baw.example.com:9443`)"*
-
-Store it and never ask again within the same session.
-
----
 
 ## Semantic operations
 
@@ -46,38 +40,14 @@ All calls after login require `BPMCSRFToken` header and session cookie.
 
 ---
 
+
+## Credentials
+
+Never prompt the user for credentials. Credentials are only needed when making a REST call.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+
+---
 ## Steps
-
-### Step 0 — Establish the BAW connection
-
-Ask for the server URL and credentials together in a single turn:
-> *"Before I get started, I need two things:*
-> *1. Your BAW server URL — no trailing slash (e.g. `https://baw.example.com:9443`)*
-> *2. Your BAW username and password*
->
-> *Your credentials are only used to obtain a session token for this conversation — they are not stored anywhere."*
-
-Once the user replies, store `{BAW_BASE_URL}`, `{BAW_USER}`, and `{BAW_PASS}` for the session. Then immediately acquire the CSRF token.
-
-Use `curl` for all REST calls. On Windows, PowerShell's built-in `curl` is an alias for `Invoke-WebRequest` — always use `cmd /c "curl ..."` on Windows to invoke the real curl executable. Write the JSON body to a temp file before POSTing on Windows to avoid shell quoting issues. Use both snippets below — pick the one that matches the platform:
-
-```bash
-# macOS / Linux
-curl -sk -X POST "{BAW_BASE_URL}/ops/system/login" \
-  -u "{BAW_USER}:{BAW_PASS}" \
-  -H "Content-Type: application/json" \
-  -d '{"refresh_groups": false}'
-```
-
-```powershell
-# Windows — write body to temp file first, then POST
-Set-Content -Path "$env:TEMP\baw_login.json" -Value '{"refresh_groups": false}'
-cmd /c "curl -sk -X POST {BAW_BASE_URL}/ops/system/login -u {BAW_USER}:{BAW_PASS} -H ""Content-Type: application/json"" -d @%TEMP%\baw_login.json"
-```
-
-On success (HTTP 201): extract `csrf_token` from the JSON response body and store it as `{BAW_CSRF}`. Discard the raw credentials immediately. Never ask again.
-
-If login returns 401 or 400, tell the user their credentials were not accepted and ask them to re-enter — do not proceed until login succeeds.
 
 ---
 
@@ -98,7 +68,7 @@ Before fetching anything, identify which of these the user is asking for:
 | Basic metadata for a specific container | `GET /ops/std/bpm/containers` (no filter) | Standard response includes all metadata fields |
 | Branches or versions for a specific container | `GET /ops/std/bpm/containers/{ACRONYM}?optional_parts=branches` | Single targeted call only when explicitly requested |
 
-**Do not repeat an identical REST call** within the same request. If you have already fetched all containers and the user's request can be satisfied from that response, re-use it — do not call the same endpoint with the same parameters again.
+**Do not repeat an identical REST call** within the same request. If you have already fetched all containers and the cached response already covers the user's request, re-use it — do not call the same endpoint with the same parameters again.
 
 ---
 
@@ -145,7 +115,7 @@ curl -sk -X GET "{BAW_BASE_URL}/ops/std/bpm/containers/{ACRONYM}" \
 cmd /c "curl -sk -X GET ""{BAW_BASE_URL}/ops/std/bpm/containers/{ACRONYM}"" -u {BAW_USER}:{BAW_PASS} -H ""BPMCSRFToken: {BAW_CSRF}"""
 ```
 
-Append `?optional_parts=branches` or `?optional_parts=versions` when branches or versions are needed. Replace `{ACRONYM}` with the actual container acronym. The single-container call response can be read directly — no script needed.
+Append `?optional_parts=branches` or `?optional_parts=versions` when branches or versions are needed. Replace `{ACRONYM}` with the actual container acronym. Read the single-container call response directly — no script needed.
 
 ---
 
@@ -261,7 +231,7 @@ When `optional_parts=branches` or `optional_parts=versions` is requested for a s
 
 | Situation | What to say |
 |---|---|
-| 401 on any call after login | "Your session may have expired. Let me re-authenticate." Re-run Step 0. |
+| 401 on any call after login | "Your session may have expired. Let me re-authenticate." Re-read `references/CREDENTIAL_HANDLING.md` and re-establish the session. |
 | 403 | "You may not have sufficient permissions for this operation. Check that your account has the BAW admin role." |
 | 404 on `get container` | "Container '[acronym]' was not found on the server. Confirm the acronym is correct." |
 | Network or timeout error | State what failed and ask: "Would you like me to retry, or would you prefer to check the server URL?" |
@@ -298,6 +268,6 @@ Never display raw JSON, stack traces, or internal error objects to the user.
 | Existence check | Direct yes/no answer with name, acronym, and type |
 | Basic metadata | Labelled key/value block |
 | Branches / versions | Nested table under container header |
-| Large result sets | File output (`.md`) when > 25 items or when metadata-heavy |
+| Large result sets | File output (`.md`) when > 25 items or when the output contains extensive metadata |
 
 Never output raw JSON. Never expose internal field names like `toolkit`, `container_name`, or `creator_user_id` as labels — always use human-readable equivalents.

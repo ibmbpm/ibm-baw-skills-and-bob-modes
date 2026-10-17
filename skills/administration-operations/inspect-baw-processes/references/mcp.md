@@ -1,6 +1,6 @@
-# inspect-baw-processes — MCP execution reference
+# inspect-baw-processes: MCP execution reference
 
-Maps each semantic operation to its BAW Runtime MCP tool. Read this file when the skill has determined MCP is the active transport. Do not read it during REST execution.
+Maps each semantic operation to its IBM Business Automation Workflow (BAW) Runtime MCP tool. Read this file when the skill has determined MCP is the active transport. Do not read it during REST execution.
 
 ---
 
@@ -10,11 +10,11 @@ Maps each semantic operation to its BAW Runtime MCP tool. Read this file when th
 ```
 get_exposed_processes()
 ```
-Returns array. Each entry: `process_app_name`, `process_app_acronym`, `process_id`, `version` (has `branch_id` or `snapshot_id`, `is_tip`, `label`).
+Returns an array. Each entry: `process_app_name`, `process_app_acronym`, `process_id`, `version` (has `branch_id` or `snapshot_id`, `is_tip`, `label`).
 
-Use this to resolve a full app name to its acronym before calling `search_processes`. Also the only source of acronyms — never guess them.
+Use this to resolve a full app name to its acronym before calling `search_processes`. It is also the only source of acronyms. Never guess them.
 
-**Schema error handling:** If `get_exposed_processes` fails with a schema validation error (null entries in the response), do not retry in a loop. Ask the user: *"I couldn't retrieve the process list automatically. What is the acronym for your process app?"*
+**Schema error handling:** If `get_exposed_processes` fails with a schema validation error (null entries in the response), do not retry in a loop. Ask the user: "I could not retrieve the process list automatically. What is the acronym for your process app?"
 
 ### search_processes
 Primary: `search_processes_by_filter(status=[...], application="{acronym}", created_after=..., created_before=..., sort_by=...)`
@@ -23,7 +23,7 @@ All parameters optional. `status` accepts a list of `ProcessStatus` values: `Act
 
 Returns: `process_instance_id`, `name`, `status`, `last_modified_on`, `due_date`.
 
-Advanced (complex boolean queries only): `search_processes` — uses a `population`/`filters`/`output` DSL. Call `explain_search_processes` first to get the DSL structure. Use only when `search_processes_by_filter` cannot express the query.
+Advanced (complex boolean queries only): `search_processes`. It uses a `population`/`filters`/`output` DSL. Call `explain_search_processes` first to get the DSL structure. Use only when `search_processes_by_filter` cannot express the query.
 
 ### get_process_details
 ```
@@ -59,7 +59,7 @@ Only call when instance status is `Failed`.
 ```
 modify_process_due_date(process_instance_id="{id}", due_date="{ISO8601 with timezone}")
 ```
-Valid for any instance state. `due_date` must be a full ISO 8601 timestamp with timezone — e.g. `2026-07-25T12:00:00Z`. Never pass a date-only string.
+Valid for any instance state. `due_date` must be a full ISO 8601 timestamp with timezone, for example `2026-07-25T12:00:00Z`. Never pass a date-only string.
 
 ### terminate_process
 ```
@@ -71,11 +71,13 @@ Valid for any instance state. Irreversible.
 
 ## system_id (federation)
 
-All action tools accept an optional `system_id`. On standalone BAW, omit it — the MCP server routes to the configured default. In CP4BA federated deployments, `search_processes` (advanced search) returns a `system_id` per result — pass it through to the action tool for that instance. Never surface `system_id` to the user.
+All action tools accept an optional `system_id`. On standalone BAW, omit it. The MCP server routes to the configured default. In IBM Cloud Pak for Business Automation (CP4BA) federated deployments, `search_processes` (advanced search) returns a `system_id` for each result. Pass it to the action tool for that instance. Never show `system_id` to the user.
 
 ---
 
 ## State transition rules
+
+The following table shows the instance status that each operation requires:
 
 | Operation | Required instance status |
 |---|---|

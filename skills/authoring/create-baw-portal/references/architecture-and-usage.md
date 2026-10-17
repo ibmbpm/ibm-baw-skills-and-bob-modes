@@ -66,7 +66,8 @@ The skill supports two runtime environments:
 | Federated BAW with PFS | PFS Federated REST API | `/rest/bpm/federated/v1/` and `/rest/bpm/federated/v2/` |
 
 Non-federated BAW is the primary supported environment with the most extensive runtime evidence.
-Federated/PFS APIs have been runtime-verified against CP4BA 26.0.0 (two federated source systems).
+Federated/PFS v1 APIs have been runtime-verified against CP4BA 26.0.0 (two federated source systems).
+PFS v2 dashboard APIs have been runtime-verified against CP4BA 24.0.0 and CP4BA 26.0.0.
 
 ---
 
@@ -93,5 +94,5 @@ This skill explicitly does not orchestrate:
 - TWX packaging or deployment
 - BAW Coach Widget or Coach Composer
 
-When a request touches those areas, the portal work should be completed first,
-and the out-of-scope work should be referred to the appropriate skill or workflow.
+When a request touches those areas, complete the portal work first.
+Refer the out-of-scope work to the appropriate skill or workflow.

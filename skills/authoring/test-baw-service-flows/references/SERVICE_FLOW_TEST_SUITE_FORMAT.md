@@ -234,5 +234,5 @@ Generated: <ISO timestamp>
 - One `##` section per test case, labelled `SFTC-NNN · <name>`.
 - The summary table at the top lists every test case — this is what a reviewer scans first.
 - Show only the inputs actually used (omitted fields are implicitly absent).
-- Express expected output assertions in plain English — do not show operator syntax verbatim (e.g. write "any non-null value" not `"any_non_null"`).
+- Express expected output assertions in plain English — do not show operator syntax verbatim (for example, write "any non-null value" not `"any_non_null"`).
 - Keep language plain — readable by QA engineers and business analysts, not just developers.

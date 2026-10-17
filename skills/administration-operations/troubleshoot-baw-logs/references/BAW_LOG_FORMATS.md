@@ -1,45 +1,47 @@
-# IBM BAW Log Formats & Error Patterns — Reference
+# IBM BAW log formats and error patterns: reference
 
 > **Scope:** IBM Business Automation Workflow (BAW) 22.x–26.x on Liberty and traditional WebSphere Application Server.
 > Items marked **(verify in your environment)** reflect patterns that may vary by version or topology.
 
 ---
 
-## Table of Contents
+## Table of contents
 
-1. [Overview — Log Files & Locations](#1-overview--log-files--locations)
+1. [Overview: log files and locations](#1-overview-log-files-and-locations)
 2. [SystemOut.log / SystemErr.log](#2-systemoutlog--systemerrlog)
-3. [messages.log — SIMPLE vs JSON](#3-messageslog--simple-vs-json)
-4. [trace.log — Trace Specification & BPM Components](#4-tracelog--trace-specification--bpm-components)
-5. [FFDC Files](#5-ffdc-files)
-6. [Process/Errors API Response](#6-processerrors-api-response)
-7. [Common Error Patterns](#7-common-error-patterns)
-8. [Correlation Tips](#8-correlation-tips)
+3. [messages.log: SIMPLE versus JSON](#3-messageslog-simple-versus-json)
+4. [trace.log: trace specification and BPM components](#4-tracelog-trace-specification-and-bpm-components)
+5. [FFDC files](#5-ffdc-files)
+6. [Process/errors API response](#6-processerrors-api-response)
+7. [Common error patterns](#7-common-error-patterns)
+8. [Correlation tips](#8-correlation-tips)
 
 ---
 
-## 1. Overview — Log Files & Locations
+## 1. Overview: log files and locations
 
-### Traditional (on-premises)
+### On-premises
 
-| Log File | Default Path | Purpose |
+`SystemOut.log` and `SystemErr.log` are standard WebSphere Application Server log files, located under the WAS profile directory. `messages.log` is a Liberty log file at a separate path. `trace.log` and `ffdc/` are present on both traditional and Liberty deployments.
+
+| Log file | Default path | Notes |
 |---|---|---|
-| `SystemOut.log` | `<WAS_HOME>/profiles/<profile>/logs/<server>/SystemOut.log` | JVM stdout; all INFO+ entries |
-| `SystemErr.log` | same directory | JVM stderr |
-| `messages.log` | same directory | Structured INFO+ messages with thread IDs |
-| `trace.log` | same directory | Verbose trace (created only when trace is enabled) |
-| `ffdc/` directory | `<WAS_HOME>/profiles/<profile>/logs/ffdc/` | One `.txt` file per incident + `<server>_exception.log` summary |
+| `SystemOut.log` | `<install_root>/profiles/<profile>/logs/<server>/SystemOut.log` | JVM stdout; all INFO+ entries. Traditional WAS log file. See [BAW log files](https://www.ibm.com/docs/en/baw/22.0.x?topic=support-business-automation-workflow-log-files). |
+| `SystemErr.log` | `<install_root>/profiles/<profile>/logs/<server>/SystemErr.log` | JVM stderr; exception stack traces. Traditional WAS log file. |
+| `messages.log` | `<WLP_HOME>/usr/servers/<server>/logs/messages.log` | Liberty-structured INFO+ messages with thread IDs and message codes. Liberty log file. See [Liberty Logging and Trace](https://www.ibm.com/docs/en/was-liberty/nd?topic=liberty-logging-trace). |
+| `trace.log` | `<WLP_HOME>/usr/servers/<server>/logs/trace.log` (Liberty) or `<install_root>/profiles/<profile>/logs/<server>/trace.log` (traditional) | Verbose trace; BAW creates it only when trace is enabled. Present on both deployments. |
+| `ffdc/` directory | `<WLP_HOME>/usr/servers/<server>/logs/ffdc/` (Liberty) or `<install_root>/profiles/<profile>/logs/ffdc/` (traditional) | One `.txt` file per incident + `<server>_exception.log` summary. Present on both deployments. |
 
-### Container (CP4BA / BAW on OpenShift)
+### Container (IBM Cloud Pak for Business Automation on Red Hat OpenShift)
 
-| Log | Container Path | Notes |
+| Log | Container path | Notes |
 |---|---|---|
 | `liberty-message.log` | `/logs/application/liberty-message.log` | Equivalent to messages.log |
-| `liberty-trace.log` | `/logs/application/liberty-trace.log` | Created when trace_specification is non-default |
+| `liberty-trace.log` | `/logs/application/liberty-trace.log` | BAW creates it when trace_specification is non-default |
 | `ffdc/` | `/logs/ffdc/` | Incident files |
 | Console (stdout) | `kubectl logs <pod>` | JSON by default; controlled by `console_format` |
 
-Container log parameters (under `baw_configuration[].logs` in the CR):
+Container log parameters (under `baw_configuration[].logs` in the custom resource):
 ```yaml
 logs:
   console_format: "json"           # default in containers
@@ -76,11 +78,11 @@ logs:
 
 ---
 
-## 3. messages.log — SIMPLE vs JSON
+## 3. messages.log: SIMPLE versus JSON
 
 `messages.log` captures INFO, AUDIT, WARNING, ERROR, and FAILURE; excludes raw JVM output.
 
-### JSON format (enabled with `message_format: JSON` or `WLP_LOGGING_MESSAGE_FORMAT=json`)
+### JSON format (enable with `message_format: JSON` or `WLP_LOGGING_MESSAGE_FORMAT=json`)
 
 ```json
 {
@@ -99,7 +101,7 @@ Key fields: `ibm_threadId` (cross-file correlation), `ibm_messageId` (CWWK*/BPM*
 
 ---
 
-## 4. trace.log — Trace Specification & BPM Components
+## 4. trace.log: trace specification and BPM components
 
 Create `trace.log` only when at least one component is traced below INFO. Enable targeted components; disable when done.
 
@@ -110,33 +112,33 @@ component=level:component2=level2
 ```
 
 Component patterns:
-- `PackageName.ClassName=level` — single class (e.g. `com.ibm.bpm.bpdengine.BPDEngine=all`)
-- `com.ibm.bpm.*=all` — all classes under `com.ibm.bpm` and every sub-package (use `*` to group all classes under a package)
-- `WLE.=all` — all classes grouped under the `WLE` logger group
-- `*=all` — every component (extremely verbose — use only as last resort)
+- `PackageName.ClassName=level`—single class (for example, `com.ibm.bpm.bpdengine.BPDEngine=all`)
+- `com.ibm.bpm.*=all`—all classes under `com.ibm.bpm` and every sub-package (use `*` to group all classes under a package)
+- `WLE.*=all`—all loggers in the `WLE` logger group (the `*` wildcard matches all sub-loggers within the group)
+- `*=all`—every component (extremely verbose—use only as last resort)
 
 Examples:
-- `WLE.=all:com.ibm.bpm.*=all:=info` — trace BAW engine, reset everything else to INFO
+- `WLE.*=all:com.ibm.bpm.*=all:*=info`—trace BAW engine, reset everything else to INFO
 
 ### Enabling trace
 
-**Traditional (Liberty on-premises):** Add or update the `<logging>` element in `server.xml`:
+**On-premises (Liberty):** Add or update the `<logging>` element in `server.xml`:
 ```xml
-<logging traceSpecification="WLE.=all:com.ibm.bpm.*=all:=info" traceFormat="ENHANCED"/>
+<logging traceSpecification="WLE.*=all:com.ibm.bpm.*=all:*=info" traceFormat="ENHANCED"/>
 ```
-(ref: https://www.ibm.com/docs/en/was-liberty/base?topic=liberty-logging-trace)
+See [Logging and Trace](https://www.ibm.com/docs/en/was-liberty/base?topic=liberty-logging-trace).
 
-**Container:** set `trace_specification` in the CR:
+**Container:** set `trace_specification` in the custom resource (CR):
 ```yaml
 logs:
-  trace_specification: "WLE.=all:com.ibm.bpm.*=all:com.ibm.workflow.*=all:=info"
+  trace_specification: "WLE.*=all:com.ibm.bpm.*=all:com.ibm.workflow.*=all:*=info"
 ```
 
 ### Key BPM/BAW trace component names
 
-| Trace String | Area |
+| Trace string | Area |
 |---|---|
-| `WLE.=all` | Workflow Logger Engine group — core BAW server-side code |
+| `WLE.*=all` | Workflow Logger Engine group—core BAW server-side code |
 | `WLE.wle_bpd=all` | BPD execution engine |
 | `WLE.wle_rest=all` | REST API layer |
 | `WLE.wle_eventmgr=all` | Event Manager / scheduler |
@@ -154,13 +156,14 @@ logs:
 
 ---
 
-## 5. FFDC Files
+## 5. FFDC files
 
 FFDC (First Failure Data Capture) records the full context of runtime failures.
 
 ### Location
 
-Traditional: `<WAS_HOME>/profiles/<profile>/logs/ffdc/`
+On-premises (Liberty): `<WLP_HOME>/usr/servers/<server>/logs/ffdc/`
+On-premises (traditional): `<install_root>/profiles/<profile>/logs/ffdc/`
 Container: `/logs/ffdc/` inside the pod
 
 ### File naming convention
@@ -170,7 +173,7 @@ Container: `/logs/ffdc/` inside the pod
 ```
 Example: `defaultServer_00000087_25.01.25_14.32.07_0.txt`
 
-The companion `<server_name>_exception.log` in the same directory summarises all incidents:
+The companion `<server_name>_exception.log` in the same directory summarizes all incidents:
 ```
 <count>  <lastTimestamp>  <exceptionClass>  <sourceId>  <probeId>
 ```
@@ -205,10 +208,10 @@ This message links you from messages.log directly to the FFDC file.
 
 ---
 
-## 6. Process/Errors API Response
+## 6. Process/errors API response
 
 **Endpoint:** `PUT /rest/bpm/wle/v1/process/errors?instanceIds=<id1>,<id2>`
-(ref: https://www.ibm.com/docs/en/baw/25.0.x?topic=information-put)
+See [REST interface for BPD-related resources - Process Instance Runtime Error Information Resource - PUT Method](https://www.ibm.com/docs/en/baw/26.0.x?topic=information-put).
 
 Returns `RuntimeErrorResponse` with per-instance runtime error details.
 
@@ -237,42 +240,42 @@ Returns `RuntimeErrorResponse` with per-instance runtime error details.
 
 | Field | Description |
 |---|---|
-| `instanceId` | `BPDInstance.<number>` — the failed instance |
+| `instanceId` | `BPDInstance.<number>`—the failed instance |
 | `errorMessage` | Human-readable description; may include script excerpt |
 | `errorCode` | BPM*/BPMD* message code (verify in your environment) |
 | `failedStepName` | Activity name where failure occurred |
 | `failedServiceName` | Called service name (if applicable) |
 | `failedScriptName` | Script context label |
 | `failedLine` | Line number in the script |
-| `errorType` | `ScriptError`, `ServiceError`, `IntegrationError`, etc. |
+| `errorType` | `ScriptError`, `ServiceError`, `IntegrationError`, and others |
 | `failedOperations` | Instances whose error info could not be retrieved |
 
 ---
 
-## 7. Common Error Patterns
+## 7. Common error patterns
 
-| Error Pattern | Typical Cause | First Response Step |
+| Error pattern | Typical cause | First response step |
 |---|---|---|
 | `CWWKZ0013E: Unable to install application` | Deployment descriptor error, missing class | Check FFDC for root exception; verify EAR/WAR contents |
-| `CWWKS4000E: Authentication did not succeed` | LDAP misconfiguration, wrong credentials | Enable `com.ibm.ws.security.=all` trace; verify LDAP bind user |
+| `CWWKS4000E: Authentication did not succeed` | LDAP misconfiguration, wrong credentials | Enable `com.ibm.ws.security.*=all` trace; verify LDAP bind user |
 | `CWWKS5207W: token has expired` | Token lifetime too short or clock skew | Increase token expiry; synchronize system clocks |
 | `CWWKE0701E: Bundle could not be resolved` | Missing OSGi feature or version mismatch | Verify `server.xml` features match installed Liberty version |
-| `CWTBG0019E: instanceId parameter missing or not valid` | Caller passed wrong format; instance deleted | Verify instance exists via Process Inspector before retrying |
-| `CWTBG0550E: Process instance not in failed state` | Retry called on non-failed instance | Check instance state; use correct API action |
+| `CWTBG0019E: instanceId parameter missing or not valid` | Caller passed wrong format; instance deleted | Verify the instance exists by using Process Inspector before retrying |
+| `CWTBG0550E: Process instance not in failed state` | Caller retried a non-failed instance | Check instance state; use correct API action |
 | `TWException` / `BPMScript error` | Uncaught JavaScript exception in Script task | Enable `WLE.wle_bpd=all` trace; review script in Process Designer |
 | `ProcessNavigationException: Cannot navigate past end of process` | Token routing issue; gateway misconfiguration | Compare flow model with FFDC stack; check gateway conditions |
-| `TaskCompletionException: Task already completed` | Race condition or duplicate completion | Check for concurrent submissions; enable `WLE.=all` trace |
+| `TaskCompletionException: Task already completed` | Race condition or duplicate completion | Check for concurrent submissions; enable `WLE.*=all` trace |
 | `ServiceException: Integration service call failed` | Downstream REST/SOAP unavailable or returned error | Check service output mapping; verify endpoint availability |
-| `SQLCODE=-911` / `DB2 DEADLOCK` | DB lock contention on BPM schema | Review DB2 lock timeout; check for long-running transactions |
+| `SQLCODE=-911` / `DB2 DEADLOCK` | DB lock contention on BPM schema | Review Db2 lock timeout; check for long-running transactions |
 | `OutOfMemoryError: Java heap space` | Heap exhausted; often caused by large variable payloads | Review JVM heap config; inspect large Business Objects |
 | `ConnectionPoolException: Unable to get connection` | JDBC pool exhausted | Check DataSource pool size; look for connection leaks in FFDC |
 | `CWWKW0101E: failed with status 500` | Unhandled exception in REST handler | Follow `FFDC1015I` pointer in messages.log to incident file |
 
 ---
 
-## 8. Correlation Tips
+## 8. Correlation tips
 
-### By Thread ID
+### By thread ID
 
 Every entry in `messages.log`, `trace.log`, and FFDC files carries the same **8-digit hex thread ID**. This is the primary correlation key for a single request.
 
@@ -280,7 +283,7 @@ Every entry in `messages.log`, `trace.log`, and FFDC files carries the same **8-
 grep "00000087" messages.log trace.log ffdc/*.txt
 ```
 
-### By Process Instance ID
+### By process instance ID
 
 BAW log messages often include `BPDInstance.<number>` in the text.
 
@@ -292,9 +295,9 @@ Then call the errors API for structured error data:
 ```
 PUT /rest/bpm/wle/v1/process/errors?instanceIds=1234
 ```
-(ref: https://www.ibm.com/docs/en/baw/25.0.x?topic=information-put)
+See [REST interface for BPD-related resources - Process Instance Runtime Error Information Resource - PUT Method](https://www.ibm.com/docs/en/baw/26.0.x?topic=information-put).
 
-### By FFDC Pointer
+### By FFDC pointer
 
 `FFDC1015I` in `messages.log` names the FFDC file. The `threadId` field in the FFDC prologue links back to trace entries for that exact failure.
 
@@ -311,4 +314,4 @@ kubectl logs <pod> | jq 'select(.loglevel == "ERROR" or .loglevel == "FAILURE")'
 
 ---
 
-*Grounded in IBM BAW 24.x/25.x and Liberty documentation. Verify paths and field names against your specific version.*
+*Based on IBM BAW 24.x/25.x and Liberty documentation. Verify paths and field names against your specific version.*
