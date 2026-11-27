@@ -1,8 +1,8 @@
-# BAW and CP4BA remediation capability map
+# Business Automation Workflow and Cloud Pak for Business Automation remediation capability map
 
 Use this mapping when selecting the appropriate platform capability for each Remediation Record in Phase 7.
 
-| Gap type | BAW/CP4BA capability |
+| Gap type | Business Automation Workflow or Cloud Pak for Business Automation capability |
 |---|---|
 | Approval gap | Human Task with approval outcome variable |
 | Missing audit trail | Process tracking, BPDW tracking group, or event logging service |
@@ -13,5 +13,5 @@ Use this mapping when selecting the appropriate platform capability for each Rem
 | Missing data validation | Decision service with BAL rules or input validation coach controls |
 | Missing SLA | Timer start event duration or due date assignment at process start |
 | Missing roles | TWProcessParticipant group or Lane assignment in Process Designer |
-| Missing security | BPM security roles (BPMAuthor, BPMAdministrator, task-level security), OAuth/OIDC if external |
+| Missing security | Business Process Manager security roles (BPMAuthor, BPMAdministrator, task-level security), OAuth/OIDC if external |
 | Missing reporting | BPDW tracking group, Operational Decision Manager (ODM) for rule-driven reports |

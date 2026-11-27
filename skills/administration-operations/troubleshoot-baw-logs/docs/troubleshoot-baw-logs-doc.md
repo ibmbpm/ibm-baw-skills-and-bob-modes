@@ -1,10 +1,10 @@
-# Troubleshoot BAW logs: documentation
+# Troubleshoot Business Automation Workflow logs: documentation
 
-> Diagnoses IBM® Business Automation Workflow (BAW) runtime failures by analyzing error logs, stack traces, and FFDC files. Identifies root causes, correlates entries across log types, and provides structured remediation steps.
+> Diagnoses IBM® Business Automation Workflow runtime failures by analyzing error logs, stack traces, and FFDC files. Identifies root causes, correlates entries across log types, and provides structured remediation steps.
 
 ## Purpose
 
-This skill helps BAW developers and administrators move from raw log data to a clear root cause with actionable next steps. It handles four input modes: pasted log content, local log files, live log retrieval from a connected BAW server (Liberty only), and structured error lookup by process instance ID. Use it whenever a BAW process is stuck in an error state, a task or service keeps failing, a snapshot deployment fails, or you have log output you need interpreted. When no Model Context Protocol (MCP) server is available the skill automatically switches to REST mode and executes `curl` calls itself—the skill never asks you to run commands manually.
+This skill helps Business Automation Workflow developers and administrators move from raw log data to a clear root cause with actionable next steps. It handles four input modes: pasted log content, local log files, live log retrieval from a connected Cloud Pak for Business Automation 26.0.3 or later server, and structured error lookup by process instance ID. Use it whenever a Business Automation Workflow process is stuck in an error state, a task or service keeps failing, a snapshot deployment fails, or you have log output you need interpreted. When no Model Context Protocol (MCP) server is available the skill automatically switches to REST mode and executes `curl` calls itself—the skill never asks you to run commands manually.
 
 ## Setup and configuration
 
@@ -12,18 +12,17 @@ This skill helps BAW developers and administrators move from raw log data to a c
 - MCP server (optional—unlocks instance and live-log modes): Connect the `workflow-runtime-mcp-server`. The skill detects its presence by looking for `get_exposed_processes` in its tool list. With MCP connected it can call:
   - `get_process_instance_errors`—structured per-instance runtime error lookup
   - `get_process_details`—full instance state, business variables, and task history
-  - `get_baw_server_logs`—live `messages.log` fetch (Liberty only)
+  - `get_baw_server_logs`—live `messages.log` fetch (Cloud Pak for Business Automation 26.0.3 and later only)
 - REST mode (no MCP needed): When the MCP server is absent the skill automatically switches to `curl`-based REST. It will ask for your `BAW_BASE_URL` (for example, `https://baw.example.com:9443`) and credentials the first time a REST call is needed, then runs all calls itself. REST equivalents exist for every MCP operation.
-- Liberty required for live-log retrieval: Both `get_baw_server_logs` (MCP) and `GET /ops/std/bpm/logs` (REST) are only available on Liberty-based BAW deployments. The skill detects a 404, 403, or empty-body response and falls back to paste/file mode automatically.
-- Admin privileges required for `/ops/` endpoints: The `/ops/system/login`, `/ops/std/bpm/logs`, and `/ops/std/bpm/event_manager_tasks` REST endpoints require the caller to have BAW admin rights. A 403 response causes the skill to fall back gracefully.
+- Cloud Pak for Business Automation 26.0.3 or later required for live-log retrieval: Both `get_baw_server_logs` (MCP) and `GET /ops/std/bpm/logs` (REST) are only available on Cloud Pak for Business Automation environments at 26.0.3 or later. The skill detects a 404, 403, or empty-body response and falls back to paste/file mode automatically.
+- Admin privileges required for `/ops/` endpoints: The `/ops/system/login`, `/ops/std/bpm/logs`, and `/ops/std/bpm/event_manager_tasks` REST endpoints require the caller to have Business Automation Workflow admin rights. A 403 response causes the skill to fall back gracefully.
 
 ## Compatibility
 
-- BAW 22.x–26.x on Liberty—log formats, field names, and FFDC structure apply to this version range; older versions or traditional WAS-profile deployments may vary.
-- Liberty required for live-log retrieval—`get_baw_server_logs` (MCP) and `GET /ops/std/bpm/logs` (REST) are only available on Liberty-based BAW deployments. `GET /ops/std/bpm/logs` returns an empty body on non-Liberty servers.
-- Container log paths differ from on-premises—in IBM Cloud Pak for Business Automation (CP4BA) on Red Hat OpenShift, `messages.log` lives at `/logs/application/liberty-message.log` inside the pod; the on-premises path is `<WAS_HOME>/profiles/<profile>/logs/<server>/messages.log`. Containers emit logs as JSON to stdout, and you can filter them with `kubectl logs … | jq`.
+- Cloud Pak for Business Automation 26.0.3 or later required for live-log retrieval—live log retrieval mode is not available on other environments. Paste mode and file mode work on any release.
+- Container log paths differ from on-premises—in IBM Cloud Pak for Business Automation on Red Hat OpenShift, `messages.log` lives at `/logs/application/liberty-message.log` inside the pod; the on-premises path is `<WAS_HOME>/profiles/<profile>/logs/<server>/messages.log`. Containers emit logs as JSON to stdout, and you can filter them with `kubectl logs … | jq`.
 - CWLLG\* task IDs ≠ process instance IDs—messages like `CWLLG0181E: error in the 360 task` use Event Manager scheduler task IDs, not process instance IDs. Only treat a number as an instance reference when the log explicitly says `BPDInstance.<n>`, `piid=<n>`, or `instanceId` in the structured API response.
-- `/rest/bpm/wle/v1/process/{processId}` and `/ops/system/login`—these endpoints are not documented in IBM Docs; verify paths and field names against your specific BAW version before scripting.
+- `/rest/bpm/wle/v1/process/{processId}` and `/ops/system/login`—these endpoints are not documented in IBM Docs; verify paths and field names against your specific Business Automation Workflow version before scripting.
 
 > **Note:** Credentials shown in prompt examples are for illustration only. Never use real production credentials in prompts. Use environment variables or a secrets manager for sensitive values.
 
@@ -105,7 +104,7 @@ This skill helps BAW developers and administrators move from raw log data to a c
 ### Instance mode: REST fallback, no MCP server
 
 **Prompt:**
-> Instance BPDInstance.5510 of our leave request workflow has been in error state for two hours. The MCP server isn't set up. My BAW server is at https://baw.internal:9443. What can you find out?
+> Instance BPDInstance.5510 of our leave request workflow has been in error state for two hours. The MCP server isn't set up. My Business Automation Workflow server is at https://baw.internal:9443. What can you find out?
 
 **What to expect:** The skill asks for credentials, runs `POST /ops/system/login` by using `curl` to obtain a session, then executes `PUT /rest/bpm/wle/v1/process/errors?instanceIds=5510` and `GET /rest/bpm/wle/v1/process/5510?parts=all&taskLimit=100&taskOffset=0`—all directly itself—and produces a diagnosis report from the structured response, or explains exactly what log content to paste if the server is unreachable.
 
@@ -123,25 +122,25 @@ This skill helps BAW developers and administrators move from raw log data to a c
 ### Live-log mode: Liberty MCP fetch
 
 **Prompt:**
-> Something's wrong on the BAW server right now. The MCP server is connected. Can you pull the live logs and see what's happening?
+> Something's wrong on the Business Automation Workflow server right now. The MCP server is connected. Can you pull the live logs and see what's happening?
 
-**What to expect:** The skill calls `get_baw_server_logs` to fetch the live `messages.log` directly from BAW, then analyzes the content and produces a diagnosis report—or explains why the endpoint is unavailable (not Liberty, HTTP 404, or insufficient privileges) and asks you to paste the log content instead.
+**What to expect:** The skill calls `get_baw_server_logs` to fetch the live `messages.log` directly from Business Automation Workflow, then analyzes the content and produces a diagnosis report—or explains why the endpoint is unavailable (not a Cloud Pak for Business Automation 26.0.3 or later environment, HTTP 404, or insufficient privileges) and asks you to paste the log content instead.
 
 ---
 
 ### Live-log mode: REST path, no MCP
 
 **Prompt:**
-> No MCP server set up, but my BAW server is at https://baw.internal:9443. Can you pull the live logs from it directly?
+> No MCP server set up, but my Business Automation Workflow server is at https://baw.internal:9443. Can you pull the live logs from it directly?
 
-**What to expect:** The skill asks for credentials, logs in through `POST /ops/system/login` using `curl`, then calls `GET /ops/std/bpm/logs`—falling back gracefully with an explanation if the endpoint returns 404 (not available on this release), 403 (admin rights needed), or an empty body (non-Liberty server).
+**What to expect:** The skill asks for credentials, logs in through `POST /ops/system/login` using `curl`, then calls `GET /ops/std/bpm/logs`—falling back gracefully with an explanation if the endpoint returns 404 (not available on this release), 403 (admin rights needed), or an empty body (not a Cloud Pak for Business Automation 26.0.3 or later environment).
 
 ---
 
 ### Container environment: JSON logs by using kubectl
 
 **Prompt:**
-> Our BAW is running on OpenShift (CP4BA). I'm seeing errors in the pod logs. Here's the relevant kubectl output from the baw-pod-0 pod — can you diagnose it?
+> Our Business Automation Workflow is running on OpenShift (Cloud Pak for Business Automation). I'm seeing errors in the pod logs. Here's the relevant kubectl output from the baw-pod-0 pod — can you diagnose it?
 >
 > ```json
 > {"ibm_datetime":"2025-04-02T10:15:03.412+0000","loglevel":"ERROR","ibm_threadId":"000000c1","module":"com.ibm.bpm.bpdengine","ibm_messageId":"CWTBG0019E","message":"The instanceId parameter is missing or not valid.","ibm_hostName":"baw-pod-0","type":"liberty_message"}
@@ -164,7 +163,7 @@ This skill helps BAW developers and administrators move from raw log data to a c
 ### Authentication failure: LDAP or token error
 
 **Prompt:**
-> Users are getting authentication errors trying to reach the BAW portal. I see these lines in messages.log:
+> Users are getting authentication errors trying to reach the Business Automation Workflow portal. I see these lines in messages.log:
 >
 > ```
 > [01/Apr/2025 08:44:11:200 UTC] 00000031 com.ibm.ws.security W CWWKS4000E: Authentication did not succeed for user ID admin. An invalid user ID or password was specified.
@@ -178,7 +177,7 @@ This skill helps BAW developers and administrators move from raw log data to a c
 ### Database and connection pool error
 
 **Prompt:**
-> Our BAW processes are grinding to a halt. The SystemOut.log is full of these:
+> Our Business Automation Workflow processes are grinding to a halt. The SystemOut.log is full of these:
 >
 > ```
 > [02/Apr/2025 14:30:05:111 UTC] 00000044 com.ibm.ws.rsadapter E CWWKC0301E: A JDBC data source connection pool has run out of connections.
@@ -192,9 +191,9 @@ This skill helps BAW developers and administrators move from raw log data to a c
 ### Enabling trace before reproducing a failure
 
 **Prompt:**
-> I can reproduce a failure in our purchase order process but I don't have enough detail in the current logs. How do I enable BAW trace to capture more information?
+> I can reproduce a failure in our purchase order process but I don't have enough detail in the current logs. How do I enable Business Automation Workflow trace to capture more information?
 
-**What to expect:** The skill explains the trace specification syntax (`WLE.wle_bpd=all:com.ibm.bpm.*=all:*=info`), how to apply it on Liberty on-premises through `server.xml` or the admin console, and how to apply it in a CP4BA container via the `trace_specification` field in the custom resource (CR)—along with a reminder to disable trace after reproducing to avoid performance impact.
+**What to expect:** The skill explains the trace specification syntax (`WLE.wle_bpd=all:com.ibm.bpm.*=all:*=info`), how to apply it on Liberty on-premises through `server.xml` or the admin console, and how to apply it in a Cloud Pak for Business Automation container via the `trace_specification` field in the custom resource (CR)—along with a reminder to disable trace after reproducing to avoid performance impact.
 
 ---
 
@@ -216,4 +215,4 @@ This skill helps BAW developers and administrators move from raw log data to a c
 **Prompt:**
 > Can you step through my process execution live in Process Designer and show me what value the `orderData` variable holds at each step?
 
-**What to expect:** The skill explains it cannot interactively step through live process execution (that requires the WebPD debugger or Process Admin Console), redirects you to the appropriate BAW tooling, and offers to analyze any log or error output you already have.
+**What to expect:** The skill explains it cannot interactively step through live process execution (that requires the WebPD debugger or Process Admin Console), redirects you to the appropriate Business Automation Workflow tooling, and offers to analyze any log or error output you already have.

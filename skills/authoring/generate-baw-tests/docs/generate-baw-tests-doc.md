@@ -1,23 +1,24 @@
-# Generate BAW tests: documentation
+# Generate Business Automation Workflow tests: documentation
 
-> Use when a BAW developer wants to generate or run automated tests for an IBM BAW process app, covering happy paths, alternative paths, edge cases, and Coach UI validation, without writing test scripts by hand.
+> Use when a Business Automation Workflow developer wants to generate or run automated tests for an IBM Business Automation Workflow process app, covering happy paths, alternative paths, edge cases, and Coach UI validation, without writing test scripts by hand.
 
 ## Purpose
 
-This skill automates two tasks that BAW developers typically do manually: writing test cases and running them. In Phase A, the skill exports the process app's `.twx` artifact and analyzes the BPMN flow paths, gateway conditions, user tasks, business objects, and Coach field rules. It then produces a structured test suite that covers the happy path, every alternative gateway branch, error paths, and boundary conditions. In Phase B, the skill runs that test suite against a live BAW environment. It starts a process instance, claims each user task, supplies test data, completes the task, and reports pass or fail in plain language. The skill generates Coach test cases (UI field validation) in Phase A, but you run them manually.
+This skill automates two tasks that Business Automation Workflow developers typically do manually: writing test cases and running them. In Phase A, the skill exports the process app's `.twx` artifact and analyzes the BPMN flow paths, gateway conditions, user tasks, business objects, and Coach field rules. It then produces a structured test suite that covers the happy path, every alternative gateway branch, error paths, and boundary conditions. In Phase B, the skill runs that test suite against a live Business Automation Workflow environment. It starts a process instance, claims each user task, supplies test data, completes the task, and reports pass or fail in plain language. The skill generates Coach test cases (UI field validation) in Phase A, but you run them manually.
 
 ## Setup and configuration
 
-- Phase A discovery and TWX export: the skill discovers applications and snapshots through the BAW Operations REST API (`GET /ops/std/bpm/containers`). The skill downloads the `.twx` file through REST (`GET /ops/std/bpm/containers/{container}/versions/{version}/export`). This step requires your BAW server URL and credentials.
-- Phase B execution (optional Runtime MCP): if the BAW Runtime MCP server (`workflow-runtime`) is connected, Bob uses it to start processes, claim tasks, and complete them. If it is not connected, Phase B runs through standard REST calls.
+- Phase A discovery and TWX export: the skill discovers applications and snapshots through the Business Automation Workflow Operations REST API (`GET /ops/std/bpm/containers`). The skill downloads the `.twx` file through REST (`GET /ops/std/bpm/containers/{container}/versions/{version}/export`). This step requires your Business Automation Workflow server URL and credentials.
+- Phase B execution (optional Runtime MCP): if the Business Automation Workflow Runtime MCP server (`workflow-runtime`) is connected, Bob uses it to start processes, claim tasks, and complete them. If it is not connected, Phase B runs through standard REST calls.
 - Local TWX fallback: if you already have the `.twx` file on disk, you can provide the file path, and Bob works from it without connecting to a server.
-- The skill uses BAW server credentials only to obtain a session token for the current conversation. It does not store them.
+- The skill uses Business Automation Workflow server credentials only to obtain a session token for the current conversation. It does not store them.
 - The TWX export endpoint typically requires administrator credentials.
 
 ## Compatibility
 
-- BAW 26.x (REST endpoints: `/ops/system/login`, `/ops/std/bpm/containers/{container}/versions/{version}/export`, `/bpm/processes`, `/bpm/user-tasks`)
-- This skill does not support Service Flow test generation or Case application testing in this version.
+- Business Automation Workflow 26.x (REST endpoints: `/ops/system/login`, `/ops/std/bpm/containers/{container}/versions/{version}/export`, `/bpm/processes`, `/bpm/user-tasks`)
+- This skill does not support Service Flow test generation or execution (use `test-baw-service-flows`).
+- Case solutions are TWX-based, so Phase A can generate tests for them, but Phase B cannot execute Case tests in this version.
 - Coach test cases are static (design-time) only. This skill does not support programmatic Coach execution. Use the assertions for manual verification.
 
 ## Prompt examples

@@ -1,0 +1,974 @@
+{
+  "schemaVersion": "1.0.0",
+  "_comment": "Machine-readable mapping from natural-language feature intents to catalog capability IDs. Does NOT duplicate operation definitions — consult catalog.json for contracts. Does NOT dictate framework, HTTP client, UI components, hosting architecture, or authentication mechanism. For code-generation requests, unresolved deployment and hosting prerequisites must be recorded and resolved before emitting code. Detailed implementation guidance belongs to the playbooks and reference guides. Selection rules are deterministic given a resolved deployment context (NF vs PFS, FDR present, hostingProfile). See references/hosting-and-generation.md for the preflight checklist.",
+  "selectionRules": {
+    "_note": "Apply these rules before selecting any capability.",
+    "rules": [
+      "R1: Resolve deployment type first. NF (nonFederated=true) and PFS (federated=true) capability sets are determined by the deployment origin, not the action target. Exception: PFS-discovered tasks have no PFS mutation endpoint — CAP-TASK-LIFECYCLE-PFS and CAP-TASK-DETAIL-NF deliberately use NF-TASK-* operations routed to the validated owning source system via restUrlPrefix. Do not forbid NF-TASK-* operations in a PFS-originated workflow when source-system routing is in place. Do not invent PFS mutation endpoint URLs — always route via restUrlPrefix with mandatory allowlist validation.",
+      "R2: FDR-gated capabilities (deployment.fdrRequired=true) require FDR to be confirmed enabled via a positive probe before use. A 503/CWTBG0788E response is a project-observed FDR-disabled signal but has not been independently confirmed; treat other non-2xx outcomes as inconclusive. Cache result per environment.",
+      "R3: PFS task mutations have no PFS endpoint — they route to the source system via restUrlPrefix. Never invent PFS mutation URLs. Always use CAP-TASK-LIFECYCLE-PFS, which enforces allowlist validation and SYSTEM_TYPE_WLE check.",
+      "R4: Prefer the narrowest individual capability when the user requests one action. Use composite capabilities only when the implementation genuinely needs the full set of actions.",
+      "R5: Optional operations within a capability are not guaranteed — do not treat them as required. Document them as optional extensions in the generated code interface.",
+      "R6: partial-status capabilities require deployment-time validation before production use — emit a validation gate or comment in generated code.",
+      "R7: Saved-search execution has two alternative strategies (C04). Strategy A (two-step PUT, documentation-verified; the harness checks that exercise it were skipped) is the safe default. Strategy B (direct GET, documentation-verified) requires compatibility validation in the target environment.",
+      "R8: Alternative NF/PFS capability pairs exist for most domains. The correct pair is selected by the resolved deployment type. Do not present both as options in generated code without an explicit runtime branch.",
+      "R9: Hosting prerequisites (hosting profile, cross-origin configuration, proxy) must be resolved before generating any HTTP client or authentication code. Record them as unresolved if unknown.",
+      "R10: evidence.level='documentation-verified' means the operation has not been runtime-tested in this project. It does not mean it will not work — emit a validation comment in generated code."
+    ]
+  },
+  "intents": [
+    {
+      "id": "INT-SAVED-SEARCH-MGMT",
+      "label": "Manage saved task searches",
+      "aliases": [
+        "save a search",
+        "create saved search",
+        "list saved searches",
+        "rename saved search",
+        "delete saved search",
+        "manage search definitions",
+        "save task filter",
+        "update saved search",
+        "full saved search CRUD"
+      ],
+      "capabilities": {
+        "NF": [
+          "CAP-SAVED-SEARCH-MGMT-NF"
+        ],
+        "PFS": [
+          "CAP-SAVED-SEARCH-MGMT-PFS"
+        ]
+      },
+      "deployment": [
+        "NF",
+        "PFS"
+      ],
+      "prerequisites": [
+        "deployment type resolved (NF vs PFS)",
+        "active authenticated session"
+      ],
+      "notes": "PFS-SAVED-UPDATE (PUT) is documentation-verified only — flag this in generated code for PFS deployments. NF claim, assign-back and priority update are runtime-verified (HTTP 2xx, status only); finish and cancel are documentation-verified (development commit-message claims are provenance only). NF convention: prefer numeric id for mutations (conflict C02).",
+      "conflicts": [
+        "C02",
+        "C03"
+      ],
+      "related": [
+        "INT-SAVED-SEARCH-EXEC"
+      ],
+      "playbook": "references/playbooks/saved-search-management.md"
+    },
+    {
+      "id": "INT-SAVED-SEARCH-EXEC",
+      "label": "Execute an existing saved search",
+      "aliases": [
+        "run a saved search",
+        "execute saved search",
+        "retrieve tasks for saved search",
+        "apply saved search",
+        "load saved search results",
+        "fetch tasks using saved filter"
+      ],
+      "capabilities": {
+        "NF": [
+          "CAP-SAVED-SEARCH-EXEC-NF"
+        ],
+        "PFS": [
+          "CAP-SAVED-SEARCH-EXEC-PFS"
+        ]
+      },
+      "deployment": [
+        "NF",
+        "PFS"
+      ],
+      "prerequisites": [
+        "deployment type resolved",
+        "saved search definition accessible (known id or name)"
+      ],
+      "strategyNote": "Two alternative strategies exist (conflict C04). Strategy A — two-step (documentation-verified, safe default): GET definition then PUT /tasks with extracted criteria. Strategy B — direct GET with savedSearch= query param (documentation-verified only): validate compatibility in target environment before use. Required operations cover Strategy A; NF-SAVED-EXEC-PARAM / PFS-SAVED-EXEC-PARAM are optional for Strategy B.",
+      "conflicts": [
+        "C04"
+      ],
+      "related": [
+        "INT-SAVED-SEARCH-MGMT",
+        "INT-TASK-INBOX"
+      ],
+      "playbook": "references/playbooks/saved-search-management.md"
+    },
+    {
+      "id": "INT-TASK-INBOX",
+      "label": "Display a personal task inbox",
+      "aliases": [
+        "show my tasks",
+        "display task list",
+        "personal task inbox",
+        "list my assigned tasks",
+        "show actionable tasks",
+        "task portal home",
+        "view task inbox",
+        "retrieve my task list",
+        "load tasks for current user"
+      ],
+      "capabilities": {
+        "NF": [
+          "CAP-TASK-LIST-NF"
+        ],
+        "PFS": [
+          "CAP-TASK-LIST-PFS"
+        ]
+      },
+      "deployment": [
+        "NF",
+        "PFS"
+      ],
+      "prerequisites": [
+        "deployment type resolved",
+        "active authenticated session"
+      ],
+      "notes": "NF fallback: use CAP-ADHOC-SEARCH-NF (PUT /tasks) only for a GET /tasks 404 that passes the 404 classification in the non-federated guide; cache the decision per session and BAW environment. PFS: each task carries systemID used for routing task actions. size=500 max per page — surface truncation indicator when totalCount exceeds returned count.",
+      "related": [
+        "INT-TASK-ACTIONS",
+        "INT-TASK-LAUNCH",
+        "INT-ADHOC-SEARCH"
+      ],
+      "disambiguations": [
+        "For team-managed task lists (manager view), use INT-TEAM-WORKLOAD instead.",
+        "For a filtered/search-driven task list, use INT-ADHOC-SEARCH or INT-SAVED-SEARCH-EXEC.",
+        "For standalone task-detail retrieval (show task details for a known TKIID), use INT-TASK-DETAIL."
+      ],
+      "playbook": "references/playbooks/task-lifecycle.md"
+    },
+    {
+      "id": "INT-ADHOC-SEARCH",
+      "label": "Search tasks with ad hoc criteria",
+      "aliases": [
+        "filter tasks",
+        "search tasks by criteria",
+        "execute task search",
+        "query tasks",
+        "find tasks matching conditions",
+        "build task filter",
+        "dynamic task search",
+        "task search with conditions"
+      ],
+      "capabilities": {
+        "NF": [
+          "CAP-ADHOC-SEARCH-NF"
+        ],
+        "PFS": [
+          "CAP-ADHOC-SEARCH-PFS"
+        ]
+      },
+      "deployment": [
+        "NF",
+        "PFS"
+      ],
+      "prerequisites": [
+        "deployment type resolved",
+        "search metadata known (optional: CAP-SEARCH-META-NF / CAP-SEARCH-META-PFS for dynamic field discovery)"
+      ],
+      "related": [
+        "INT-TASK-INBOX",
+        "INT-SEARCH-METADATA",
+        "INT-SAVED-SEARCH-EXEC"
+      ]
+    },
+    {
+      "id": "INT-SEARCH-METADATA",
+      "label": "Discover searchable fields and constraint options",
+      "aliases": [
+        "discover search fields",
+        "get searchable fields",
+        "enumerate filter options",
+        "build dynamic search form",
+        "fetch constraint fields",
+        "list business data fields for search",
+        "search form metadata"
+      ],
+      "capabilities": {
+        "NF": [
+          "CAP-SEARCH-META-NF"
+        ],
+        "PFS": [
+          "CAP-SEARCH-META-PFS"
+        ]
+      },
+      "deployment": [
+        "NF",
+        "PFS"
+      ],
+      "prerequisites": [
+        "deployment type resolved"
+      ],
+      "notes": "NF path conflict C01: BAW 24+ requires /searches/tasks/meta/* not /searches/meta/*. PFS adds taskStatus and priority metadata endpoints not present in NF.",
+      "conflicts": [
+        "C01"
+      ],
+      "related": [
+        "INT-ADHOC-SEARCH"
+      ]
+    },
+    {
+      "id": "INT-TASK-ACTIONS",
+      "label": "Claim, release, reassign, or complete tasks",
+      "aliases": [
+        "claim a task",
+        "take a task",
+        "release a task",
+        "assign task back",
+        "reassign task",
+        "complete a task",
+        "finish a task",
+        "submit task",
+        "cancel task claim",
+        "unassign a task",
+        "route task to another user",
+        "task lifecycle actions",
+        "task state transitions"
+      ],
+      "capabilities": {
+        "NF": {
+          "composite": [
+            "CAP-TASK-LIFECYCLE-NF"
+          ],
+          "individual": {
+            "claim": [
+              "CAP-TASK-CLAIM-NF"
+            ],
+            "release-or-reassign": [
+              "CAP-TASK-RELEASE-NF"
+            ],
+            "complete": [
+              "CAP-TASK-FINISH-NF"
+            ],
+            "cancel-claim": [
+              "CAP-TASK-CANCEL-NF"
+            ],
+            "update-attributes": [
+              "CAP-TASK-UPDATE-NF"
+            ]
+          }
+        },
+        "PFS": {
+          "composite": [
+            "CAP-TASK-LIFECYCLE-PFS"
+          ],
+          "_note": "PFS task mutations route to the source system via restUrlPrefix. No PFS mutation endpoints exist. CAP-TASK-LIFECYCLE-PFS enforces allowlist validation, systemType==SYSTEM_TYPE_WLE check, and source-origin authentication."
+        }
+      },
+      "deployment": [
+        "NF",
+        "PFS"
+      ],
+      "prerequisites": [
+        "deployment type resolved",
+        "valid task TKIID from any source",
+        "task in appropriate state for the chosen action",
+        "for PFS: systemID, restUrlPrefix from federationResult[], systemType==SYSTEM_TYPE_WLE, restUrlPrefix validated against trusted allowlist, source-system authentication (SSO or bearer coverage)"
+      ],
+      "selectionGuidance": "Use the narrowest individual capability when only one action is needed. Use the composite (CAP-TASK-LIFECYCLE-NF or CAP-TASK-LIFECYCLE-PFS) only when the implementation genuinely requires multiple lifecycle transitions. Reassignment to a specific target (NF-TASK-ASSIGN-TO) is an optional extension — documentation-verified only; do not treat as guaranteed.",
+      "notes": "NF-TASK-ASSIGN-TO (targeted reassignment): toUser observed on one deployment (structural-assertion-verified), toGroup/toTeam/toMe documentation-verified only; NF-TASK-ASSIGN-BACK (assign-back to original role) is runtime-verified. NF-TASK-UPDATE is documentation-verified for attributes beyond priority.",
+      "relatedCapabilities": {
+        "task-detail-before-action": [
+          "CAP-TASK-DETAIL-NF"
+        ],
+        "_task-detail-note": "CAP-TASK-DETAIL-NF is optional — retrieve full task context before taking action. A valid TKIID is sufficient to act without a prior task-detail call."
+      },
+      "related": [
+        "INT-TASK-INBOX",
+        "INT-TASK-LAUNCH"
+      ],
+      "playbook": "references/playbooks/task-lifecycle.md"
+    },
+    {
+      "id": "INT-TASK-LAUNCH",
+      "label": "Open a BAW task form",
+      "aliases": [
+        "open task",
+        "launch task",
+        "open task form",
+        "execute task in BAW UI",
+        "navigate to task",
+        "open task in new tab",
+        "embed task in iframe",
+        "run task UI",
+        "start working on a task"
+      ],
+      "capabilities": {
+        "NF": [
+          "CAP-TASK-LAUNCH-NF"
+        ],
+        "PFS": [
+          "CAP-TASK-LAUNCH-PFS"
+        ]
+      },
+      "deployment": [
+        "NF",
+        "PFS"
+      ],
+      "prerequisites": [
+        "deployment type resolved",
+        "valid task TKIID",
+        "active authenticated user session",
+        "for NF: hosting profile determined (same-origin vs proxy vs cross-origin)",
+        "for PFS: taskCompletionUrlPrefix from federationResult[] validated and allowlisted, SSO spanning federated systems"
+      ],
+      "notes": "runURL is absent from task detail responses — URL must always be constructed manually via /teamworks/process.lsw pattern. iframe embedding requires same-origin (BAW-hosted) hosting or the prerequisites in references/hosting-and-generation.md (a reverse proxy alone is not sufficient) due to BAW's frame-ancestors 'self' CSP. Top-level navigation (window.open) supported for cross-origin portals. For PFS, taskCompletionUrlPrefix must be validated against a trusted allowlist before constructing navigation URL.",
+      "hostingPrerequisites": [
+        "hosting profile (Profile A/A2/C) must be resolved before generating URL construction or iframe/window.open code",
+        "hosting prerequisites (references/hosting-and-generation.md) determine whether iframe or top-level navigation is the correct pattern; a reverse proxy alone does not enable iframe"
+      ],
+      "related": [
+        "INT-TASK-INBOX",
+        "INT-TASK-ACTIONS"
+      ],
+      "playbook": "references/playbooks/task-lifecycle.md"
+    },
+    {
+      "id": "INT-PROCESS-DISCOVER-AND-START",
+      "label": "Discover and start a process",
+      "aliases": [
+        "start a process",
+        "launch a workflow",
+        "initiate a process",
+        "discover startable processes",
+        "list launchable processes",
+        "populate process launcher",
+        "start a new process instance",
+        "show processes I can start",
+        "build process launch menu"
+      ],
+      "capabilities": {
+        "NF": [
+          "CAP-PROCESS-DISCOVERY-NF",
+          "CAP-PROCESS-START-NF"
+        ],
+        "PFS": [
+          "CAP-PROCESS-DISCOVERY-PFS"
+        ],
+        "_PFS_note": "Federated process initiation is NOT available via a PFS-level endpoint. It must route to the owning source BAW system via restUrlPrefix + NF-PROCESS-START. This routing is not yet independently verified — see CAP-PROCESS-DISCOVERY-PFS status=available with open question on routing verification."
+      },
+      "deployment": [
+        "NF",
+        "PFS"
+      ],
+      "prerequisites": [
+        "deployment type resolved",
+        "for NF start: bpdId parsed from startURL of /exposed response (not from itemID or snapshotID)",
+        "for PFS: source system restUrlPrefix resolved and allowlisted, systemType verified"
+      ],
+      "notes": "NF: discovery (CAP-PROCESS-DISCOVERY-NF) is optional when bpdId is already known. bpdId and processAppId must be parsed from startURL — using itemID or snapshotID directly caused errors in project tests (CWTBG0012E, HTTP 409, scoped to tested environment). params format is process-definition-specific.",
+      "related": [
+        "INT-PROCESS-INSTANCE-MGMT",
+        "INT-TASK-INBOX"
+      ]
+    },
+    {
+      "id": "INT-PROCESS-INSTANCE-SEARCH",
+      "label": "Search and inspect process instances",
+      "aliases": [
+        "search process instances",
+        "list process instances",
+        "find process instances",
+        "view running processes",
+        "filter instances by state",
+        "show process instance details",
+        "inspect a process instance",
+        "get instance status",
+        "process instance overview"
+      ],
+      "capabilities": {
+        "NF": [
+          "CAP-PROCESS-INSTANCE-LIST-NF",
+          "CAP-PROCESS-INSTANCE-DETAIL-NF"
+        ],
+        "PFS": [
+          "CAP-INSTANCE-SEARCH-PFS"
+        ]
+      },
+      "deployment": [
+        "NF",
+        "PFS"
+      ],
+      "prerequisites": [
+        "deployment type resolved",
+        "for instance detail: valid PIID known, caller authorized"
+      ],
+      "notes": "CAP-PROCESS-INSTANCE-LIST-NF and CAP-PROCESS-INSTANCE-DETAIL-NF are both partial (documentation-verified only) — emit validation gates. CAP-INSTANCE-SEARCH-PFS is documentation-verified (partial); no retained successful execution record. Instance-search field names differ from task-search field names — do not share schemas. For PFS, PFS-INSTANCE-SEARCH-META (searchType=INSTANCE_SEARCH) should be used to discover valid field names.",
+      "related": [
+        "INT-PROCESS-INSTANCE-MGMT",
+        "INT-PROCESS-DISCOVER-AND-START"
+      ]
+    },
+    {
+      "id": "INT-PROCESS-INSTANCE-MGMT",
+      "label": "Manage process instance state",
+      "aliases": [
+        "suspend a process instance",
+        "resume a process instance",
+        "retry a failed process instance",
+        "terminate a process instance",
+        "delete a process instance",
+        "update instance due date",
+        "process instance administration",
+        "manage running processes",
+        "halt a process",
+        "recover a failed instance",
+        "process instance lifecycle"
+      ],
+      "capabilities": {
+        "NF": {
+          "composite": [
+            "CAP-INSTANCE-LIFECYCLE-NF"
+          ],
+          "individual": {
+            "suspend": [
+              "CAP-INSTANCE-SUSPEND-NF"
+            ],
+            "resume": [
+              "CAP-INSTANCE-RESUME-NF"
+            ],
+            "retry": [
+              "CAP-INSTANCE-RETRY-NF"
+            ],
+            "update-due-date": [
+              "CAP-INSTANCE-UPDATE-DUEDATE-NF"
+            ],
+            "terminate": [
+              "CAP-INSTANCE-TERMINATE-NF"
+            ],
+            "delete": [
+              "CAP-INSTANCE-DELETE-NF"
+            ]
+          }
+        },
+        "PFS": null,
+        "_PFS_note": "Instance lifecycle actions on PFS-discovered instances are not modeled in the catalog. They would require source-system routing analogous to CAP-TASK-LIFECYCLE-PFS. Do not select NF capabilities for PFS-discovered instance PIIDs without establishing source routing."
+      },
+      "deployment": [
+        "NF"
+      ],
+      "prerequisites": [
+        "non-federated BAW deployment",
+        "valid authorized PIID (from any source — listing not required)",
+        "instance currently in an eligible state for the chosen action",
+        "caller holds per-action authorization policy (ACTION_SUSPEND/RESUME/RETRY/CHANGE_INSTANCE_DUEDATE/ABORT/DELETE_INSTANCE)",
+        "for terminate and delete: explicit user confirmation flow in place",
+        "for delete: application-level audit logging before submission"
+      ],
+      "selectionGuidance": "Use the narrowest individual capability when only one action is needed. Five of the six individual action capabilities were observed on one deployment (structural-assertion-verified; retry is documentation-verified only) — all remain partial, emit validation gates. CAP-INSTANCE-LIFECYCLE-NF composite is partial. Actions are state-dependent alternatives — determine eligible action from instance state, not a fixed sequence.",
+      "notes": "Retry re-runs the failed service from its beginning including external side effects — require idempotency assessment before use. Terminate is irreversible. Delete is permanent — no recovery via application REST actions; infrastructure-level backup restore may be possible. dueDate: ISO-8601 UTC accepted on one deployment; confirm other formats in the target. Delete HTTP method is ambiguous (conflict C06).",
+      "conflicts": [
+        "C06"
+      ],
+      "related": [
+        "INT-PROCESS-INSTANCE-SEARCH",
+        "INT-PROCESS-DISCOVER-AND-START"
+      ]
+    },
+    {
+      "id": "INT-TEAM-WORKLOAD",
+      "label": "Display managed-team workloads",
+      "aliases": [
+        "show team workload",
+        "team workload dashboard",
+        "manager dashboard",
+        "view team task counts",
+        "see overdue tasks for my teams",
+        "team performance overview",
+        "workload summary for managed teams",
+        "team member workload",
+        "team task trend",
+        "team dashboard"
+      ],
+      "capabilities": {
+        "NF": {
+          "overview": [
+            "CAP-TEAM-WORKLOAD-OVERVIEW-NF"
+          ],
+          "single-team": [
+            "CAP-TEAM-WORKLOAD-SINGLE-NF"
+          ],
+          "member-list": [
+            "CAP-TEAM-MEMBERS-NF"
+          ],
+          "task-search": [
+            "CAP-TEAM-TASK-SEARCH-NF"
+          ],
+          "trend": [
+            "CAP-TEAM-TASK-TREND-NF"
+          ]
+        },
+        "PFS": {
+          "overview": [
+            "CAP-TEAM-WORKLOAD-OVERVIEW-PFS"
+          ],
+          "single-team": [
+            "CAP-TEAM-WORKLOAD-SINGLE-PFS"
+          ],
+          "member-list": [
+            "CAP-TEAM-MEMBERS-PFS"
+          ],
+          "task-search": [
+            "CAP-TEAM-TASK-SEARCH-PFS"
+          ],
+          "trend": [
+            "CAP-TEAM-TASK-TREND-PFS"
+          ]
+        }
+      },
+      "deployment": [
+        "NF",
+        "PFS"
+      ],
+      "prerequisites": [
+        "deployment type resolved",
+        "for NF: FDR enabled (BAW 24+) — confirmed via positive probe (NF-ADV-QUERIES-LIST preferred); HTTP 503/CWTBG0788E is a project-observed FDR-disabled signal (unconfirmed mapping — see conflict C05)",
+        "caller manages at least one global team (empty result or HTTP 400 returned otherwise)",
+        "active authenticated user session"
+      ],
+      "fdrGate": {
+        "required": true,
+        "deployments": [
+          "NF"
+        ],
+        "probeCapability": "NF-ADV-QUERIES-LIST",
+        "probeNote": "GET /rest/bpm/wle/v2/search/queries — positive probe; does not depend on team management",
+        "secondaryProbe": "NF-DASHBOARD-TEAMSUMMARY-ALL",
+        "secondaryProbeNote": "Secondary probe; depends on caller managing teams",
+        "inconclusiveOutcomes": "HTTP 400, 401/403, 404, 408, other 5xx, CORS/proxy failure, network error or timeout — all INCONCLUSIVE; do not report as FDR disabled"
+      },
+      "notes": "All NF and PFS workload capabilities are partial. Most dashboard operations returned HTTP 200 on CP4BA 26.0.0 (status only; response schema not asserted); NF-DASHBOARD-TEAMTASKS-ONE/-ALL, NF-DASHBOARD-TEAMMEMBER-ONE and PFS-DASHBOARD-TEAMMEMBER-ONE remain documentation-verified, so CAP-TEAM-TASK-SEARCH-NF is documentation-verified. Emit validation gates. PFS responses include federationResult[] — handle partial-source failures. PFS index lag means results may not reflect most recent state.",
+      "conflicts": [
+        "C05"
+      ],
+      "related": [
+        "INT-USER-PROFILE-AND-TEAMS",
+        "INT-TASK-INBOX"
+      ]
+    },
+    {
+      "id": "INT-ADVANCED-SEARCH",
+      "label": "Advanced task search with WLE v2",
+      "aliases": [
+        "advanced task search",
+        "WLE v2 search",
+        "complex task query",
+        "FDR-backed search",
+        "powerful task filter",
+        "v2 search endpoint"
+      ],
+      "capabilities": {
+        "NF": [
+          "CAP-ADV-SEARCH-NF"
+        ]
+      },
+      "deployment": [
+        "NF"
+      ],
+      "prerequisites": [
+        "non-federated BAW deployment",
+        "FDR enabled (BAW 24+) — must probe before generating code that calls this endpoint",
+        "active authenticated user session"
+      ],
+      "fdrGate": {
+        "required": true,
+        "deployments": [
+          "NF"
+        ],
+        "probeCapability": "NF-ADV-QUERIES-LIST",
+        "notes": "status=gated — FDR gate must be established before code generation. No PFS equivalent exists."
+      },
+      "notes": "NF-only, no PFS equivalent. Returns HTTP 503 when FDR is not enabled.",
+      "conflicts": [
+        "C05"
+      ],
+      "related": [
+        "INT-ADHOC-SEARCH",
+        "INT-TEAM-WORKLOAD"
+      ]
+    },
+    {
+      "id": "INT-USER-PROFILE-AND-TEAMS",
+      "label": "Retrieve current user profile and team membership",
+      "aliases": [
+        "get current user",
+        "who am I",
+        "my profile",
+        "current user profile",
+        "user display name",
+        "get my teams",
+        "list teams I belong to",
+        "my managed teams",
+        "team membership",
+        "am I a manager",
+        "discover my teams",
+        "get user info"
+      ],
+      "capabilities": {
+        "NF": {
+          "profile": [
+            "CAP-USER-PROFILE-NF"
+          ],
+          "visible-teams": [
+            "CAP-VISIBLE-TEAMS-NF"
+          ],
+          "managed-teams": [
+            "CAP-MANAGED-TEAMS-NF"
+          ],
+          "team-membership": [
+            "CAP-TEAM-MEMBERSHIP-NF"
+          ],
+          "modeled-team-lookup": [
+            "CAP-MODELED-TEAM-LOOKUP-NF"
+          ]
+        }
+      },
+      "deployment": [
+        "NF"
+      ],
+      "prerequisites": [
+        "non-federated BAW deployment",
+        "active authenticated user session",
+        "for team membership: valid runtime global team ID and caller must manage or have access to the team"
+      ],
+      "selectionGuidance": "Use CAP-USER-PROFILE-NF for display name and email. Use CAP-MANAGED-TEAMS-NF for manager-role discovery — do not derive manager status from data.managerName in the user profile. Use CAP-VISIBLE-TEAMS-NF for a full list of visible teams. Use CAP-TEAM-MEMBERSHIP-NF for members of a specific team. Use CAP-MODELED-TEAM-LOOKUP-NF for Process Designer team definitions. Do not interchange runtime global team IDs with modeled team IDs.",
+      "notes": "data.managerName from user profile is a display-name string only — must not be used to derive team management permissions. PFS equivalent not modeled in catalog.",
+      "related": [
+        "INT-TEAM-WORKLOAD"
+      ]
+    },
+    {
+      "id": "INT-TASK-DETAIL",
+      "label": "Retrieve details for a single task",
+      "aliases": [
+        "show task details",
+        "get task detail",
+        "view task metadata",
+        "task detail panel",
+        "show task description",
+        "display task context",
+        "task info",
+        "inspect a task"
+      ],
+      "capabilities": {
+        "NF": [
+          "CAP-TASK-DETAIL-NF"
+        ],
+        "PFS": null,
+        "_PFS_note": "Source-routed PFS task detail is not independently supported. A PFS-discovered task TKIID may be used with CAP-TASK-DETAIL-NF if the caller routes via a validated source-system restUrlPrefix — this routing is not yet independently verified end to end. Do not select CAP-TASK-DETAIL-NF for a PFS deployment without confirming source routing."
+      },
+      "deployment": [
+        "NF"
+      ],
+      "prerequisites": [
+        "non-federated BAW deployment (or source-routed PFS — see _PFS_note)",
+        "valid task TKIID"
+      ],
+      "notes": "NF-TASK-GET is the required operation. runURL is absent from the response — construct the task launch URL separately via NF-TASK-LAUNCH if needed. All returned values must be rendered via textContent, not unescaped innerHTML.",
+      "related": [
+        "INT-TASK-INBOX",
+        "INT-TASK-ACTIONS",
+        "INT-TASK-LAUNCH"
+      ],
+      "playbook": "references/playbooks/task-lifecycle.md"
+    }
+  ],
+  "acceptanceFixtures": {
+    "_comment": "Representative user requests with expected capability IDs. Used for regression testing of the intent-map. These fixtures are DECLARED expectations — they specify what a correctly implemented selector must return for a given resolved context. The 'pass' field is a declaration (expected: true), NOT a recorded test result. The independent validator tests structural consistency only; natural-language selection behavior is not executable without a separate selector implementation. See Task 1D.1 handoff for fixture executability status.",
+    "fixtures": [
+      {
+        "id": "FIX-01",
+        "label": "NF saved-search management",
+        "userRequest": "Let me save, list, rename, and delete task searches on my BAW system",
+        "resolvedContext": {
+          "deployment": "NF",
+          "fdrEnabled": false,
+          "hostingProfile": null
+        },
+        "expectedCapabilities": [
+          "CAP-SAVED-SEARCH-MGMT-NF"
+        ],
+        "notExpected": [
+          "CAP-SAVED-SEARCH-MGMT-PFS"
+        ],
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result. See acceptanceFixtures _comment."
+      },
+      {
+        "id": "FIX-02",
+        "label": "PFS saved-search management — UPDATE is documentation-verified",
+        "userRequest": "Manage saved searches on our federated BAW environment",
+        "resolvedContext": {
+          "deployment": "PFS",
+          "fdrEnabled": false
+        },
+        "expectedCapabilities": [
+          "CAP-SAVED-SEARCH-MGMT-PFS"
+        ],
+        "notExpected": [
+          "CAP-SAVED-SEARCH-MGMT-NF"
+        ],
+        "flaggedPartial": [
+          "PFS-SAVED-UPDATE"
+        ],
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-03",
+        "label": "Saved-search execution — strategy selection",
+        "userRequest": "Run an existing saved search to populate the inbox",
+        "resolvedContext": {
+          "deployment": "NF"
+        },
+        "expectedCapabilities": [
+          "CAP-SAVED-SEARCH-EXEC-NF"
+        ],
+        "strategyNote": "Strategy A (two-step, documentation-verified) is the safe default. Strategy B (direct GET) requires target-environment validation.",
+        "conflictsApply": [
+          "C04"
+        ],
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-04",
+        "label": "NF task inbox",
+        "userRequest": "Show the current user's task inbox on a non-federated BAW deployment",
+        "resolvedContext": {
+          "deployment": "NF"
+        },
+        "expectedCapabilities": [
+          "CAP-TASK-LIST-NF"
+        ],
+        "notExpected": [
+          "CAP-TASK-LIST-PFS",
+          "CAP-ADHOC-SEARCH-NF"
+        ],
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-05",
+        "label": "Claim a single task — narrow vs composite",
+        "userRequest": "Add a Claim button to the task row",
+        "resolvedContext": {
+          "deployment": "NF"
+        },
+        "expectedCapabilities": [
+          "CAP-TASK-CLAIM-NF"
+        ],
+        "notExpected": [
+          "CAP-TASK-LIFECYCLE-NF"
+        ],
+        "selectionNote": "Narrowest individual capability preferred over composite when only one action is needed.",
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-06",
+        "label": "PFS task lifecycle — no PFS mutation endpoint",
+        "userRequest": "Implement claim and complete for tasks on our federated environment",
+        "resolvedContext": {
+          "deployment": "PFS"
+        },
+        "expectedCapabilities": [
+          "CAP-TASK-LIFECYCLE-PFS"
+        ],
+        "notExpected": [
+          "CAP-TASK-LIFECYCLE-NF"
+        ],
+        "authNote": "Source-system mutation routing required. restUrlPrefix must be from trusted allowlist. Source-system authentication independent of PFS session. SYSTEM_TYPE_WLE check mandatory.",
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-07",
+        "label": "FDR-gated advanced search",
+        "userRequest": "Use the WLE v2 advanced search endpoint",
+        "resolvedContext": {
+          "deployment": "NF",
+          "fdrEnabled": "unconfirmed"
+        },
+        "expectedCapabilities": [
+          "CAP-ADV-SEARCH-NF"
+        ],
+        "status": "gated",
+        "gateMustBeConfirmed": true,
+        "gateNote": "FDR must be confirmed present via NF-ADV-QUERIES-LIST positive probe before generating code for this endpoint. Do not emit code without gate.",
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-08",
+        "label": "Manager team workload — NF with FDR gate",
+        "userRequest": "Build a manager dashboard showing team task counts and overdue indicators",
+        "resolvedContext": {
+          "deployment": "NF",
+          "fdrEnabled": "unconfirmed"
+        },
+        "expectedCapabilities": [
+          "CAP-TEAM-WORKLOAD-OVERVIEW-NF"
+        ],
+        "optionalExtensions": [
+          "CAP-TEAM-WORKLOAD-SINGLE-NF",
+          "CAP-TEAM-MEMBERS-NF",
+          "CAP-TEAM-TASK-SEARCH-NF"
+        ],
+        "fdrGate": true,
+        "gateNote": "All NF team-workload capabilities require FDR enabled (BAW 24+). Probe via NF-ADV-QUERIES-LIST before use.",
+        "partialStatus": true,
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-09",
+        "label": "Hosting prerequisite unresolved",
+        "userRequest": "Build a task portal that opens task forms",
+        "resolvedContext": {
+          "deployment": "NF",
+          "hostingProfile": null
+        },
+        "expectedCapabilities": [
+          "CAP-TASK-LIST-NF",
+          "CAP-TASK-LAUNCH-NF"
+        ],
+        "unresolvedPrerequisites": [
+          "hostingProfile (A/A2/C) must be determined before generating URL construction or iframe/window.open code",
+          "hosting prerequisites (references/hosting-and-generation.md) determine whether iframe or top-level navigation is correct; a reverse proxy alone does not enable iframe"
+        ],
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-10",
+        "label": "PFS task list — not NF endpoint",
+        "userRequest": "Show a federated task list across all source BAW systems",
+        "resolvedContext": {
+          "deployment": "PFS"
+        },
+        "expectedCapabilities": [
+          "CAP-TASK-LIST-PFS"
+        ],
+        "notExpected": [
+          "CAP-TASK-LIST-NF"
+        ],
+        "notes": "Each task item carries systemID for routing. federationResult[] provides routing fields. Partial failures possible — check federationResult[].statusCode.",
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-11",
+        "label": "User profile and managed teams",
+        "userRequest": "Show the current user's name and the teams they manage",
+        "resolvedContext": {
+          "deployment": "NF"
+        },
+        "expectedCapabilities": [
+          "CAP-USER-PROFILE-NF",
+          "CAP-MANAGED-TEAMS-NF"
+        ],
+        "selectionNote": "Do not derive manager status from data.managerName in user profile — use CAP-MANAGED-TEAMS-NF (NF-MANAGED-GLOBAL-TEAMS endpoint) for authoritative manager discovery.",
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-12",
+        "label": "Process instance management — partial, requires runtime validation",
+        "userRequest": "Let an admin suspend, retry, or terminate a process instance",
+        "resolvedContext": {
+          "deployment": "NF"
+        },
+        "expectedCapabilities": [
+          "CAP-INSTANCE-SUSPEND-NF",
+          "CAP-INSTANCE-RETRY-NF",
+          "CAP-INSTANCE-TERMINATE-NF"
+        ],
+        "alternativeComposite": "CAP-INSTANCE-LIFECYCLE-NF",
+        "partialStatus": true,
+        "validationGateRequired": true,
+        "notes": "All three capabilities are partial (documentation-verified). Emit validation gates in generated code. Retry re-runs the failed service — require idempotency assessment. Terminate is irreversible — require explicit confirmation.",
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      },
+      {
+        "id": "FIX-13",
+        "label": "Standalone task-detail retrieval — NF only",
+        "userRequest": "Show task details for a specific task ID on our non-federated BAW system",
+        "resolvedContext": {
+          "deployment": "NF"
+        },
+        "expectedCapabilities": [
+          "CAP-TASK-DETAIL-NF"
+        ],
+        "notExpected": [
+          "CAP-TASK-LIST-NF",
+          "CAP-TASK-LIFECYCLE-NF",
+          "CAP-TASK-LIFECYCLE-PFS"
+        ],
+        "selectionNote": "Standalone task-detail retrieval maps to CAP-TASK-DETAIL-NF (NF-TASK-GET). This is narrower than the full task inbox or lifecycle — selecting the inbox or lifecycle composite for a detail-only request violates R4. PFS source-routed task detail is not independently verified and must not be selected silently.",
+        "pass": true,
+        "_passNote": "Declared expectation only — not a recorded test result."
+      }
+    ]
+  },
+  "discoveryAmbiguities": [
+    {
+      "id": "AMB-01",
+      "description": "Deployment type not yet resolved: when NF/PFS is unknown, both capability pairs must be surfaced and the user must confirm deployment type before any selection is final.",
+      "affectedIntents": [
+        "INT-TASK-INBOX",
+        "INT-TASK-ACTIONS",
+        "INT-SAVED-SEARCH-MGMT",
+        "INT-SAVED-SEARCH-EXEC",
+        "INT-ADHOC-SEARCH",
+        "INT-TASK-LAUNCH",
+        "INT-TEAM-WORKLOAD"
+      ]
+    },
+    {
+      "id": "AMB-02",
+      "description": "FDR status unknown: NF team workload (INT-TEAM-WORKLOAD) and advanced search (INT-ADVANCED-SEARCH) require FDR confirmed present. Treat as gated and emit probe requirement. Do not generate WLE v2 code without confirmed FDR.",
+      "affectedIntents": [
+        "INT-TEAM-WORKLOAD",
+        "INT-ADVANCED-SEARCH"
+      ]
+    },
+    {
+      "id": "AMB-03",
+      "description": "Hosting profile unknown: task launch (INT-TASK-LAUNCH) URL construction pattern and iframe vs window.open selection depend on hosting profile (Profile A/A2/C). Record as unresolved prerequisite — do not default to iframe.",
+      "affectedIntents": [
+        "INT-TASK-LAUNCH"
+      ]
+    },
+    {
+      "id": "AMB-04",
+      "description": "Narrow vs composite action selection: requests mentioning 'task actions' or 'lifecycle' are ambiguous. Prefer narrowest individual capability for single-action requests. Use composite only when multiple lifecycle transitions are genuinely needed.",
+      "affectedIntents": [
+        "INT-TASK-ACTIONS",
+        "INT-PROCESS-INSTANCE-MGMT"
+      ]
+    },
+    {
+      "id": "AMB-05",
+      "description": "Saved-search execution strategy: documentation describes two alternative strategies (C04). Requests that do not specify which pattern should default to Strategy A (two-step, documentation-verified). Flag Strategy B as requiring deployment-time validation.",
+      "affectedIntents": [
+        "INT-SAVED-SEARCH-EXEC"
+      ]
+    },
+    {
+      "id": "AMB-06",
+      "description": "PFS task mutation routing: requests for task actions in a PFS deployment must not invent PFS mutation endpoints. The correct selection is always CAP-TASK-LIFECYCLE-PFS, which routes via source-system restUrlPrefix with mandatory allowlist validation.",
+      "affectedIntents": [
+        "INT-TASK-ACTIONS"
+      ]
+    },
+    {
+      "id": "AMB-07",
+      "description": "Process instance management for PFS-discovered instances: the catalog does not model instance lifecycle actions for PFS-discovered PIIDs. Such a request must be flagged as out-of-scope until source-routing for instance actions is cataloged.",
+      "affectedIntents": [
+        "INT-PROCESS-INSTANCE-MGMT"
+      ]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# BAW Business Object Import — OpenAPI 3.0 format rules
+# Business Automation Workflow Business Object Import — OpenAPI 3.0 format rules
 
 IBM verified these rules by manual test.
 
@@ -23,7 +23,7 @@ The file must be valid JSON with exactly these top-level keys:
 - `info.version` — required. Use `"1.0.0"` unless the user specifies otherwise.
 - `info.description` — optional but recommended.
 
-**Do NOT include:** `paths`, `servers`, `security`, `tags`, or any other OpenAPI operation-level keys. BAW's BO importer reads only `components.schemas`. These keys will not cause an import failure, but they add noise and may confuse tooling.
+**Do NOT include:** `paths`, `servers`, `security`, `tags`, or any other OpenAPI operation-level keys. Business Automation Workflow's BO importer reads only `components.schemas`. These keys will not cause an import failure, but they add noise and may confuse tooling.
 
 ---
 
@@ -78,7 +78,7 @@ Add a description on every schema. Keep it to one sentence. This description is 
 
 ### Supported primitive types
 
-| OpenAPI type | BAW BO type | Notes |
+| OpenAPI type | Business Automation Workflow BO type | Notes |
 |---|---|---|
 | `string` | String (or Date/Time with `format`) | Default for text and codes; use `format` to get Date or Time type (see below) |
 | `string` + `"format": "date"` | Date | Date only — no time component shown in coach views |
@@ -89,9 +89,9 @@ Add a description on every schema. Keep it to one sentence. This description is 
 
 ### String format hints — date and time fields
 
-OpenAPI `format` values on `string` fields control the BAW BO field type created on import:
+OpenAPI `format` values on `string` fields control the Business Automation Workflow BO field type created on import:
 
-| OpenAPI `format` | BAW BO field type | Coach view behavior |
+| OpenAPI `format` | Business Automation Workflow BO field type | Coach view behavior |
 |---|---|---|
 | `"date"` | `Date` | Shows **date only** (no time component rendered) |
 | `"date-time"` | `Time` | Shows **date and time** |
@@ -128,14 +128,14 @@ OpenAPI `format` values on `string` fields control the BAW BO field type created
 ```
 
 - The `$ref` path must be exactly `#/components/schemas/<SchemaName>`.
-- The referenced schema must exist in the same file — BAW does not resolve external references.
+- The referenced schema must exist in the same file — Business Automation Workflow does not resolve external references.
 - Do NOT use `$ref` and other properties on the same field object. A `$ref` replaces all other keywords on that property.
 
 ### Field descriptions
 
 Add `"description"` to a field when its meaning is not obvious from its name.
 
-BAW preserves field descriptions and surfaces them in the WebPD BO designer.
+Business Automation Workflow preserves field descriptions and surfaces them in the WebPD BO designer.
 
 ---
 
@@ -189,7 +189,7 @@ BAW preserves field descriptions and surfaces them in the WebPD BO designer.
 }
 ```
 
-BAW preserves the `enum` values for human readability; runtime enforcement is handled by the Selection BO type itself.
+Business Automation Workflow preserves the `enum` values for human readability; runtime enforcement is handled by the Selection BO type itself.
 
 ---
 
@@ -206,9 +206,9 @@ BAW preserves the `enum` values for human readability; runtime enforcement is ha
 
 ## Self-referential schemas
 
-BAW **does** support self-referential BOs — a schema that contains a `$ref` to itself imports without errors. For example, an `Employee` with a `manager` field of type `$ref: Employee` is valid.
+Business Automation Workflow **does** support self-referential BOs — a schema that contains a `$ref` to itself imports without errors. For example, an `Employee` with a `manager` field of type `$ref: Employee` is valid.
 
-At runtime, a recursive structure must bottom out somewhere (the top-level manager's `manager` field will simply be null/unset). This is normal BAW behavior, not a defect.
+At runtime, a recursive structure must bottom out somewhere (the top-level manager's `manager` field will simply be null/unset). This is normal Business Automation Workflow behavior, not a defect.
 
 A flat alternative (storing `managerId` as a string rather than a nested object) is sometimes simpler to work with in process data mappings, but it is a design choice — not a requirement. Use whichever fits the process better.
 
@@ -216,7 +216,7 @@ A flat alternative (storing `managerId` as a string rather than a nested object)
 
 ## Ordering
 
-BAW does not require schemas to be declared before they are referenced. You can order schemas alphabetically or dependency-first — either works. Dependency-first (leaf objects first, composites last) is easier to read.
+Business Automation Workflow does not require schemas to be declared before they are referenced. You can order schemas alphabetically or dependency-first — either works. Dependency-first (leaf objects first, composites last) is easier to read.
 
 ---
 
@@ -290,4 +290,4 @@ The following keys are outside the scope of the BO import and should be omitted 
 }
 ```
 
-This example imports into BAW WebPD without errors. Verified by manual test.
+This example imports into Business Automation Workflow WebPD without errors. Verified by manual test.

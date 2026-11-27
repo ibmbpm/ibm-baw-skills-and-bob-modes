@@ -1,21 +1,21 @@
 ---
 name: baw-dependency-mapper
-description: Maps all usages and dependencies of a specified variable or Business Object (BO) across an entire IBM BAW process application by analyzing the TWX export. Produces a dependency graph showing declarations, read/write usages, service I/O bindings, and coach bindings; detects circular BO references, redundant service calls touching the same BO, and over-coupling. Use when the user asks to analyze dependencies of a variable or BO, map where a BO is used, detect circular references, assess the impact of changing a BO or variable, or identify over-coupling in a BAW process app. Also triggers on phrases like "where is this BO used", "what would break if I change X", "find all usages of", "dependency map", "circular dependency BAW".
+description: Maps all usages and dependencies of a specified variable or Business Object (BO) across an entire IBM Business Automation Workflow process application by analyzing the TWX export. Produces a dependency graph showing declarations, read/write usages, service I/O bindings, and coach bindings; detects circular BO references, redundant service calls touching the same BO, and over-coupling. Use when the user asks to analyze dependencies of a variable or BO, map where a BO is used, detect circular references, assess the impact of changing a BO or variable, or identify over-coupling in a Business Automation Workflow process app. Also triggers on phrases like "where is this BO used", "what would break if I change X", "find all usages of", "dependency map", "circular dependency Business Automation Workflow".
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: BAW Dependency Mapper
-  short_description: Map all usages of a variable or Business Object across a BAW process app TWX export, with circular-reference and over-coupling detection.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Dependency Mapper
+  short_description: Map all usages of a variable or Business Object across a Business Automation Workflow process app TWX export, with circular-reference and over-coupling detection.
+  author: IBM Business Automation Workflow Team
 ---
-# BAW Dependency Mapper
+# Business Automation Workflow Dependency Mapper
 
-Analyze a BAW process application TWX export and produce a full dependency map for a specified variable or Business Object (BO), together with circular-reference detection, redundancy analysis, and an impact assessment.
+Analyze a Business Automation Workflow process application TWX export and produce a full dependency map for a specified variable or Business Object (BO), together with circular-reference detection, redundancy analysis, and an impact assessment.
 
 The analysis is driven by `scripts/analyze_dependencies.py`.
 
@@ -23,7 +23,7 @@ The analysis is driven by `scripts/analyze_dependencies.py`.
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 
@@ -56,29 +56,23 @@ If the user provided an acronym and snapshot, skip to Step 2. Otherwise:
 
 1. **List containers:**
    ```
-   GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers
+   GET /ops/std/bpm/containers
    ```
    Match `container_name` against the app name the user gave. Record the `container` field as `{CONTAINER}`.
 
 2. **List versions:**
    ```
-   GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers/{CONTAINER}/versions
+   GET /ops/std/bpm/containers/{CONTAINER}/versions
    ```
    Pick the most recent non-archived version. Record its `version` field as `{VERSION}`. If there are multiple snapshots, show the user a brief table and ask which to export.
 
 #### Step 2 — Export the TWX
 
 ```
-GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers/{CONTAINER}/versions/{VERSION}/export?use_enhanced_filenames=true
+GET /ops/std/bpm/containers/{CONTAINER}/versions/{VERSION}/export?use_enhanced_filenames=true
 ```
 
-Include headers:
-```
-Authorization: Basic <base64(user:pass)>
-BPMCSRFToken: {BAW_CSRF}
-Cookie: {BAW_SESSION}
-Accept: application/octet-stream, */*
-```
+Send the extra header `Accept: application/octet-stream, */*` and save the response as a file (binary download). Authentication is handled as described in `references/CREDENTIAL_HANDLING.md`.
 
 The `Accept: application/octet-stream, */*` header is **required** — omitting it causes a `406 Not Acceptable` error.
 
@@ -211,7 +205,7 @@ For each proposed change type (add field, remove field, rename field, delete BO,
 - **Generating or modifying BOs** — use `generate-baw-business-objects`.
 - **Generating or modifying BPMN processes** — use `generate-baw-bpmn`.
 - **TWX packaging or deployment** — not in scope.
-- **REST-only dependency mapping** — the TWX export route is used for full static dependency analysis on both standalone BAW and CP4BA.
+- **REST-only dependency mapping** — the TWX export route is used for full static dependency analysis on both standalone Business Automation Workflow and Cloud Pak for Business Automation.
 
 **Future upgrade path:**
 - If a future MCP tool for process-app export becomes available, this boundary should be revisited — it may allow analysis without a TWX file.

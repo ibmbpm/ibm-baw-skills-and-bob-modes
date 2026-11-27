@@ -1,28 +1,28 @@
 ---
 name: baw-toolkit-analyzer
-description: 'Analyzes IBM BAW toolkit dependencies from a TWX export. Maps direct and transitive toolkit dependencies, tracks snapshot versions, and flags missing, conflicting, circular, outdated, and unused dependencies. Supports where-used (what artifacts reference a toolkit) and what-uses (what toolkits an app consumes) analysis. Use when a BAW admin or developer needs to understand toolkit structure, assess upgrade impact, audit before deployment, or answer questions like "what toolkits does this app depend on?", "is this toolkit safe to remove?", "do I have circular toolkit deps?". Trigger phrases: toolkit dependencies, toolkit dependency graph, where is this toolkit used, analyze toolkit, toolkit impact, missing toolkit, circular toolkit, outdated snapshot, unnecessary dependency, toolkit analyzer, TWX toolkit.'
+description: 'Analyzes IBM Business Automation Workflow toolkit dependencies from a TWX export. Maps direct and transitive toolkit dependencies, tracks snapshot versions, and flags missing, conflicting, circular, outdated, and unused dependencies. Supports where-used (what artifacts reference a toolkit) and what-uses (what toolkits an app consumes) analysis. Use when a Business Automation Workflow admin or developer needs to understand toolkit structure, assess upgrade impact, audit before deployment, or answer questions like "what toolkits does this app depend on?", "is this toolkit safe to remove?", "do I have circular toolkit deps?". Trigger phrases: toolkit dependencies, toolkit dependency graph, where is this toolkit used, analyze toolkit, toolkit impact, missing toolkit, circular toolkit, outdated snapshot, unnecessary dependency, toolkit analyzer, TWX toolkit.'
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: BAW Toolkit Analyzer
-  short_description: Map direct and transitive toolkit dependencies in a BAW TWX export and flag missing, circular, conflicting, and unused dependencies.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Toolkit Analyzer
+  short_description: Map direct and transitive toolkit dependencies in a Business Automation Workflow TWX export and flag missing, circular, conflicting, and unused dependencies.
+  author: IBM Business Automation Workflow Team
 ---
 
-# BAW Toolkit Dependency and Usage Analyzer
+# Business Automation Workflow Toolkit Dependency and Usage Analyzer
 
-Analyze the toolkit dependencies inside a BAW process application TWX export and produce a full dependency report: direct and transitive dependencies, snapshot tracking, conflict and gap detection, and upgrade impact analysis.
+Analyze the toolkit dependencies inside a Business Automation Workflow process application TWX export and produce a full dependency report: direct and transitive dependencies, snapshot tracking, conflict and gap detection, and upgrade impact analysis.
 
 
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 
@@ -57,29 +57,23 @@ If the user provided an acronym (e.g. `TAT`) and snapshot, skip to Step 2. Other
 
 1. **List containers:**
    ```
-   GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers
+   GET /ops/std/bpm/containers
    ```
    Match `container_name` against the app name the user gave. Record the `container` (acronym) field as `{CONTAINER}`.
 
 2. **List versions:**
    ```
-   GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers/{CONTAINER}/versions
+   GET /ops/std/bpm/containers/{CONTAINER}/versions
    ```
    Pick the most recent non-archived version. Record its `version` field as `{VERSION}`. If there are multiple snapshots, show the user a brief table and ask which to export.
 
 #### Step 2 — Export the TWX
 
 ```
-GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers/{CONTAINER}/versions/{VERSION}/export?use_enhanced_filenames=true
+GET /ops/std/bpm/containers/{CONTAINER}/versions/{VERSION}/export?use_enhanced_filenames=true
 ```
 
-Include headers:
-```
-Authorization: Basic <base64(user:pass)>
-BPMCSRFToken: {BAW_CSRF}
-Cookie: {BAW_SESSION}
-Accept: application/octet-stream, */*
-```
+Send the extra header `Accept: application/octet-stream, */*` and save the response as a file (binary download). Authentication is handled as described in `references/CREDENTIAL_HANDLING.md`.
 
 The `Accept: application/octet-stream, */*` header is **required** — omitting it causes a `406 Not Acceptable` error.
 

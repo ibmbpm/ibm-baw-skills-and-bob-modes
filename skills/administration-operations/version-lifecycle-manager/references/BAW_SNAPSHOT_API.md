@@ -1,11 +1,11 @@
-# BAW Version Lifecycle — Operations REST API Reference
+# Business Automation Workflow Version Lifecycle — Operations REST API Reference
 
-This file is the authoritative reference for all BAW version lifecycle endpoints used by the `version-lifecycle-manager` skill. Read it before constructing any API call.
+This file is the authoritative reference for all Business Automation Workflow version lifecycle endpoints used by the `version-lifecycle-manager` skill. Read it before constructing any API call.
 
 **IBM Docs source:** IBM Business Automation Workflow 24.x / 25.x / 26.x — "BPMContainers REST API" and "Operations REST APIs" sections under "Administering > REST APIs".
 Always verify against the IBM documentation for the exact server version in use: https://www.ibm.com/docs/en/baw
 
-> **Path prefix note:** Endpoints under `/ops/std/bpm/...` use the Operations API prefix. Endpoints under `/std/bpm/...` use the standard BPM API prefix. Both are appended to the same base URL.
+> **Path prefix note:** Endpoints under `/ops/std/bpm/...` use the Operations API prefix. Endpoints under `/std/bpm/...` use the standard Business Process Manager API prefix. Both are appended to the same base URL.
 
 ---
 
@@ -31,16 +31,16 @@ Always verify against the IBM documentation for the exact server version in use:
 
 | Deployment | Base URL pattern | Notes |
 |---|---|---|
-| BAW on-premises (root mount) | `https://<host>:9443` | Most standalone on-prem installations mount Operations API directly at `/ops/...` |
-| BAW on-premises (prefixed) | `https://<host>:9443/rest`, `/bas`, or `/baw` | Some installations use `/rest`, `/bas`, or `/baw` |
-| BAW on Cloud | `https://<tenant>.baw.ibmcloud.com` | Tenant-specific; supplied by IBM Cloud |
-| CP4BA (Cloud Pak for Business Automation) | `https://<cpd-route>/bas` | `cpd-route` is the OpenShift route for the BAW component |
+| Business Automation Workflow on-premises (root mount) | `https://<host>:9443` | Most standalone on-prem installations mount Operations API directly at `/ops/...` |
+| Business Automation Workflow on-premises (prefixed) | `https://<host>:9443/rest`, `/bas`, or `/baw` | Some installations use `/rest`, `/bas`, or `/baw` |
+| Business Automation Workflow on Cloud | `https://<tenant>.baw.ibmcloud.com` | Tenant-specific; supplied by IBM Cloud |
+| Cloud Pak for Business Automation | `https://<cpd-route>/bas` | `cpd-route` is the OpenShift route for the Business Automation Workflow component |
 
 All API paths below are appended to the base URL. Never invent or guess the base URL — ask the user.
 
 **Port and Context Discovery:** The default on-premises HTTPS port is **9443**. Port 9080 (HTTP) is commonly configured to redirect to 9443. If the user provides a hostname without a port, try port 9443 first. If they provide a hostname without a context root, probe root `""` (no prefix), `/rest`, `/bas`, `/baw` on port 9443 in that order using `POST <base-url>/ops/system/login` — use the first that returns HTTP 200, 201, 401, or 403.
 
-**Important:** The BAW REST API has two overlapping path spaces:
+**Important:** The Business Automation Workflow REST API has two overlapping path spaces:
 - **WLE REST API** (`/rest/bpm/wle/v1/...`) — used for listing Process Apps, Toolkits, and their installed snapshots.
 - **Operations REST API** (`/ops/std/bpm/...`) — used for install, activate, deactivate, delete, and env var management.
 
@@ -62,10 +62,10 @@ echo -n "admin:mypassword" | base64
 ### LTPA token (on-premises SSO)
 Pass `Authorization: LtpaToken2 <token>` obtained from a prior `/ibm/console` login.
 
-### Zen API key (CP4BA)
-Pass `Authorization: ZenApiKey <api-key>` where the API key is generated from the CP4BA admin UI under **Profile → API Key**.
+### Zen API key (Cloud Pak for Business Automation)
+Pass `Authorization: ZenApiKey <api-key>` where the API key is generated from the Cloud Pak for Business Automation admin UI under **Profile → API Key**.
 
-### OAuth / bearer token (BAW on Cloud)
+### OAuth / bearer token (Business Automation Workflow on Cloud)
 Pass `Authorization: Bearer <token>` obtained from the IBM Cloud IAM token endpoint.
 
 ---
@@ -94,7 +94,7 @@ Content-Type: multipart/form-data
 ```bash
 curl -X POST \
   "https://baw.example.com/bas/ops/std/bpm/containers/install" \
-  -H "Authorization: Basic YWRtaW46bXlwYXNzd29yZA==" \
+  -H "Authorization: Basic <base64-credentials>" \
   -F "file=@/tmp/MYAPP_v3.0.twx"
 ```
 
@@ -110,7 +110,7 @@ curl -X POST \
 }
 ```
 
-**After install:** always verify the snapshot using section 4 to confirm BAW registered it with the expected state before activating.
+**After install:** always verify the snapshot using section 4 to confirm Business Automation Workflow registered it with the expected state before activating.
 
 ---
 
@@ -130,7 +130,7 @@ Returns the current state and metadata of a specific snapshot. Use after install
 ```bash
 curl -X GET \
   "https://baw.example.com/bas/ops/std/bpm/containers/MYAPP/versions/3.0" \
-  -H "Authorization: Basic YWRtaW46bXlwYXNzd29yZA=="
+  -H "Authorization: Basic <base64-credentials>"
 ```
 
 **Success response — HTTP 200:**
@@ -176,7 +176,7 @@ Content-Type: application/json
 ```bash
 curl -X POST \
   "https://baw.example.com/bas/std/bpm/containers/MYAPP/versions/0.9.3/activate" \
-  -H "Authorization: Basic YWRtaW46bXlwYXNzd29yZA==" \
+  -H "Authorization: Basic <base64-credentials>" \
   -H "Content-Type: application/json"
 ```
 
@@ -214,7 +214,7 @@ Removes the snapshot from the active execution path. Running instances already o
 ```bash
 curl -X POST \
   "https://baw.example.com/bas/std/bpm/containers/MYAPP/versions/0.9.3/deactivate" \
-  -H "Authorization: Basic YWRtaW46bXlwYXNzd29yZA==" \
+  -H "Authorization: Basic <base64-credentials>" \
   -H "Content-Type: application/json"
 ```
 
@@ -236,12 +236,12 @@ curl -X POST \
 
 ## 7. Delete a snapshot
 
-Permanently removes the snapshot from the BAW server. You cannot undo this action.
+Permanently removes the snapshot from the Business Automation Workflow server. You cannot undo this action.
 
 **Method:** `DELETE`
 **Path:** `/ops/std/bpm/containers/{container}/versions/{version}`
 
-> **Path note:** Earlier documentation referenced `/std/bpm/containers/...` (without the `/ops` prefix) for this endpoint. On CP4BA and recent BAW on-premises installations, all version lifecycle endpoints — including delete — are served under `/ops/std/bpm/...`. The `/std/bpm/...` path returns 404 on these deployments. Use `/ops/std/bpm/...` consistently.
+> **Path note:** Earlier documentation referenced `/std/bpm/containers/...` (without the `/ops` prefix) for this endpoint. On Cloud Pak for Business Automation and recent Business Automation Workflow on-premises installations, all version lifecycle endpoints — including delete — are served under `/ops/std/bpm/...`. The `/std/bpm/...` path returns 404 on these deployments. Use `/ops/std/bpm/...` consistently.
 
 | Parameter | Location | Required | Description |
 |---|---|---|---|
@@ -254,7 +254,7 @@ Permanently removes the snapshot from the BAW server. You cannot undo this actio
 ```bash
 curl -X DELETE \
   "https://baw.example.com/bas/ops/std/bpm/containers/MYAPP/versions/0.9.3" \
-  -H "Authorization: Basic YWRtaW46bXlwYXNzd29yZA=="
+  -H "Authorization: Basic <base64-credentials>"
 ```
 
 **Success response — HTTP 200:**
@@ -269,15 +269,15 @@ curl -X DELETE \
 }
 ```
 
-**🚨 Destructive:** Deletion is permanent. BAW rejects this call if:
+**🚨 Destructive:** Deletion is permanent. Business Automation Workflow rejects this call if:
 - The snapshot is currently active (`HTTP 409`) — deactivate it first.
 - There are active process instances on the snapshot (`HTTP 409`) — migrate or complete them first.
 
-> **CP4BA caveat — HTTP 405 on DELETE:** On some CP4BA cluster configurations, `DELETE /ops/std/bpm/containers/{container}/versions/{version}` returns **405 Method Not Allowed** even when the snapshot is deactivated and the path resolves correctly (GET returns 200). This is a server-side restriction — the DELETE method is not exposed on that endpoint for the authenticated user's role. `CEAdmin` and equivalent non-admin roles are known to hit this. If you receive 405:
+> **Cloud Pak for Business Automation caveat — HTTP 405 on DELETE:** On some Cloud Pak for Business Automation cluster configurations, `DELETE /ops/std/bpm/containers/{container}/versions/{version}` returns **405 Method Not Allowed** even when the snapshot is deactivated and the path resolves correctly (GET returns 200). This is a server-side restriction — the DELETE method is not exposed on that endpoint for the authenticated user's role. `CEAdmin` and equivalent non-admin roles are known to hit this. If you receive 405:
 > 1. Try authenticating as a higher-privileged user (e.g. `admin`).
 > 2. If 405 persists, delete via the authoring environment UI instead — these bypass the REST API restriction:
->    - **Traditional BAW:** Workflow Center → open the process app → find the snapshot → delete from the snapshot menu
->    - **CP4BA containerized:** Business Automation Studio → open the process app → find the snapshot → delete from the snapshot menu
+>    - **Traditional Business Automation Workflow:** Workflow Center → open the process app → find the snapshot → delete from the snapshot menu
+>    - **Cloud Pak for Business Automation containerized:** Business Automation Studio → open the process app → find the snapshot → delete from the snapshot menu
 
 ---
 
@@ -374,7 +374,7 @@ Returns the environment variables configured for a specific snapshot.
 ```bash
 curl -X GET \
   "https://baw.example.com/bas/ops/std/bpm/containers/MYAPP/versions/3.0/env_vars" \
-  -H "Authorization: Basic YWRtaW46bXlwYXNzd29yZA=="
+  -H "Authorization: Basic <base64-credentials>"
 ```
 
 **Success response — HTTP 200:**
@@ -396,7 +396,7 @@ Always read env vars before making changes so you have a baseline for rollback.
 
 ## 10. Set environment variables
 
-Writes one or more environment variables to a snapshot's stored configuration. BAW persists the values but does not apply them to the running environment until you run a sync (section 11).
+Writes one or more environment variables to a snapshot's stored configuration. Business Automation Workflow persists the values but does not apply them to the running environment until you run a sync (section 11).
 
 **Method:** `POST`
 **Path:** `/ops/std/bpm/containers/{container}/versions/{version}/env_vars`
@@ -460,7 +460,7 @@ Copies the stored environment variable values from a **source** snapshot to a **
 ```bash
 curl -X POST \
   "https://baw.example.com/bas/ops/std/bpm/containers/MYAPP/versions/1.0/env_vars/sync?target_version=2.0" \
-  -H "Authorization: Basic YWRtaW46bXlwYXNzd29yZA==" \
+  -H "Authorization: Basic <base64-credentials>" \
   -H "Content-Type: application/json"
 ```
 
@@ -526,7 +526,7 @@ curl -X GET \
   -H "Accept: application/json"
 ```
 
-**Success response — HTTP 200 (BAW on-premises / WLE API, excerpt):**
+**Success response — HTTP 200 (Business Automation Workflow on-premises / WLE API, excerpt):**
 ```json
 {
   "status": "200",
@@ -547,9 +547,9 @@ curl -X GET \
 
 The `shortName` field is the container acronym to use in all other API calls.
 
-> **CP4BA response schema difference:** On CP4BA clusters, `GET /bas/ops/std/bpm/containers?containerType=PA|TK` returns a flat array under the `containers` key (not `data.processAppsList`), and field names differ:
+> **Cloud Pak for Business Automation response schema difference:** On Cloud Pak for Business Automation clusters, `GET /bas/ops/std/bpm/containers?containerType=PA|TK` returns a flat array under the `containers` key (not `data.processAppsList`), and field names differ:
 >
-> | WLE API (on-premises) | CP4BA Ops API |
+> | WLE API (on-premises) | Cloud Pak for Business Automation Ops API |
 > |---|---|
 > | `shortName` | `container` |
 > | `name` | `container_name` |
@@ -557,7 +557,7 @@ The `shortName` field is the container acronym to use in all other API calls.
 > | *(no field)* | `toolkit` (`true`/`false`) |
 > | *(no field)* | `archived` (`true`/`false`) |
 >
-> **CP4BA example response (single item):**
+> **Cloud Pak for Business Automation example response (single item):**
 > ```json
 > {
 >   "containers": [
@@ -581,18 +581,18 @@ The `shortName` field is the container acronym to use in all other API calls.
 
 | HTTP status | Code / message | Cause | Remediation |
 |---|---|---|---|
-| `401 Unauthorized` | `CWTBG0019E` | Invalid or missing credentials | Verify username/password or API key; check that the account has BAW administrative rights |
-| `403 Forbidden` | `CWTBG0020E` | Authenticated user lacks permission | Ensure the user is in the `tw_admins` group (on-premises) or has the BAW Admin role (CP4BA) |
+| `401 Unauthorized` | `CWTBG0019E` | Invalid or missing credentials | Verify username/password or API key; check that the account has Business Automation Workflow administrative rights |
+| `403 Forbidden` | `CWTBG0020E` | Authenticated user lacks permission | Ensure the user is in the `tw_admins` group (on-premises) or has the Business Automation Workflow Admin role (Cloud Pak for Business Automation) |
 | `400 Bad Request` | `CWTBG0624E` | Container acronym does not exist | Use `GET /ops/std/bpm/containers` (section 12) to list containers and confirm the correct acronym; acronyms are case-sensitive |
 | `400 Bad Request` | `CWTBG0646E` | Snapshot acronym does not exist within the container | Use `GET /ops/std/bpm/containers/{container}/versions` (section 8) to list snapshots and confirm the exact acronym |
 | `409 Conflict` | `CWTBG0550E` | Trying to delete the active snapshot | Deactivate the snapshot first (section 4), then retry the delete |
 | `409 Conflict` | `CWTBG0551E` | Snapshot has active process instances | Complete or migrate running instances before deleting; check the Process Admin Console for active instances |
-| `500 Internal Server Error` | — | BAW server error | Inspect the BAW SystemOut.log; may indicate a cluster node issue or database problem; retry after checking server health |
+| `500 Internal Server Error` | — | Business Automation Workflow server error | Inspect the Business Automation Workflow SystemOut.log; may indicate a cluster node issue or database problem; retry after checking server health |
 
 ### Case sensitivity note
 Container and snapshot acronyms are **case-sensitive**. `MYAPP` and `myapp` are different values. Always use the exact acronym as returned by the list endpoints.
 
-### CP4BA-specific notes
-- On CP4BA, Basic auth (`Authorization: Basic`) returns **403**. `ZenApiKey <base64>` may return **401** depending on cluster configuration. If either occurs, exchange credentials for a Bearer token via `POST /icp4d-api/v1/authorize` with `{"username":"…","password":"…"}` and use `Authorization: Bearer <token>` for all API calls. Tokens expire; re-exchange on 401.
-- The base URL uses the OpenShift route for the BAW component, not the CP4BA dashboard URL. Retrieve it with `oc get route -n <namespace> | grep baw`.
+### Notes specific to Cloud Pak for Business Automation
+- On Cloud Pak for Business Automation, Basic auth (`Authorization: Basic`) returns **403**. `ZenApiKey <base64>` may return **401** depending on cluster configuration. If either occurs, exchange credentials for a Bearer token via `POST /icp4d-api/v1/authorize` with `{"username":"…","password":"…"}` and use `Authorization: Bearer <token>` for all API calls. Tokens expire; re-exchange on 401.
+- The base URL uses the OpenShift route for the Business Automation Workflow component, not the Cloud Pak for Business Automation dashboard URL. Retrieve it with `oc get route -n <namespace> | grep baw`.
 - Namespace-level RBAC policies may further restrict which operations a given service account can perform; coordinate with the cluster admin if you receive `403` despite correct credentials.

@@ -1,23 +1,23 @@
-# BAW External Task UI Builder — Documentation
+# Business Automation Workflow External Task UI Builder — Documentation
 
-> Generate a custom external task UI for an IBM Business Automation Workflow (BAW) human task configured with a Custom URL — a Node.js Express server with a React or user-specified frontend that fetches task data from BAW, renders a Carbon-styled form, and completes the task on submission.
+> Generate a custom external task UI for an IBM Business Automation Workflow human task configured with a Custom URL — a Node.js Express server with a React or user-specified frontend that fetches task data from Business Automation Workflow, renders a Carbon-styled form, and completes the task on submission.
 
 ## Purpose
 
-When a BAW human task is configured with a **Custom URL**, IBM Workplace opens an external application instead of a BAW coach when a user claims that task. This skill generates that external application. It creates a Node.js Express server paired with a React (default) or user-specified frontend, wired to BAW's `/bpm/user-tasks` REST API for fetching task data and submitting results.
+When a Business Automation Workflow human task is configured with a **Custom URL**, IBM Workplace opens an external application instead of a Business Automation Workflow coach when a user claims that task. This skill generates that external application. It creates a Node.js Express server paired with a React (default) or user-specified frontend, wired to Business Automation Workflow's `/bpm/user-tasks` REST API for fetching task data and submitting results.
 
-The skill supports two ways to describe the task's fields: supply a task schema file (an OpenAPI spec exported from your BAW service flow), or describe the fields verbally. If you do not have the schema file yet, the skill provides step-by-step instructions for exporting it from BAW.
+The skill supports two ways to describe the task's fields: supply a task schema file (an OpenAPI spec exported from your Business Automation Workflow service flow), or describe the fields verbally. If you do not have the schema file yet, the skill provides step-by-step instructions for exporting it from Business Automation Workflow.
 
-Use this skill when you need to build a standalone external UI for a single BAW human task. For task list portals that display and manage multiple tasks, use the `create-baw-portal` skill instead. For BAW Coach View widgets, use `create-baw-widget`.
+Use this skill when you need to build a standalone external UI for a single Business Automation Workflow human task. For task list portals that display and manage multiple tasks, use the `create-baw-portal` skill instead. For Business Automation Workflow Coach View widgets, use `create-baw-widget`.
 
 ---
 
 ## Setup and configuration
 
-- **Node.js** installed on the target BAW VM or server where the generated application will run (v16 or later recommended)
-- **IBM BAW server** accessible from the host where the Node.js app runs — HTTP Basic Authentication credentials (username and password) required
-- **BAW server base URL** — e.g. `https://my-baw-server:9443`
-- **SSL certificate handling** — if your BAW server uses a self-signed certificate, set `IGNORE_SSL_CERTIFICATES=true` in the generated `.env` file
+- **Node.js** installed on the target Business Automation Workflow VM or server where the generated application will run (v16 or later recommended)
+- **IBM Business Automation Workflow server** accessible from the host where the Node.js app runs — HTTP Basic Authentication credentials (username and password) required
+- **Business Automation Workflow server base URL** — e.g. `https://my-baw-server:9443`
+- **SSL certificate handling** — if your Business Automation Workflow server uses a self-signed certificate, set `IGNORE_SSL_CERTIFICATES=true` in the generated `.env` file
 - For React projects: **Node.js** with npm available locally for the build step (`npm run build`) before copying files to the VM
 - No API keys or MCP servers required — the skill generates files only
 
@@ -25,8 +25,8 @@ Use this skill when you need to build a standalone external UI for a single BAW 
 
 ## Compatibility
 
-- IBM BAW 22.x and later; IBM CP4BA 22.x and later
-- Uses the BAW `/bpm/` REST API surface (BPM Standard API) — not the WLE REST API (`/rest/bpm/wle/`) used by BAW portals
+- Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle.
+- Uses the Business Automation Workflow `/bpm/` REST API surface (Business Process Manager Standard API) — not the WLE REST API (`/rest/bpm/wle/`) used by Business Automation Workflow portals
 - Self-signed SSL certificates are supported via an `IGNORE_SSL_CERTIFICATES` environment flag
 - Generated React apps use Vite; Node.js 16+ required on the build machine
 
@@ -37,16 +37,16 @@ Use this skill when you need to build a standalone external UI for a single BAW 
 ### Generate an external task UI from a verbal field description
 
 **Prompt:**
-> Create an external task UI for a BAW Manager Approval task. The task receives a customer name (read-only string) and credit score (read-only number). The manager must submit an approved decision (boolean: Approve or Reject) and a justification note (string).
+> Create an external task UI for a Business Automation Workflow Manager Approval task. The task receives a customer name (read-only string) and credit score (read-only number). The manager must submit an approved decision (boolean: Approve or Reject) and a justification note (string).
 
-**What to expect:** A `.env`, `package.json`, `server.js`, and a named React component (`ManagerApproval.jsx`) with Carbon Design System styling, a confirmation dialog before submission, and the correct BAW API integration for fetching and completing the task.
+**What to expect:** A `.env`, `package.json`, `server.js`, and a named React component (`ManagerApproval.jsx`) with Carbon Design System styling, a confirmation dialog before submission, and the correct Business Automation Workflow API integration for fetching and completing the task.
 
 ---
 
 ### Generate an external task UI from a task schema file
 
 **Prompt:**
-> Build an external task UI for my BAW Send Email task. Here is my task schema file:
+> Build an external task UI for my Business Automation Workflow Send Email task. Here is my task schema file:
 >
 > ```json
 > {
@@ -75,7 +75,7 @@ Use this skill when you need to build a standalone external UI for a single BAW 
 > }
 > ```
 >
-> BAW server is at https://baw-prod.example.com:9443. Use self-signed SSL.
+> Business Automation Workflow server is at https://baw-prod.example.com:9443. Use self-signed SSL.
 
 **What to expect:** The skill derives all form fields from the schema (`fromEmail` as read-only, output fields as editable Carbon inputs with `toEmail` and `emailSubject` marked required), generates a `server.js` with a `/api/schema` endpoint that resolves `$ref` references, and produces a `SendEmail.jsx` React component — no need to describe any field manually.
 
@@ -84,9 +84,9 @@ Use this skill when you need to build a standalone external UI for a single BAW 
 ### Get instructions to export the task schema file
 
 **Prompt:**
-> I want to use my BAW service flow schema to generate the external UI, but I don't have the task schema file yet. How do I export it from BAW?
+> I want to use my Business Automation Workflow service flow schema to generate the external UI, but I don't have the task schema file yet. How do I export it from Business Automation Workflow?
 
-**What to expect:** Step-by-step instructions covering how to create a service flow with an `ioSpec` operation, expose it as a REST endpoint, navigate to the BAW REST API Explorer, and download the OpenAPI spec — plus a `curl` command for self-signed certificate environments.
+**What to expect:** Step-by-step instructions covering how to create a service flow with an `ioSpec` operation, expose it as a REST endpoint, navigate to the Business Automation Workflow REST API Explorer, and download the OpenAPI spec — plus a `curl` command for self-signed certificate environments.
 
 ---
 
@@ -102,7 +102,7 @@ Use this skill when you need to build a standalone external UI for a single BAW 
 ### Generate with plain HTML instead of React
 
 **Prompt:**
-> Build an external task UI for a Vacation Request approval task. Fields: employeeName (read-only), vacationDates (read-only), requestReason (read-only). Outputs: approved (boolean), managerNote (string). Use plain HTML, not React. BAW server: https://baw-dev.internal:9443, credentials admin/admin, self-signed SSL.
+> Build an external task UI for a Vacation Request approval task. Fields: employeeName (read-only), vacationDates (read-only), requestReason (read-only). Outputs: approved (boolean), managerNote (string). Use plain HTML, not React. Business Automation Workflow server: https://baw-dev.internal:9443, credentials admin/admin, self-signed SSL.
 
 **What to expect:** Three files — `.env`, `package.json`, `server.js` — plus a single named HTML file (`vacation-approval.html`) with all client JavaScript embedded in `<script>` tags and Carbon loaded from CDN; no Vite, no React components.
 
@@ -111,7 +111,7 @@ Use this skill when you need to build a standalone external UI for a single BAW 
 ### Add a Vue frontend
 
 **Prompt:**
-> Generate a BAW external task UI for an Invoice Approval task using Vue 3. Input fields: invoiceNumber (string, read-only), supplierName (string, read-only), amount (number, read-only). Output fields: approved (boolean), rejectionReason (string). BAW is at https://baw.company.com:9443.
+> Generate a Business Automation Workflow external task UI for an Invoice Approval task using Vue 3. Input fields: invoiceNumber (string, read-only), supplierName (string, read-only), amount (number, read-only). Output fields: approved (boolean), rejectionReason (string). Business Automation Workflow is at https://baw.company.com:9443.
 
 **What to expect:** A Vue 3 Composition API component for the approval form alongside the standard `server.js` and configuration files, using Carbon tokens for styling.
 
@@ -132,15 +132,15 @@ server.js               # Express API proxy to BAW
 
 1. User claims the task in IBM Workplace — the Custom URL opens your Node.js app with `?taskId=<id>`
 2. The React component calls `GET /api/user-task/:taskId` on `server.js`
-3. `server.js` acquires a CSRF token from BAW (`POST /bpm/system/login`), then fetches the task (`GET /bpm/user-tasks/:taskId?optional_parts=data`)
-4. BAW returns input data as `[{name, data}]` arrays; the server flattens these and strips `@metadata` fields before returning them to the client
+3. `server.js` acquires a CSRF token from Business Automation Workflow (`POST /bpm/system/login`), then fetches the task (`GET /bpm/user-tasks/:taskId?optional_parts=data`)
+4. Business Automation Workflow returns input data as `[{name, data}]` arrays; the server flattens these and strips `@metadata` fields before returning them to the client
 5. The user fills in the output fields and clicks Submit
 6. A confirmation dialog appears; on confirm, `server.js` posts to `POST /bpm/user-tasks/:taskId/complete`
 7. After completion, the popup closes or the page redirects to IBM Workplace (`/Workplace`)
 
 ### Running the application
 
-After copying files to your BAW VM:
+After copying files to your Business Automation Workflow VM:
 
 ```bash
 # 1. Edit .env with your BAW server details
@@ -164,7 +164,7 @@ Access via: `http://localhost:3000/?taskId=YOUR_TASK_ID`
 
 | Request | Use instead |
 |---|---|
-| Build a task list portal that lists and opens multiple BAW tasks | `create-baw-portal` |
-| Create BAW Coach View widgets | `create-baw-widget` |
-| Generate BAW process diagrams or BPMN | `generate-baw-bpmn` |
-| Deploy or copy files to the BAW VM | Manual step — the skill generates files only |
+| Build a task list portal that lists and opens multiple Business Automation Workflow tasks | `create-baw-portal` |
+| Create Business Automation Workflow Coach View widgets | `create-baw-widget` |
+| Generate Business Automation Workflow process diagrams or BPMN | `generate-baw-bpmn` |
+| Deploy or copy files to the Business Automation Workflow VM | Manual step — the skill generates files only |

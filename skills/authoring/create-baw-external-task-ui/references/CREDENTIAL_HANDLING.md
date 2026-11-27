@@ -1,73 +1,83 @@
-# BAW Credential Handling
+# Business Automation Workflow Credential Handling
 
-## Step 0 — Resolve credentials
+**Credentials must never enter your context.** Do not read `.env` or ask for credentials, and do not build `Authorization` headers, `curl` commands, or Base64 strings yourself. All authenticated REST calls go through the bundled script, `scripts/baw_rest.py` in this skill's folder. The script reads `<workspace>/.env`, logs in, handles the CSRF token, makes the call, and prints only a scrubbed response.
 
-Before making any REST call, resolve the three required values. **Skip this step for any operation you are about to execute via MCP** — MCP manages authentication internally. Only run this step when you are about to make a direct REST call. If the session uses MCP for some operations and REST for others, run this step once the first time a REST call is needed — not before.
+Skip this file for any operation you execute through MCP. MCP manages authentication internally.
 
-**Read `.env`:**
+---
 
-> ⚠️ **Preferred method:** Use `execute_command` with `grep` (shown below) — this works even when `.env` is listed in `.gitignore`, which blocks `read_file`. If `execute_command` is unavailable, try `read_file` as a fallback. Never surface a tool failure to the user — recover silently.
+## How to run the script
+
+Every command has the form:
 
 ```bash
-grep -E "^(BAW_SERVER_BASE_URL|BAW_BASE_URL|BAW_USERNAME|BAW_PASSWORD)=" .env 2>/dev/null
+python3 <skill_dir>/scripts/baw_rest.py --workspace <workspace> <command> ...
 ```
 
-Parse each matching line as `KEY=VALUE`, stripping surrounding quotes. A value is **missing** if absent, empty, or still an angle-bracket placeholder (e.g. `<your-baw-username>`).
-
-**If any values are missing**, ask for all of them together in a single message — never one at a time:
-
-> "I need a few details to connect to your BAW server. Please provide:
->
-> - **BAW server URL** — include the context root (e.g. `https://baw.example.com:9443` for standalone BAW, `https://cpd.example.com/bas` for CP4BA authoring, `https://cpd.example.com/baw-bawins1` for CP4BA runtime)
-> - **Username**
-> - **Password**
->
-> **Tip:** Edit `.env` in the directory where you ran the installer and replace the placeholder values:
-> ```
-> BAW_SERVER_BASE_URL=https://your-baw-server.example.com:9443
-> BAW_USERNAME=your-username
-> BAW_PASSWORD=your-password
-> ```"
-
-Once all three values are known, store them in session context. Do not ask again for the rest of this session.
+- `<skill_dir>` is the folder that contains this skill's `SKILL.md`.
+- `<workspace>` is the absolute path of the folder the user has open in Bob (the workspace root). The script reads only `<workspace>/.env`. It does not search parent folders. Always pass it, and use the same value for every call.
+- In the examples below, `baw_rest.py` stands for the full `python3 <skill_dir>/scripts/baw_rest.py --workspace <workspace>` prefix.
 
 ---
 
-## Step 0a — Authenticate
-
-Once credentials are resolved, authenticate **once** before the first REST call. The same flow works for standalone BAW and CP4BA.
+## Step 0 — Check the connection (once per session)
 
 ```bash
-curl -sk -c /tmp/baw_cookies.txt -X POST \
-  "{BAW_BASE_URL}/bpm/system/login" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Basic $(echo -n '{BAW_USERNAME}:{BAW_PASSWORD}' | base64)" \
-  -d '{}'
+python3 <skill_dir>/scripts/baw_rest.py --workspace <workspace> check
 ```
 
-On **HTTP 200/201**: extract `csrf_token` from the response body → store as `{BAW_CSRF}`.
+The output is JSON and never contains secrets. Example: `{"configured": true, "base_url": "https://baw.example.com:9443", "auth": "basic", ...}`.
 
-On **HTTP 401/400**: tell the user their credentials were rejected and ask them to re-enter. Do not proceed until login succeeds.
+| Result | What to do |
+|---|---|
+| `"configured": true` | Continue. If the task changes data (install, delete, import), confirm `base_url` with the user first. |
+| `"configured": false` | `missing` or `placeholders` lists variable **names** only. If `"env_file_found": false` (exit code 2), the output also has a `message` and the `env_file` path that was checked. Tell the user to create or edit `.env` in `<workspace>` (copy `.env.example`), fill those names in themselves, then re-run `check`. |
+
+If the script does not exist at `<skill_dir>/scripts/baw_rest.py`, tell the user the skill installation is incomplete. Do not fall back to reading `.env` or writing `curl`.
 
 ---
 
-## Step 0b — Making subsequent REST calls
+## Step 1 — Make calls
 
-Send **both** of the following on every REST call after login:
-
+```bash
+baw_rest.py request GET /ops/std/bpm/containers --paginate
+baw_rest.py request GET /ops/std/bpm/containers/APP/versions -q filter=active
+baw_rest.py request POST /ops/std/bpm/containers/APP/versions/V1/activate
+baw_rest.py request POST /bpm/processes --data '{"processAppId":"..."}'
+baw_rest.py request POST /ops/std/bpm/containers/install \
+    --upload file=./MyApp.twx --form inactive=false
+baw_rest.py request GET /ops/std/bpm/containers/APP/versions/V1/export \
+    -q use_enhanced_filenames=true -o ./MyApp.twx
 ```
-Authorization: Basic $(echo -n '{BAW_USERNAME}:{BAW_PASSWORD}' | base64)
-BPMCSRFToken: {BAW_CSRF}
-```
 
-Also include `-b /tmp/baw_cookies.txt` in every curl call (required for standalone BAW; harmless on CP4BA).
+- `PATH` is always **server-relative** (it starts with `/`). The script prepends the configured base URL, so a full URL is rejected by design.
+- The script logs in once per invocation (`POST /ops/system/login`), sends the CSRF token (`BPMCSRFToken`), and falls back to a Zen Bearer token silently if a Cloud Pak for Business Automation gateway requires it. You do none of this.
+- Use `-q key=value` for query parameters, `--data '<json>'` or `--data-file <file>` for JSON bodies, `--upload field=file` for multipart uploads, and `-o <file>` to save a binary response such as a `.twx`. Binary responses without `-o` are not printed.
+- Use `--paginate` to automatically follow the response `"next"` link and merge list properties in-memory (highly recommended for list-retrieval).
+- Confirm with the user before any state-changing call (`POST`, `PUT`, `DELETE`, `PATCH`), as the skill instructs.
+- Use `--login-path /bpm/system/login` for the Process Server login used by `/bpm/...` endpoints on some servers.
+- Add `-H 'Name: value'` for extra non-auth headers. `Authorization`, `Cookie`, and `BPMCSRFToken` are managed by the script and cannot be set.
+
+### Reading the result
+
+Output is one JSON object: `{"status": 200, "ok": true, "body": {...}}`, or `{"status": ..., "saved_to": "...", "bytes": ...}` when `-o` is used. Exit codes: `0` success, `1` HTTP error status (the body is still printed), `2` configuration or usage error, `3` network or authentication failure.
+
+| Result | Meaning and action |
+|---|---|
+| `error: credentials were rejected` (exit 3) | Wrong username or password in `.env`. Tell the user to correct `.env` themselves. Do not retry in a loop. |
+| `status: 400` with `CWTBG0651E` | CSRF problem. Re-run the same command (the script logs in fresh each time). |
+| `status: 401/403` | Account lacks permission (on-premises: needs the `tw_admins` group). Report it. |
+| `status: 404` or `login failed (HTTP 404)` | Wrong base URL or missing context root. In Cloud Pak for Business Automation environments, `BAW_BASE_URL` MUST include the context root path (for example, `/bas` or `/baw-bawins1`, e.g., `https://cpd.example.com/bas`). Tell the user to update `.env` to include the context root. |
+| `network error ... self-signed` (exit 3) | The server uses a self-signed certificate. Tell the user to add `BAW_SSL_VERIFY=false` to `.env` (dev/test only). |
+| `error: BAW connection is not configured` (exit 2) | Go back to Step 0. |
 
 ---
 
-## Security rules
+## Rules
 
-- **Never echo credentials in output.** Show curl commands with placeholder form only. Never substitute real values.
-- **Never write `BAW_PASSWORD` to disk in plain text.** `/tmp/baw_cookies.txt` (session cookies only) is the only credential-related file permitted.
-- **One prompt maximum per session.** Once credentials are resolved, do not ask again — not even if a new task starts within the same conversation.
-- **Never commit `.env`.** It is in `.gitignore`. Provide a `.env.example` or boilerplate `.env` with placeholder values for user customization.
-- **Never expose credentials to client-side code.** Server configuration endpoints (like `GET /api/config`) must only return public URLs (e.g., `bawServerUrl`), never `BAW_USERNAME` or `BAW_PASSWORD`.
+- **Never read `.env`** by any means: `read_file`, `cat`, `grep`, `head`, `source`, `printenv`, `env`, or an editor tool. `.bobignore` blocks some of these, but this rule applies regardless. To find out whether `.env` is present, run `check`.
+- **Never print, log, or write credentials**, and never put them in a file you create, a command line, or generated code. Generated applications read their own configuration from `.env` at run time (see `.env.example`).
+- Do not ask the user for credentials in chat. If anything is missing, tell them which variable **names** to fill in, in `.env`.
+- Do not try to bypass the script, for example by extracting values from `scripts/baw_rest.py`'s process, shell history, or environment. If the script cannot do something you need, say so and ask the user.
+- **Do not chat about system internals.** Keep script names (like `baw_rest.py`), server URLs, endpoints, and your inner monologue (such as choosing a REST path or verifying connection checks) completely hidden from your natural language responses. Present results cleanly as parsed Markdown tables or business-level text. Only mention endpoints or script files if an error occurs and you are helping the user troubleshoot.
+- Never commit `.env`. It is in `.gitignore` and `.bobignore`.

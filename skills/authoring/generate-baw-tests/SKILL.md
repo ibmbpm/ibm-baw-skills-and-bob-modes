@@ -1,29 +1,29 @@
 ---
 name: generate-baw-tests
-description: "Use when a BAW developer wants to generate or execute automated tests for an IBM BAW process app, case application, or service flow. Covers two phases: Phase A analyzes artifacts and generates a structured test suite file (processes and coaches); Phase B executes process tests end-to-end (start instance, claim tasks, update task data, complete tasks, assert each step and final state). Use when the user says 'generate tests for my process', 'run my test suite', 'test this service', 'test all paths', 'create edge case tests', 'test my case', 'test coach validation', or 'test with invalid data'. Also use proactively when a user shares a BAW process app and asks if it works, wants to validate a workflow, or asks how to test before going to production. Do not use for authoring new processes (generate-baw-bpmn), inspecting running instances (inspect-baw-processes), creating coach widgets (create-baw-widget), or building custom portals (create-baw-portal)."
+description: "Use when a developer wants to generate or execute automated tests for an IBM Business Automation Workflow process app. Phase A analyzes the exported TWX and generates a structured test suite file (processes and coaches; case solutions are also TWX-based, so tests can be generated for them but not executed). Phase B executes process tests end-to-end (start instance, claim tasks, complete tasks, assert each step and final state). Does not generate or run service flow tests (use test-baw-service-flows). Use when the user says 'generate tests for my process', 'run my test suite', 'test all paths', 'create edge case tests', 'test coach validation', or 'test with invalid data'. Also use proactively when a user shares a process app and asks if it works or how to test before production. Do not use for authoring processes (generate-baw-bpmn), inspecting running instances (inspect-baw-processes), coach widgets (create-baw-widget), or custom portals (create-baw-portal)."
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: Generate BAW Tests
-  short_description: Generate and execute end-to-end automated test suites for IBM BAW process apps, case applications, and service flows.
-  author: IBM BAW Team
+  display_name: Generate Business Automation Workflow Tests
+  short_description: "Generate and execute end-to-end automated test suites for IBM Business Automation Workflow process apps. Case solutions: generation only. No service flow support."
+  author: IBM Business Automation Workflow Team
 ---
 
-# Generate BAW tests
+# Generate Business Automation Workflow tests
 
-Generate comprehensive, structured test suites from IBM Business Automation Workflow (BAW) process application artifacts, and run them end-to-end against a live environment.
+Generate comprehensive, structured test suites from IBM Business Automation Workflow process application artifacts, and run them end-to-end against a live environment.
 
 This skill has two distinct phases. Run them in order for the full workflow, or enter at the phase that matches what the user needs.
 
 | Phase | What it does |
 |---|---|
 | A: Generation | Fetch the process app artifacts, analyze them, and produce a test suite JSON file that covers the happy path, alternative paths, and edge cases for Processes and Coaches. |
-| B: Execution | Take a test suite file and drive it against a live BAW environment: start a process, claim each user task, supply test data, complete the task, and report pass or fail in plain language. |
+| B: Execution | Take a test suite file and drive it against a live Business Automation Workflow environment: start a process, claim each user task, supply test data, complete the task, and report pass or fail in plain language. |
 
 ---
 
@@ -41,7 +41,7 @@ Decide each phase independently. A failed tool call is not evidence of absence. 
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 
@@ -83,7 +83,7 @@ Once the app and snapshot are resolved, ask:
 > *Are there any specific paths, edge cases, or boundary values you especially want covered?"*
 
 Also ask:
-> *"Once the test suite is ready, would you like me to run it against your BAW server immediately, or just generate the file for review first?"*
+> *"Once the test suite is ready, would you like me to run it against your Business Automation Workflow server immediately, or just generate the file for review first?"*
 
 The answer determines whether to chain directly into Phase B or stop after writing the file.
 
@@ -91,7 +91,7 @@ Generate the tests as follows:
 
 1. Acquire artifacts. The TWX export is the only source for test generation, because it contains the full process model, coach definitions, business objects, and all variable bindings that thorough test coverage needs. Use the first path that succeeds:
 
-   Path 1: REST TWX export. The TWX download always requires REST. Read credentials from `references/CREDENTIAL_HANDLING.md` (already resolved earlier in this session if a REST call was made in Phase A — do not resolve again). Then call `GET {BAW_BASE_URL}/ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true`. The response is a binary `.twx` file (a ZIP). Extract it and read the XML files for the process model, coach definitions, and business object details.
+   Path 1: REST TWX export. The TWX download always requires REST. Follow `references/CREDENTIAL_HANDLING.md` to execute `GET /ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true` and save the binary response as a `.twx` file (a ZIP). Extract it and read the XML files for the process model, coach definitions, and business object details.
 
    Path 2: local TWX file (offer only after Path 1 visibly fails). If the REST export fails or errors more than once, offer this option without making it feel like a demotion:
    > *"If you already have the `.twx` file for this app on your machine, you can point me to it and I can work from that directly. No server connection is needed for this step."*
@@ -123,9 +123,9 @@ Phase B entry: confirm these items in order before starting.
 2. Check whether a test suite file exists to run. If not, offer to go back to Phase A.
 3. Ask which tests to run: all, a specific subset, or just the happy path first.
 4. Confirm the environment is nonproduction. Tell the user:
-   > *"Running these tests creates real process instances on your BAW server. Run them against an authoring or nonproduction environment to avoid polluting task lists, reporting dashboards, and audit logs with test data. Do you want to continue? (yes / no)"*
+   > *"Running these tests creates real process instances on your Business Automation Workflow server. Run them against an authoring or nonproduction environment to avoid polluting task lists, reporting dashboards, and audit logs with test data. Do you want to continue? (yes / no)"*
    Wait for an explicit "yes" before starting. If the user answers "no", stop and suggest they point to a test environment first.
-5. REST only (skip entirely if using MCP): resolve credentials via `references/CREDENTIAL_HANDLING.md` — credentials are read from `.env` automatically and the session from Phase A is reused if already established. No prompt to the user unless `.env` is incomplete.
+5. REST only (skip entirely if using MCP): follow `references/CREDENTIAL_HANDLING.md` for how to connect; reuse the connection from Phase A if already established.
 6. If the server is production (the URL contains `prod`, the user says so, or the URL matches a known production hostname), add a second warning: *"This appears to be a production server. Running tests here creates real process instances that appear in your users' task lists and might affect reporting and SLAs. Consider running against a staging or authoring environment instead. Are you sure you want to continue on production?"* Wait for explicit confirmation before continuing.
 
 Phase B steps (for each test case, in sequence):
@@ -180,8 +180,8 @@ In scope: Process test generation (BPMN paths, gateways, user tasks, business da
 
 Out of scope. Do not attempt:
 - Service Flow test generation or execution: use the `test-baw-service-flows` skill.
-- Case application testing: out of scope for this version.
-- Federated multi-system test orchestration: each test targets a single BAW system.
+- Case application test execution: not supported. Case solutions are exported as TWX files, so a test suite can be generated from them in Phase A, but Phase B cannot run them.
+- Federated multi-system test orchestration: each test targets a single Business Automation Workflow system.
 - Authoring or modifying process definitions: use `generate-baw-bpmn`.
 - UI rendering or screenshot capture of Coaches: this skill performs static artifact analysis only.
 - Creating coach widgets or task portals: use `create-baw-widget` or `create-baw-portal`.

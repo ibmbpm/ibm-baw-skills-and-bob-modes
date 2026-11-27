@@ -1,0 +1,10 @@
+# .bobignore — files Bob must never read
+#
+# Credentials must never enter the AI context. The patterns below prevent Bob
+# from opening .env files by any means (read_file, grep, cat, etc.).
+# The baw_rest.py script reads .env internally; Bob only invokes the script.
+
+.env
+.env.local
+**/.env
+**/.env.local

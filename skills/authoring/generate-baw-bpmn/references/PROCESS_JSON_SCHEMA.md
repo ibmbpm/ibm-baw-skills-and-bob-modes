@@ -2,7 +2,7 @@
 
 This is the authoritative schema for the process JSON that `scripts/generate_baw_bpmn.py`
 consumes. You (the model) write this JSON; the script deterministically turns it into
-BAW-importable BPMN 2.0 XML. Your judgment lives entirely in this file — element choice,
+BPMN 2.0 XML importable into Business Automation Workflow. Your judgment lives entirely in this file — element choice,
 naming, branching, data — and the XML generation stays mechanical.
 
 Config IDs are yours to choose (short, readable, kebab-case works well). The generator
@@ -28,8 +28,8 @@ yourself.
 Names the actors involved in the process — people, teams, and systems. The generator
 uses these to:
 - Populate the README's "Performed by" column and role assignment table.
-- **Emit a `<laneSet>` with one `<lane>` per role** so BAW creates swim-lanes on import.
-- **Emit a `<performer>` on every task** that references a role — BAW's primary signal
+- **Emit a `<laneSet>` with one `<lane>` per role** so Business Automation Workflow creates swim-lanes on import.
+- **Emit a `<performer>` on every task** that references a role — Business Automation Workflow's primary signal
   for lane assignment and team binding.
 
 Assign a `"role"` to every task. Control-flow elements (start/end events, gateways)
@@ -77,14 +77,14 @@ Then on tasks:
 }
 ```
 
-Avoid `< > & " \ / : * ? |` in the name — BAW rejects them in artifact names.
+Avoid `< > & " \ / : * ? |` in the name — Business Automation Workflow rejects them in artifact names.
 
 ## `elements`
 
 Each element: `{"id", "type", "name", ...}`. Allowed types (each maps 1:1 to a row in
 IBM's import mapping — see `BAW_BPMN_DIALECT.md`):
 
-| type | Imports into BAW as | Notes |
+| type | Imports into Business Automation Workflow as | Notes |
 |---|---|---|
 | `startEvent` | Start event | Exactly one plain startEvent per process (and per subProcess). Optional `eventDefinition`: `message`, `timer`, `error` for additional typed starts. |
 | `endEvent` | End event | At least one required. Optional `eventDefinition`: `message`, `error`, `terminate`. |
@@ -122,7 +122,7 @@ stores, signal/escalation events...) should not be included.
 
 Give every exclusive/inclusive gateway's outgoing flows a short `name` (it labels the
 branch in the diagram) and either a `condition` or `isDefault: true`. Conditions are
-carried into the XML but BAW expects you to finish the conditional logic in Process
+carried into the XML but Business Automation Workflow expects you to finish the conditional logic in Process
 Designer after import — write them in `tw.local.*` JavaScript style so they're a
 useful starting point, not decoration.
 
@@ -154,7 +154,7 @@ or the name of a business object defined in `businessObjects` below.
 
 Complex, nested data types — the "business objects" the process works with. The
 generator emits them as complexTypes in a sidecar `.xsd` file, adds a `bpmn:import`
-for it, and points the matching itemDefinitions at the types. On import BAW
+for it, and points the matching itemDefinitions at the types. On import Business Automation Workflow
 materializes each one as a business object (IBM mapping: item definition → business
 object). The `.xsd` travels inside the same .zip as the `.bpmn` — never separate them.
 
@@ -172,7 +172,7 @@ object). The `.xsd` travels inside the same .zip as the `.bpmn` — never separa
 ```
 
 Field types: `String`, `Integer`, `Decimal`, `Boolean`, `Date`, `Time`, `DateTime`
-(BAW's business-object primitive set), or the name of another business object defined
+(Business Automation Workflow's business-object primitive set), or the name of another business object defined
 in the same config. `required: true` → `minOccurs="1"`; `list: true` →
 `maxOccurs="unbounded"`. The generator orders the XSD so referenced types come first.
 There is no enum construct — document a closed value set in the field-owning object's
@@ -224,7 +224,7 @@ conditions on non-gateway flows, and unconditioned non-default gateway branches.
 
 ## Worked examples
 
-### 1. Minimal linear process (mirrors a real BAW export)
+### 1. Minimal linear process (mirrors a real Business Automation Workflow export)
 
 ```json
 {
@@ -243,7 +243,7 @@ conditions on non-gateway flows, and unconditioned non-default gateway branches.
 }
 ```
 
-On import BAW creates the process, a human service for "Inline user task", and a
+On import Business Automation Workflow creates the process, a human service for "Inline user task", and a
 service flow named "Service flow1".
 
 ### 2. Approval with roles, decision, default path, and escalation timer
@@ -510,5 +510,5 @@ decision object + all variables wired end-to-end. This is what "complete" looks 
   flat fields.
 - `Customer` is a nested party object with contact fields; `Address` nests inside it.
 - `status` and `inventoryStatus` fields have their allowed values documented in the
-  object's `description` — because there is no enum in XSD's BAW subset.
+  object's `description` — because there is no enum in XSD's Business Automation Workflow subset.
 - Both variables (`order` and `customer`) are wired to every task that reads or writes them.

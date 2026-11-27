@@ -14,7 +14,7 @@ Mentally walk through the process from every angle before writing the config:
 Different actors suggest distinct work areas. Capture this in a `roles` section (see
 [PROCESS_JSON_SCHEMA.md](PROCESS_JSON_SCHEMA.md)) and reference each role from its tasks with
 `"role": "<roleId>"`. Assign a role to every task — user tasks especially must have an
-explicit role so BAW creates the correct human swimlane on import. Always include a
+explicit role so Business Automation Workflow creates the correct human swimlane on import. Always include a
 system role (`"type": "system"`) for service tasks and automated steps; if none is
 defined the generator adds one automatically, but naming it explicitly keeps the
 config self-documenting.

@@ -16,7 +16,7 @@ A TWX file is a ZIP archive. With `use_enhanced_filenames=true` the key files ar
 | `services/*.xml` | Service flow and coach flow definitions |
 | `*.xml` (root or config) | Environment variables, EPVs, process variables |
 
-When parsing: look for `<activity>`, `<gateway>`, `<lane>`, `<boundaryEvent>`, `<dataObject>`, `<property>` elements (BAW uses BPMN 2.0 XML with IBM extensions). Lane names appear in `<lane name="...">`. Boundary events have a `eventDefinitionRef` attribute indicating timer (`timerEventDefinition`) or error (`errorEventDefinition`).
+When parsing: look for `<activity>`, `<gateway>`, `<lane>`, `<boundaryEvent>`, `<dataObject>`, `<property>` elements (Business Automation Workflow uses BPMN 2.0 XML with IBM extensions). Lane names appear in `<lane name="...">`. Boundary events have a `eventDefinitionRef` attribute indicating timer (`timerEventDefinition`) or error (`errorEventDefinition`).
 
 ---
 
@@ -99,7 +99,7 @@ Lanes must be bound to named, restricted teams. A lane open to all users is an a
 | # | Criterion | Evidence to look for in TWX |
 |---|---|---|
 | A1 | Every human lane has a specific, non-generic name | In process XML: lane `name` attributes are not "All Users", "Everyone", "Default", "Participants", or blank |
-| A2 | System lanes are distinguishable from human lanes | Look for IBM BAW `systemLane="true"` attribute or equivalent on automated lanes |
+| A2 | System lanes are distinguishable from human lanes | Look for IBM Business Automation Workflow `systemLane="true"` attribute or equivalent on automated lanes |
 | A3 | No human activity sits in a system lane | Cross-check activity lane assignments — a user task in a system lane is a misconfiguration |
 
 ### Scoring guide
@@ -110,7 +110,7 @@ Lanes must be bound to named, restricted teams. A lane open to all users is an a
 
 ### Notes
 
-The TWX shows lane **names** as defined in Process Designer. To confirm runtime team bindings, check the team binding XML files in the TWX (`teams/` directory or inline team references). If lane names are specific (e.g. "HR Manager", "Finance Approver") but no team binding files are found, score A1 as passing and note: *"Confirm runtime team bindings are configured in BAW Administration."*
+The TWX shows lane **names** as defined in Process Designer. To confirm runtime team bindings, check the team binding XML files in the TWX (`teams/` directory or inline team references). If lane names are specific (e.g. "HR Manager", "Finance Approver") but no team binding files are found, score A1 as passing and note: *"Confirm runtime team bindings are configured in Business Automation Workflow Administration."*
 
 ---
 

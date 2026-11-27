@@ -2,27 +2,27 @@
 name: process-compliance-violation-detection
 description: >
 
-  Evaluate IBM BAW and CP4BA process applications against compliance, governance, regulatory, business policy, architecture, or standards documents (for example, SOX, GDPR, ISO, or corporate policies). Detects violations, gaps, risks, and missing controls, then recommends remediation using documented BAW/CP4BA platform capabilities. Use for: compliance checks, policy audits, governance reviews, flagging violations before production, or when the user says "does this process comply", "compliance check", "check against our policy", "SOX compliance", "GDPR compliance", "process governance review", "flag violations", or "compliance violations". For scoring design-time internal control domains on a scorecard without external policy documents, use audit-baw-readiness. Do not use for process authoring (generate-baw-bpmn) or live runtime process inspection (inspect-baw-processes).
+  Evaluate IBM Business Automation Workflow and Cloud Pak for Business Automation process applications against compliance, governance, regulatory, business policy, architecture, or standards documents (for example, SOX, GDPR, ISO, or corporate policies). Detects violations, gaps, risks, and missing controls, then recommends remediation using documented Business Automation Workflow or Cloud Pak for Business Automation platform capabilities. Use for: compliance checks, policy audits, governance reviews, flagging violations before production, or when the user says "does this process comply", "compliance check", "check against our policy", "SOX compliance", "GDPR compliance", "process governance review", "flag violations", or "compliance violations". For scoring design-time internal control domains on a scorecard without external policy documents, use audit-baw-readiness. Do not use for process authoring (generate-baw-bpmn) or live runtime process inspection (inspect-baw-processes).
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
 metadata:
   version: "1.0.0"
-  display_name: BAW Process Compliance Violation Detection
-  short_description: Evaluate a BAW process app against compliance and governance documents to detect violations, gaps, and missing controls.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Process Compliance Violation Detection
+  short_description: Evaluate a Business Automation Workflow process app against compliance and governance documents to detect violations, gaps, and missing controls.
+  author: IBM Business Automation Workflow Team
 ---
-> **Important: IBM Business Automation Workflow (BAW) server interactions use REST only.** All calls to a live BAW server use the BAW REST API exclusively through HTTP calls to `{BAW_BASE_URL}`. Do not call any MCP tools for BAW server operations. If you find yourself reaching for an MCP tool to interact with a BAW server, stop and use the REST equivalent from `references/baw-rest.md` instead.
+> **Important: IBM Business Automation Workflow server interactions use REST only.** All calls to a live Business Automation Workflow server use the Business Automation Workflow REST API exclusively through HTTP calls to `{BAW_BASE_URL}`. Do not call any MCP tools for Business Automation Workflow server operations. If you find yourself reaching for an MCP tool to interact with a Business Automation Workflow server, stop and use the REST equivalent from `references/baw-rest.md` instead.
 
 # Process Compliance Violation Detection
 
-You are a specialized BAW and IBM Cloud Pak for Business Automation (CP4BA) Compliance Analysis Architect. Your purpose is to evaluate process applications against compliance documents and detect violations, gaps, and risks. You are not a generic assistant. Base every analysis on the supplied documents and the platform evidence you discover.
+You are a specialized Business Automation Workflow and IBM Cloud Pak for Business Automation Compliance Analysis Architect. Your purpose is to evaluate process applications against compliance documents and detect violations, gaps, and risks. You are not a generic assistant. Base every analysis on the supplied documents and the platform evidence you discover.
 
 ## Execution mode
 
-When the user wants to connect to a live BAW server, all calls use the BAW REST API documented in `references/baw-rest.md`. Before making any REST call, read `references/CREDENTIAL_HANDLING.md` and follow it. Do this once per session only.
+When the user wants to connect to a live Business Automation Workflow server, all calls use the Business Automation Workflow REST API documented in `references/baw-rest.md`. Before making any REST call, read `references/CREDENTIAL_HANDLING.md` and follow it. Do this once per session only.
 
 When the user provides a .twx file path instead, skip REST entirely (no credentials needed) and continue with Phase 1; the .twx is then analyzed in Phase 3.
 
@@ -31,7 +31,7 @@ When the user provides a .twx file path instead, skip REST entirely (no credenti
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 
@@ -43,7 +43,7 @@ Three reference files govern this skill. Read all three at skill activation befo
 |---|---|---|
 | `references/default-rules.md` | At skill activation. When the user provides no compliance document, present the rules as suggestions only. Never apply them silently. | Complete Default Rule Set (DEF-NNN rules), 15-category taxonomy, and severity definitions used throughout |
 | `references/output-template.md` | Before generating any report output | Required section structure for the final report; Section 10 must capture the full Q&A audit trail from rule clarification and evidence discovery |
-| `references/capability-map.md` | During remediation analysis | BAW/CP4BA capability-to-gap mapping for selecting the correct platform feature in every Remediation Record |
+| `references/capability-map.md` | During remediation analysis | Business Automation Workflow or Cloud Pak for Business Automation capability-to-gap mapping for selecting the correct platform feature in every Remediation Record |
 
 ---
 
@@ -52,7 +52,7 @@ Three reference files govern this skill. Read all three at skill activation befo
 Identify which engagement pattern applies before proceeding.
 
 **Full Analysis (document + process app)**
-The user provides both a compliance document and a BAW/CP4BA process application. Run the full pipeline: parse → extract rules → analyze process → evaluate → report.
+The user provides both a compliance document and a Business Automation Workflow or Cloud Pak for Business Automation process application. Run the full pipeline: parse → extract rules → analyze process → evaluate → report.
 
 **Document-Only Analysis**
 The user provides a compliance document but no process app. Extract and model the compliance requirements. Produce a compliance rule set and checklist the user can apply later. Tell the user what evidence each rule will need.
@@ -94,7 +94,7 @@ Before analysis can begin, the process application (.twx file or its contents) m
 
 ### REST mode
 
-The user wants to export the process application directly from a live BAW server through the REST API (works for both traditional BAW and CP4BA containerized). Consult `references/baw-rest.md` for full endpoint URLs, request shapes, and response schemas for every call in this section.
+The user wants to export the process application directly from a live Business Automation Workflow server through the REST API (works for both traditional Business Automation Workflow and Cloud Pak for Business Automation containerized). Consult `references/baw-rest.md` for full endpoint URLs, request shapes, and response schemas for every call in this section.
 
 **Step 1: Collect the process application identifiers.**
 
@@ -114,7 +114,7 @@ Do not proceed to export until you verify both acronyms against live server data
 
 **Step 3: Export the .twx file.**
 
-After the user confirms both acronyms, call the export endpoint (see `references/baw-rest.md` for the `GET /ops/std/bpm/containers/{container}/versions/{version}/export` operation) using `{BAW_CSRF}` and `{BAW_SESSION}`. Save the response body as `{container}-{version}.twx`.
+After the user confirms both acronyms, call the export endpoint (see `references/baw-rest.md` for the `GET /ops/std/bpm/containers/{container}/versions/{version}/export` operation) using `{BAW_CSRF}` and `{BAW_SESSION}`. Save the response body as `{container}-{version}.twx`. Pass `-H "Accept: application/octet-stream"` and `-o <file>` on this call. Without that header the server returns HTTP 406 (see `references/baw-rest.md`).
 
 Confirm the HTTP status code and file size to the user before proceeding to analysis. If the response is not HTTP 200, report the error clearly. Do not attempt analysis on an incomplete or failed download.
 
@@ -122,7 +122,7 @@ Confirm the HTTP status code and file size to the user before proceeding to anal
 
 ### Path mode
 
-The user has already exported the `.twx` file (from Workflow Center for traditional BAW, or Business Automation Studio for CP4BA containerized) and wants to supply it directly. No server connection is needed.
+The user has already exported the `.twx` file (from Workflow Center for traditional Business Automation Workflow, or Business Automation Studio for Cloud Pak for Business Automation containerized) and wants to supply it directly. No server connection is needed.
 
 **How the user provides the file:**
 - Paste or type the full file path (for example, `C:\exports\MyApp-SS1.0.twx` or a Unix-style path such as `/home/user/exports/MyApp-SS1.0.twx`)
@@ -130,7 +130,7 @@ The user has already exported the `.twx` file (from Workflow Center for traditio
 
 If the user pastes a path, accept it as-is and attempt to read it. Do not prompt for server credentials. This mode does not need them.
 
-Read the file at the given path. A .twx file is a ZIP archive. Extract and read the XML content within it to discover process artifacts. If the file cannot be read or is not a valid .twx archive, report the error clearly and ask the user to verify the path or re-export the file from their authoring environment (**Workflow Center** for traditional BAW, or **Business Automation Studio** for CP4BA).
+Read the file at the given path. A .twx file is a ZIP archive. Extract and read the XML content within it to discover process artifacts. If the file cannot be read or is not a valid .twx archive, report the error clearly and ask the user to verify the path or re-export the file from their authoring environment (**Workflow Center** for traditional Business Automation Workflow, or **Business Automation Studio** for Cloud Pak for Business Automation).
 
 ---
 
@@ -146,11 +146,11 @@ Collect all required inputs for the chosen acquisition mode before proceeding.
 
 If the user provides no process application source (server credentials or .twx file path), respond:
 
-> To run a compliance analysis I need access to the process application. Provide either the path to a .twx file (Path mode) or the BAW server URL, credentials, and process app acronym to export it (REST mode).
+> To run a compliance analysis I need access to the process application. Provide either the path to a .twx file (Path mode) or the Business Automation Workflow server URL, credentials, and process app acronym to export it (REST mode).
 
 If the user also provides no compliance document, respond:
 
-> I need at least one input to begin: a compliance document to extract rules from, or a BAW/CP4BA process application to evaluate. Share one or both.
+> I need at least one input to begin: a compliance document to extract rules from, or a Business Automation Workflow or Cloud Pak for Business Automation process application to evaluate. Share one or both.
 
 ---
 
@@ -169,7 +169,7 @@ For every extracted rule produce a **Compliance Rule Record**:
 | Severity | Critical / High / Medium / Low |
 | Required Evidence | What artifact or behavior would prove compliance |
 
-Be precise. Map document language to BAW/CP4BA implementation terms. For example: "approvals must be recorded" → "Human Task with approval outcome tracked in process variable or audit log".
+Be precise. Map document language to Business Automation Workflow or Cloud Pak for Business Automation implementation terms. For example: "approvals must be recorded" → "Human Task with approval outcome tracked in process variable or audit log".
 
 If a requirement is ambiguous, flag it for discovery questions rather than guessing.
 
@@ -212,7 +212,7 @@ Proceed only after the user explicitly confirms (says "proceed", "go ahead", "ye
 
 Review every rule in `Rules.md` for ambiguity before advancing to process application analysis. Flag a rule as ambiguous when:
 - The document language is unclear about scope ("all records": which records?)
-- The implementation path is uncertain (the rule could be satisfied by multiple BAW artifacts)
+- The implementation path is uncertain (the rule could be satisfied by multiple Business Automation Workflow artifacts)
 - The rule may not apply to this process app (for example, an offer-letter rule when no offer phase exists)
 - Applicability depends on organizational context not stated in the document
 
@@ -253,7 +253,7 @@ When you have a .twx file (from a REST mode export or Path mode), extract its co
 - Timer events and escalation paths
 - Error/fault boundary events
 - Event handlers (message, signal, error, terminate)
-- Case solutions (if CP4BA Case)
+- Case solutions (if Cloud Pak for Business Automation Case)
 - Tracking definitions and reporting groups
 
 Document which artifacts you found and which were absent. Absence is evidence of non-compliance for rules that require those artifacts.
@@ -261,7 +261,7 @@ Document which artifacts you found and which were absent. Absence is evidence of
 ### 3b: Build the process understanding model
 
 Synthesize a concise **Process Application Summary** covering:
-- Name, version, platform (BAW / CP4BA)
+- Name, version, platform (Business Automation Workflow / Cloud Pak for Business Automation)
 - Main business scenario
 - Key roles and teams
 - High-level flow (happy path in up to 5 steps)
@@ -363,9 +363,9 @@ Violation categories to check:
 
 ## Phase 7: Remediation suggestions
 
-For every violation provide a **Remediation Record**. Keep recommendations at the suggestion level: name the BAW/CP4BA capability and describe what should change. Do not author process designs, task breakdowns, or architecture decisions.
+For every violation provide a **Remediation Record**. Keep recommendations at the suggestion level: name the Business Automation Workflow or Cloud Pak for Business Automation capability and describe what should change. Do not author process designs, task breakdowns, or architecture decisions.
 
-Prefer documented BAW/CP4BA platform capabilities over custom code. Read `references/capability-map.md` before writing any Remediation Record.
+Prefer documented Business Automation Workflow or Cloud Pak for Business Automation platform capabilities over custom code. Read `references/capability-map.md` before writing any Remediation Record.
 
 ```
 ### Remediation [REM-NNN]: for Finding [VIO-NNN]
@@ -441,7 +441,7 @@ When the user says "only apply custom rules" or "disable default rules", respect
 
 ## Boundaries
 
-In scope: parsing compliance/policy documents, extracting rules, evaluating BAW/CP4BA process models against regulations (SOX, GDPR, ISO, internal standards), detecting violations, and generating remediation records.
+In scope: parsing compliance/policy documents, extracting rules, evaluating Business Automation Workflow or Cloud Pak for Business Automation process models against regulations (SOX, GDPR, ISO, internal standards), detecting violations, and generating remediation records.
 
 Out of scope (do not attempt):
 - **Scoring internal design-time control domains without external policy documents.** Use `audit-baw-readiness`.

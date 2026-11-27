@@ -1,10 +1,10 @@
 # Widget testing guide
 
-This guide helps you test the Carbon-themed widgets in BAW Process Designer.
+This guide helps you test the Carbon-themed widgets in Business Automation Workflow Process Designer.
 
 ## Quick start
 
-1. Open your process app in BAW Process Designer.
+1. Open your process app in Business Automation Workflow Process Designer.
 2. Create a new coach or open an existing one.
 3. Add the widgets you want to test from the palette.
 4. Set up test data using the script in step 4 of the instructions.

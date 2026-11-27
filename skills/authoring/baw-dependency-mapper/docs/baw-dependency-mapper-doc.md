@@ -1,22 +1,22 @@
-# BAW Dependency Mapper — Documentation
+# Business Automation Workflow Dependency Mapper — Documentation
 
-> This skill maps all usages and dependencies of a specified variable or Business Object (BO) across an entire IBM BAW process application by analyzing the TWX export.
+> This skill maps all usages and dependencies of a specified variable or Business Object (BO) across an entire IBM Business Automation Workflow process application by analyzing the TWX export.
 
 ## Purpose
 
-This skill takes a BAW process application TWX export and a target variable or Business Object (BO) name, then produces a complete dependency map showing every artifact that declares, reads, writes, or binds to that target. It detects circular BO references, over-coupling, redundant service calls, orphaned and write-only variables, missing output mappings, stale coach bindings, and read-before-write ordering problems, and generates an impact assessment for common change scenarios (add field, remove field, rename field, delete BO, change field type). Use it when you need to understand the ripple effect of a proposed BO change, audit a process app for data quality issues, or build a complete picture of where a specific BO or variable is consumed.
+This skill takes a Business Automation Workflow process application TWX export and a target variable or Business Object (BO) name, then produces a complete dependency map showing every artifact that declares, reads, writes, or binds to that target. It detects circular BO references, over-coupling, redundant service calls, orphaned and write-only variables, missing output mappings, stale coach bindings, and read-before-write ordering problems, and generates an impact assessment for common change scenarios (add field, remove field, rename field, delete BO, change field type). Use it when you need to understand the ripple effect of a proposed BO change, audit a process app for data quality issues, or build a complete picture of where a specific BO or variable is consumed.
 
 ## Setup and configuration
 
 - **Python 3.6+** — required to run `scripts/analyze_dependencies.py`. No external packages are needed; the script uses the standard library only.
-- **BAW server credentials or a local TWX file** — the skill can download the TWX automatically via the BAW export REST API (preferred), or work from a `.twx` file on disk if you provide the path.
+- **Business Automation Workflow server credentials or a local TWX file** — the skill can download the TWX automatically via the Business Automation Workflow export REST API (preferred), or work from a `.twx` file on disk if you provide the path.
 - No MCP server or API key is required.
 
 ## TWX acquisition
 
 When you provide a server URL, the skill:
 
-1. Probe for the active context root (`/ops`, `/bas/ops`, `/baw/ops`, `/bpm/ops`) to handle both standalone BAW and CP4BA deployments automatically.
+1. Probe for the active context root (`/ops`, `/bas/ops`, `/baw/ops`, `/bpm/ops`) to handle both standalone Business Automation Workflow and Cloud Pak for Business Automation deployments automatically.
 2. Authenticate via `POST .../ops/system/login` — the skill uses credentials only to obtain a session token and does not store them beyond the current conversation.
 3. List containers and versions if you do not know the app acronym or snapshot.
 4. Download the TWX via `GET .../ops/std/bpm/containers/{container}/versions/{version}/export?use_enhanced_filenames=true` and save it to a system temp directory.
@@ -25,17 +25,17 @@ If you already have a `.twx` file on disk, provide its path — the skill uses i
 
 ## Compatibility
 
-- Works with both standalone IBM Business Automation Workflow and IBM Cloud Pak for Business Automation (CP4BA) deployments. The TWX format is consistent across both.
+- Works with both standalone IBM Business Automation Workflow and IBM Cloud Pak for Business Automation deployments. The TWX format is consistent across both.
 - The skill analyzes only artifacts inside the current process app's `objects/` folder; cross-toolkit usages are excluded. If the target BO is defined in a toolkit dependency, run a separate analysis against that toolkit's TWX.
 - IBM does not publish a formal XML schema for TWX internals; the script uses heuristics validated against real exports. Confirm findings against the actual artifacts before acting on them.
-- For environments with self-signed certificates (typical in CP4BA on-prem), TLS verification is disabled automatically during download.
+- For environments with self-signed certificates (typical in Cloud Pak for Business Automation on-prem), TLS verification is disabled automatically during download.
 
 ## Prompt examples
 
 ### Map all usages of a BO — enumerate first, then analyze
 
 **Prompt:**
-> Map the BO dependencies for the OrderFulfillment process app on my BAW server at https://baw.example.com:9443. List all the BOs first so I can pick one.
+> Map the BO dependencies for the OrderFulfillment process app on my Business Automation Workflow server at https://baw.example.com:9443. List all the BOs first so I can pick one.
 
 **What to expect:** Bob downloads the TWX, enumerates all BO types found in the app, prints them, and waits for you to pick a target before running the full analysis.
 
@@ -44,7 +44,7 @@ If you already have a `.twx` file on disk, provide its path — the skill uses i
 ### Full dependency map for a named business object
 
 **Prompt:**
-> On my BAW server at https://baw.example.com:9443, map every place the `ClaimRequest` business object is declared, read, written, used as a service parameter, or bound to a coach UI control in the ClaimsProcessing app. Also flag any circular BO references.
+> On my Business Automation Workflow server at https://baw.example.com:9443, map every place the `ClaimRequest` business object is declared, read, written, used as a service parameter, or bound to a coach UI control in the ClaimsProcessing app. Also flag any circular BO references.
 
 **What to expect:** A full 10-section report including a Mermaid dependency diagram, declaration, read/write usage tables, service input/output bindings, coach bindings, all detected issues (with circular reference warnings if any), and an impact assessment for add/remove/rename/delete scenarios.
 
@@ -89,7 +89,7 @@ If you already have a `.twx` file on disk, provide its path — the skill uses i
 ### Work from a local TWX file
 
 **Prompt:**
-> I have a BAW process app exported to `C:/exports/ClaimsApp.twx`. Map every place the `ClaimRequest` business object is used — declarations, reads, writes, service parameters, and coach bindings.
+> I have a Business Automation Workflow process app exported to `C:/exports/ClaimsApp.twx`. Map every place the `ClaimRequest` business object is used — declarations, reads, writes, service parameters, and coach bindings.
 
 **What to expect:** Bob works directly from the file on disk — no server connection needed — and produces the same full dependency report.
 

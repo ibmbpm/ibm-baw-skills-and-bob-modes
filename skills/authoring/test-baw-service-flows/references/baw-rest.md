@@ -1,4 +1,4 @@
-# BAW REST API Reference — Service Flow Endpoints
+# Business Automation Workflow REST API Reference — Service Flow Endpoints
 
 This file covers the REST endpoints used by the `test-baw-service-flows` skill.
 Source specs: `apis/baw-ops.26.0.0.json` (basePath `/ops`), `apis/baw-process.26.0.0.json` (basePath `/bpm`), `apis/baw-wle-v1.26.0.0.json` (basePath `/rest/bpm/wle/v1`).
@@ -7,19 +7,19 @@ Source specs: `apis/baw-ops.26.0.0.json` (basePath `/ops`), `apis/baw-process.26
 
 ## Environment differences
 
-The API surface (`/ops`, `/bpm`, `/rest/bpm/wle/v1`) is identical across all BAW deployment types. What differs per environment is the **base URL** and **authentication method**.
+The API surface (`/ops`, `/bpm`, `/rest/bpm/wle/v1`) is identical across all Business Automation Workflow deployment types. What differs per environment is the **base URL** and **authentication method**.
 
 | Environment | Base URL pattern | Authentication |
 |---|---|---|
 | **On-premises (traditional WAS)** | `https://<host>:<port>` e.g. `https://baw.example.com:9443` | HTTP Basic → CSRF token via `POST /ops/system/login`. Session held in `LtpaToken2` + `JSESSIONID` cookies. |
-| **BAW on containers (standalone)** | `https://<host>:<port>` — same port structure as on-prem | HTTP Basic → CSRF token via `POST /ops/system/login`. Same cookie model. |
-| **CP4BA — Workflow Authoring (BAS)** | `https://<cpd-route>/bas`. No deployed snapshot required. Has an integrated **playback server** for in-development testing. ⚠️ Service invocation uses `{BAS_BASE_URL}/rest/bpm/wle/v1/service/{id}?action=start` — the `/bpm/dev/` prefix is **not** used for invocation calls (returns 404 on BAW 26.x). Discovery endpoints (`/exposed/service`, `/exposed/process`) also respond correctly without the prefix. `GET /ops/std/bpm/servers/workflow` returns `{"servers":[]}`. | Zen token (same as runtime below). No separate login for the playback server — use the BAS Zen token. |
-| **CP4BA — Workflow Runtime** | `https://<cpd-route>/baw-<instance>` e.g. `baw-dev`, `baw-aut`, `baw-prod`. The `/ops`, `/bpm`, and `/rest/bpm/wle/v1` paths are appended to this base. Requires an active snapshot to be deployed. | **Zen token** (IAM-based). Obtain via `GET https://<cpd-host>/v1/preauth/validateAuth` with Basic auth `username:password`. Capture `accessToken`. Use as `Authorization: Bearer <accessToken>` on all requests. The `/ops/system/login` CSRF call is still required — send `Authorization: Bearer <accessToken>` with body `{"refresh_groups": false}` to get `BPMCSRFToken`. |
-| **BAW on Cloud (SaaS)** | `https://<tenant>.baw.ibmcloud.com` | IAM API key or OAuth2 bearer token. Consult the tenant-specific credentials. CSRF token flow is the same once authenticated. |
+| **Business Automation Workflow on containers (standalone)** | `https://<host>:<port>` — same port structure as on-prem | HTTP Basic → CSRF token via `POST /ops/system/login`. Same cookie model. |
+| **Cloud Pak for Business Automation — Workflow Authoring (BAS)** | `https://<cpd-route>/bas`. No deployed snapshot required. Has an integrated **playback server** for in-development testing. ⚠️ Service invocation uses `{BAS_BASE_URL}/rest/bpm/wle/v1/service/{id}?action=start` — the `/bpm/dev/` prefix is **not** used for invocation calls (returns 404 on Business Automation Workflow 26.x). Discovery endpoints (`/exposed/service`, `/exposed/process`) also respond correctly without the prefix. `GET /ops/std/bpm/servers/workflow` returns `{"servers":[]}`. | Zen token (same as runtime below). No separate login for the playback server — use the BAS Zen token. |
+| **Cloud Pak for Business Automation — Workflow Runtime** | `https://<cpd-route>/baw-<instance>` e.g. `baw-dev`, `baw-aut`, `baw-prod`. The `/ops`, `/bpm`, and `/rest/bpm/wle/v1` paths are appended to this base. Requires an active snapshot to be deployed. | **Zen token** (IAM-based). Obtain via `GET https://<cpd-host>/v1/preauth/validateAuth` with Basic auth `username:password`. Capture `accessToken`. Use as `Authorization: Bearer <accessToken>` on all requests. The `/ops/system/login` CSRF call is still required — send `Authorization: Bearer <accessToken>` with body `{"refresh_groups": false}` to get `BPMCSRFToken`. |
+| **Business Automation Workflow on Cloud (SaaS)** | `https://<tenant>.baw.ibmcloud.com` | IAM API key or OAuth2 bearer token. Consult the tenant-specific credentials. CSRF token flow is the same once authenticated. |
 
-> **Detecting the environment type:** Call `GET {BAW_BASE_URL}/ops/std/bpm/servers/workflow`. If `servers` is an empty array, this is a Workflow Authoring (BAS) environment — service flows can be invoked directly at `{BAS_BASE_URL}/rest/bpm/wle/v1/service/{id}?action=start` (no snapshot deployment required; the `/bpm/dev/` prefix is NOT used for invocation on BAW 26.x). If `servers` contains one or more entries, this is a Workflow Runtime endpoint.
+> **Detecting the environment type:** Call `GET {BAW_BASE_URL}/ops/std/bpm/servers/workflow`. If `servers` is an empty array, this is a Workflow Authoring (BAS) environment — service flows can be invoked directly at `{BAS_BASE_URL}/rest/bpm/wle/v1/service/{id}?action=start` (no snapshot deployment required; the `/bpm/dev/` prefix is NOT used for invocation on Business Automation Workflow 26.x). If `servers` contains one or more entries, this is a Workflow Runtime endpoint.
 
-> **Detecting the server version:** Call `GET {BAW_BASE_URL}/ops/docs` → `info.version`. A version string like `8.6.2.21021` indicates BAW v21; `8.6.12.26030` indicates BAW 26.0.3. CP4BA environments expose the same version string regardless of whether the endpoint is authoring or runtime.
+> **Detecting the server version:** Call `GET {BAW_BASE_URL}/ops/docs` → `info.version`. A version string like `8.6.2.21021` indicates Business Automation Workflow v21; `8.6.12.26030` indicates Business Automation Workflow 26.0.3. Cloud Pak for Business Automation environments expose the same version string regardless of whether the endpoint is authoring or runtime.
 
 > **Detecting version from a TWX:** The `META-INF/package.xml` inside the TWX ZIP contains `buildVersion="8.6.12.26030"`. If this is newer than the server's `info.version`, the TWX cannot be imported — tell the user and stop.
 
@@ -27,7 +27,7 @@ The API surface (`/ops`, `/bpm`, `/rest/bpm/wle/v1`) is identical across all BAW
 
 ## Authentication
 
-> **Cross-platform HTTP — always use Python stdlib `urllib` for all HTTP calls.** Never use `curl` or PowerShell for REST calls — Python is available on all supported platforms (Windows, macOS, Linux) and avoids shell quoting and alias incompatibilities. No third-party packages are needed. For CP4BA environments with self-signed or private CA certificates, disable certificate verification:
+> **Cross-platform HTTP — always use Python stdlib `urllib` for all HTTP calls.** Never use `curl` or PowerShell for REST calls — Python is available on all supported platforms (Windows, macOS, Linux) and avoids shell quoting and alias incompatibilities. No third-party packages are needed. For Cloud Pak for Business Automation environments with self-signed or private CA certificates, disable certificate verification:
 > ```python
 > import ssl
 > ctx = ssl.create_default_context()
@@ -36,7 +36,7 @@ The API surface (`/ops`, `/bpm`, `/rest/bpm/wle/v1`) is identical across all BAW
 > # pass ctx= to every urllib.request.urlopen() call
 > ```
 
-### On-premises / BAW on containers
+### On-premises / Business Automation Workflow on containers
 
 ```
 POST {BAW_BASE_URL}/ops/system/login
@@ -52,16 +52,16 @@ Body: {"refresh_groups": false}
 
 **On 401/400:** Ask the user to re-enter credentials.
 
-**Do NOT use** `/rest/bpm/wle/v1/system/login` — that is the legacy WLE path, not valid in BAW 26.x.
+**Do NOT use** `/rest/bpm/wle/v1/system/login` — that is the legacy WLE path, not valid in Business Automation Workflow 26.x.
 
-### CP4BA (Zen/IAM token)
+### Cloud Pak for Business Automation (Zen/IAM token)
 
 ```
 GET https://<cp4ba-host>/v1/preauth/validateAuth
 Authorization: Basic <base64(username:password)>
 ```
 
-Capture `accessToken` from the JSON response. Then call login against the BAW instance endpoint to get the CSRF token:
+Capture `accessToken` from the JSON response. Then call login against the Business Automation Workflow instance endpoint to get the CSRF token:
 
 ```
 POST {BAW_BASE_URL}/ops/system/login
@@ -80,7 +80,7 @@ Store `csrf_token` → `{BAW_CSRF}`. Send `Authorization: Bearer <accessToken>` 
 
 **Invoke a Service Flow exposed as an Automation Service**
 
-Available on: on-prem, BAW on containers, CP4BA. Not available on older BAW versions that predate the Automation Services feature.
+Available on: on-prem, Business Automation Workflow on containers, Cloud Pak for Business Automation. Not available on older Business Automation Workflow versions that predate the Automation Services feature.
 
 ```
 POST {BAW_BASE_URL}/automationservices/rest/{appAcronym}/{servicePath}
@@ -98,7 +98,7 @@ Body: { ...input fields per the service's OpenAPI contract }
 - `401` — authentication failure; re-authenticate and retry once.
 - `403` — caller is not a member of the team authorised for this service.
 - `404` — service path incorrect or not published.
-- `500` — server-side error; check BAW server logs.
+- `500` — server-side error; check Business Automation Workflow server logs.
 
 ---
 
@@ -106,7 +106,7 @@ Body: { ...input fields per the service's OpenAPI contract }
 
 **Invoke a directly startable Service Flow via the WLE v1 API**
 
-Available on: on-prem, BAW on containers, CP4BA. Input variables are passed inside a **`params` form field** as a JSON-encoded string. The request must use `application/x-www-form-urlencoded` — **not** `application/json`.
+Available on: on-prem, Business Automation Workflow on containers, Cloud Pak for Business Automation. Input variables are passed inside a **`params` form field** as a JSON-encoded string. The request must use `application/x-www-form-urlencoded` — **not** `application/json`.
 
 ```
 POST {BAW_BASE_URL}/rest/bpm/wle/v1/service/{serviceId}?action=start
@@ -131,7 +131,7 @@ params={"name":"Widget A","quantity":5}
 **Responses:**
 - `200` — successful invocation. Output variables are inside `data.data` in the response JSON.
 - `400` — expired CSRF token **or** invalid input. Distinguish by checking the response body:
-  - `CWTBG0543E` ("The variable 'X' does not exist"): input error. **On BAW 26.x this also fires when an undeclared variable name is passed in `params` — BAW 26.x strictly rejects unknown fields; BAW 8.6/v21 silently ignores them.** If you are running a test case that sends extra/undeclared fields, treat this as a `FAIL` with the note "BAW 26.x rejects undeclared input variables."
+  - `CWTBG0543E` ("The variable 'X' does not exist"): input error. **On Business Automation Workflow 26.x this also fires when an undeclared variable name is passed in `params` — Business Automation Workflow 26.x strictly rejects unknown fields; Business Automation Workflow 8.6/v21 silently ignores them.** If you are running a test case that sends extra/undeclared fields, treat this as a `FAIL` with the note "Business Automation Workflow 26.x rejects undeclared input variables."
   - `CWTBG0022E` ("callerTaskId or callerModelId was required"): the service is `process_embedded`, not directly startable. Re-classify and use the process fallback.
   - No `errorNumber` present: likely an expired CSRF token — re-authenticate and retry once.
 - `401`/`403` — authentication or authorisation failure.
@@ -246,7 +246,7 @@ Returns list of snapshots with `active`, `status`, and `version` (snapshot acron
 
 ### `GET /bpm/docs`
 
-**Discover available BPM REST API paths on this server version**
+**Discover available Business Process Manager REST API paths on this server version**
 
 ```
 GET {BAW_BASE_URL}/bpm/docs
@@ -254,7 +254,7 @@ BPMCSRFToken: {BAW_CSRF}
 Cookie: {BAW_SESSION}
 ```
 
-Returns a Swagger 2.0 JSON. Use `info.version` to confirm the BPM API version and check whether `/automationservices` and `/exposed-processes` paths are present.
+Returns a Swagger 2.0 JSON. Use `info.version` to confirm the Business Process Manager API version and check whether `/automationservices` and `/exposed-processes` paths are present.
 
 ### `GET /bpm/exposed-services?type=rest`
 
@@ -285,7 +285,7 @@ Cookie: {BAW_SESSION}
 
 - The session from `POST /ops/system/login` is valid for both `/ops/…` and `/bpm/…` calls.
 - **On-prem/containers:** Send `BPMCSRFToken: {BAW_CSRF}` header and the `LtpaToken2`/`JSESSIONID` cookies on every request after login.
-- **CP4BA:** Send `Authorization: Bearer <zen_token>` and `BPMCSRFToken: {BAW_CSRF}` on every request. No cookies needed.
+- **Cloud Pak for Business Automation:** Send `Authorization: Bearer <zen_token>` and `BPMCSRFToken: {BAW_CSRF}` on every request. No cookies needed.
 - **401 on any endpoint:** Re-authenticate once and retry. If retry fails, stop and ask the user.
 - **400 on `/rest/bpm/wle/v1/service/...`:** Check the response body. If `errorNumber` is absent or unrelated to the input, the CSRF token has expired — re-authenticate, get a new `{BAW_CSRF}`, and retry the call once.
 - **403 on mutating calls:** Verify `BPMCSRFToken` header is present. Re-read the token from the login response and retry once.

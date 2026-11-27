@@ -1,30 +1,30 @@
 ---
 name: baw-endpoint-validation
-description: "Use when a BAW administrator wants to validate a process application before installing it on a new server — asking what new server to target, collecting source and target endpoints, scanning the TWX export for hardcoded references to the old server, and generating a report of findings. Supports both traditional BAW (reads BPMConfig .properties files or runs BPMConfig -export) and CP4BA containerized deployments on OpenShift (reads the ICP4ACluster custom resource via oc get). Trigger phrases: 'install process app on new server', 'check for hardcoded endpoints', 'validate TWX for new environment', 'endpoint validation', 'what needs to change to move to new server', 'BPMConfig export', 'scan TWX for old server references', 'run BPMConfig', 'validate TWX on CP4BA', 'CP4BA endpoint validation', 'oc get ICP4ACluster'. Do not use for runtime process inspection (use inspect-baw-processes) or BPMN authoring (use generate-baw-bpmn)."
+description: "Use when a Business Automation Workflow administrator wants to validate a process application before installing it on a new server: collect source and target endpoints, scan the TWX export for hardcoded references to the old server, and generate a findings report. Supports traditional Business Automation Workflow (reads BPMConfig .properties files or runs BPMConfig -export) and Cloud Pak for Business Automation on OpenShift (reads the ICP4ACluster custom resource via oc get). Trigger phrases: 'install process app on new server', 'check for hardcoded endpoints', 'validate TWX for new environment', 'endpoint validation', 'what needs to change to move to new server', 'BPMConfig export', 'scan TWX for old server references', 'oc get ICP4ACluster'. Do not use for runtime process inspection (use inspect-baw-processes) or BPMN authoring (use generate-baw-bpmn)."
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: BAW Endpoint Validation
-  short_description: Scan a BAW process app TWX export for hardcoded server endpoints and generate a migration report before moving to a new environment.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Endpoint Validation
+  short_description: Scan a Business Automation Workflow process app TWX export for hardcoded server endpoints and generate a migration report before moving to a new environment.
+  author: IBM Business Automation Workflow Team
 ---
-# BAW Endpoint Validation
+# Business Automation Workflow Endpoint Validation
 
-Identify what needs to change when a BAW process application is installed on a new server. Supports both deployment types:
+Identify what needs to change when a Business Automation Workflow process application is installed on a new server. Supports both deployment types:
 
 | Deployment type | How source endpoints are collected |
 |---|---|
-| **Traditional BAW** (on-premises / VM with WebSphere) | `BPMConfig -export` or a user-provided `.properties` file |
-| **CP4BA containerized** (OpenShift / Kubernetes) | `oc get ICP4ACluster` YAML or a user-provided CR YAML snippet |
+| **Traditional Business Automation Workflow** (on-premises / VM with WebSphere) | `BPMConfig -export` or a user-provided `.properties` file |
+| **Cloud Pak for Business Automation containerized** (OpenShift / Kubernetes) | `oc get ICP4ACluster` YAML or a user-provided CR YAML snippet |
 
 Steps for both paths:
-1. Detect deployment type (traditional BAW or CP4BA containerized).
-2. Collect source environment endpoints (Option A/B for traditional, Option C for CP4BA).
+1. Detect deployment type (traditional Business Automation Workflow or Cloud Pak for Business Automation containerized).
+2. Collect source environment endpoints (Option A/B for traditional, Option C for Cloud Pak for Business Automation).
 3. Collect target environment endpoints (same options).
 4. Scan the TWX export for hardcoded references pointing to the old server.
 5. Generate a report of findings with a summary of the intended endpoint changes.
@@ -35,7 +35,7 @@ The TWX scan is driven by `scripts/scan_twx_endpoints.py`.
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 
@@ -53,49 +53,49 @@ The actual offline promotion step uses the `BPMInstallOfflinePackage` wsadmin co
 
 ## Deployment type detection
 
-**Perform this check before any other step.** Determine whether the user is on a traditional BAW deployment or a CP4BA containerized deployment.
+**Perform this check before any other step.** Determine whether the user is on a traditional Business Automation Workflow deployment or a Cloud Pak for Business Automation containerized deployment.
 
-### Signals that indicate CP4BA containerized
+### Signals that indicate Cloud Pak for Business Automation containerized
 
-- User mentions **CP4BA**, **Cloud Pak for Business Automation**, **OpenShift**, **OCP**, **Kubernetes**, **k8s**, or **pods**
+- User mentions **Cloud Pak for Business Automation**, **Cloud Pak for Business Automation**, **OpenShift**, **OCP**, **Kubernetes**, **k8s**, or **pods**
 - User mentions `icp4adeploy` or a `ICP4ACluster` custom resource
 - User mentions `cpd-cli`, `oc` (OpenShift CLI), or `kubectl`
 - User provides a hostname ending in a cluster domain (e.g. `.svc.cluster.local`, `.apps.<cluster>`)
 - User mentions that `BPMConfig` is not found or unavailable
-- A provided BAW install root path does not exist when tested via `execute_command` (the directory is absent — this is normal inside a CP4BA container where no traditional BAW filesystem is present)
+- A provided Business Automation Workflow install root path does not exist when tested via `execute_command` (the directory is absent — this is normal inside a Cloud Pak for Business Automation container where no traditional Business Automation Workflow filesystem is present)
 - `oc version --client` or `kubectl version --client` succeeds when run via `execute_command` (indicates Bob is running inside or alongside an OpenShift/Kubernetes environment)
 
-### Signals that indicate traditional BAW
+### Signals that indicate traditional Business Automation Workflow
 
 - User provides a `.properties` file exported by `BPMConfig`
 - User mentions WebSphere, Deployment Manager (dmgr), Network Deployment, or a profiles directory
 - User describes an on-premises or VM-based installation
-- User provides a BAW install root path **AND** confirms they are working directly on that server (e.g. SSH'd into the BAW host, not a cluster node)
+- User provides a Business Automation Workflow install root path **AND** confirms they are working directly on that server (e.g. SSH'd into the Business Automation Workflow host, not a cluster node)
 
-> **Note:** Install root path alone is **not** sufficient to conclude traditional BAW. An admin managing a migration from traditional BAW to CP4BA will often state the old install root as the source, while their current machine has `oc` and no BAW filesystem. Always confirm the working environment before attempting `BPMConfig`.
+> **Note:** Install root path alone is **not** sufficient to conclude traditional Business Automation Workflow. An admin managing a migration from traditional Business Automation Workflow to Cloud Pak for Business Automation will often state the old install root as the source, while their current machine has `oc` and no Business Automation Workflow filesystem. Always confirm the working environment before attempting `BPMConfig`.
 
 ### When the deployment type is ambiguous
 
 Ask using `ask_followup_question`:
 
-> "Is your BAW environment a traditional on-premises installation (running on VMs with WebSphere), or a CP4BA containerized deployment on OpenShift/Kubernetes?"
+> "Is your Business Automation Workflow environment a traditional on-premises installation (running on VMs with WebSphere), or a Cloud Pak for Business Automation containerized deployment on OpenShift/Kubernetes?"
 
 With options:
-- "Traditional BAW on-premises / VM installation"
-- "CP4BA containerized deployment on OpenShift or Kubernetes"
+- "Traditional Business Automation Workflow on-premises / VM installation"
+- "Cloud Pak for Business Automation containerized deployment on OpenShift or Kubernetes"
 
-### If CP4BA containerized is confirmed
+### If Cloud Pak for Business Automation containerized is confirmed
 
-Do not invoke any BPMConfig steps. **Do not attempt to access any BAW install root path** — on CP4BA there is no BAW filesystem accessible outside of pods, and `oc exec` into pods is not required. All endpoint data comes from the `ICP4ACluster` custom resource and OpenShift routes. Proceed with **Option C** (see Step 1, Option C below).
+Do not invoke any BPMConfig steps. **Do not attempt to access any Business Automation Workflow install root path** — on Cloud Pak for Business Automation there is no Business Automation Workflow filesystem accessible outside of pods, and `oc exec` into pods is not required. All endpoint data comes from the `ICP4ACluster` custom resource and OpenShift routes. Proceed with **Option C** (see Step 1, Option C below).
 
-### Mixed scenario — migrating from traditional BAW to CP4BA
+### Mixed scenario — migrating from traditional Business Automation Workflow to Cloud Pak for Business Automation
 
-When the user mentions **both** an old on-premises BAW install root (the source) **and** a CP4BA/OpenShift target, the deployment types are different per role:
+When the user mentions **both** an old on-premises Business Automation Workflow install root (the source) **and** a Cloud Pak for Business Automation or OpenShift target, the deployment types are different per role:
 
 | Role | Deployment type | How to collect endpoints |
 |---|---|---|
-| **Source** | Traditional BAW | `BPMConfig -export` on the old server, or user provides `.properties` file |
-| **Target** | CP4BA containerized | `oc get ICP4ACluster` on the target cluster |
+| **Source** | Traditional Business Automation Workflow | `BPMConfig -export` on the old server, or user provides `.properties` file |
+| **Target** | Cloud Pak for Business Automation containerized | `oc get ICP4ACluster` on the target cluster |
 
 In this case: use Option B for source, Option C for target. Confirm this split with the user before proceeding.
 
@@ -103,7 +103,7 @@ In this case: use Option B for source, Option C for target. Confirm this split w
 
 Collect all three items before proceeding. Do not assume which environment (source or target) a block belongs to — always read the user's explicit labelling in their message.
 
-| # | Input | Traditional BAW | CP4BA containerized |
+| # | Input | Traditional Business Automation Workflow | Cloud Pak for Business Automation containerized |
 |---|---|---|---|
 | 1 | **Source endpoints** | User-provided `.properties` file path, or run `BPMConfig -export` | User-provided CR YAML snippet, or run `oc get ICP4ACluster` |
 | 2 | **Target endpoints** | User-provided `.properties` file path, or stated hostname/URL | User-provided CR YAML snippet, or stated hostname/URL |
@@ -119,14 +119,14 @@ Ask using `ask_followup_question` for any item not yet clearly provided with an 
 
 **`read_file` is for explicit file paths only — never for filesystem exploration.** Only use `read_file` on paths the user has explicitly provided (e.g. a `.properties` file path, a CR YAML file, a `.twx` path) or that this skill has written itself. Do not use `read_file` to probe whether a directory exists, search for binaries, or list directory contents — use `execute_command` for all discovery.
 
-**If `execute_command` reports that a BAW install root does not exist** (e.g. "no such file or directory") — do not simply ask for a different path. First run the following probe to determine what environment Bob is actually on:
+**If `execute_command` reports that a Business Automation Workflow install root does not exist** (e.g. "no such file or directory") — do not simply ask for a different path. First run the following probe to determine what environment Bob is actually on:
 
 ```bash
 oc version --client 2>/dev/null || kubectl version --client 2>/dev/null || echo "no-k8s-cli"
 ```
 
-- If `oc` or `kubectl` responds → this machine is part of a CP4BA/OpenShift environment. `BPMConfig` does not exist here. Discard the install root. Tell the user: *"The path `<install_root>` does not exist on this machine — this appears to be a CP4BA/OpenShift environment where `BPMConfig` is not available. I'll collect configuration from the `ICP4ACluster` custom resource instead."* Proceed to **Option C**.
-- If the probe returns `no-k8s-cli` → this machine has neither BAW nor Kubernetes tooling. Tell the user: *"The path `<install_root>` is not accessible from this machine. Please either run the BPMConfig discovery commands on the BAW server and paste the output here, or provide an already-exported `.properties` file."*
+- If `oc` or `kubectl` responds → this machine is part of a Cloud Pak for Business Automation or OpenShift environment. `BPMConfig` does not exist here. Discard the install root. Tell the user: *"The path `<install_root>` does not exist on this machine — this appears to be a Cloud Pak for Business Automation or OpenShift environment where `BPMConfig` is not available. I'll collect configuration from the `ICP4ACluster` custom resource instead."* Proceed to **Option C**.
+- If the probe returns `no-k8s-cli` → this machine has neither Business Automation Workflow nor Kubernetes tooling. Tell the user: *"The path `<install_root>` is not accessible from this machine. Please either run the BPMConfig discovery commands on the Business Automation Workflow server and paste the output here, or provide an already-exported `.properties` file."*
 
 ## Steps
 
@@ -141,39 +141,39 @@ oc version --client 2>/dev/null || kubectl version --client 2>/dev/null || echo 
 
 Once ownership is established, determine how to obtain each:
 
-**Traditional BAW — source environment** — choose the first that applies:
+**Traditional Business Automation Workflow — source environment** — choose the first that applies:
 - User provided a `.properties` **file path** → read it with `read_file`
 - User provided an **install root path** (e.g. `C:\baw`) → run `BPMConfig -export` (Option B)
 - User pasted properties **inline and labelled it as source** → parse the pasted content
 - None of the above → ask: "Should I run `BPMConfig -export` against your source server, or do you have an exported `.properties` file?"
 
-**Traditional BAW — target environment** — choose the first that applies:
+**Traditional Business Automation Workflow — target environment** — choose the first that applies:
 - User provided a `.properties` **file path** → read it with `read_file`
 - User pasted properties **inline and labelled it as target** → parse the pasted content
 - User provided only a **hostname/URL** → ask: "Do you have a BPMConfig `.properties` file for the target server, or should I use just the hostname you provided?"
 - None of the above → ask for it
 
-**CP4BA containerized — source environment** — choose the first that applies:
+**Cloud Pak for Business Automation containerized — source environment** — choose the first that applies:
 - User pasted a CR YAML snippet **labelled as source** → parse it (Option C)
 - User provided a namespace and CR name → run `oc get ICP4ACluster` (Option C)
 - None of the above → ask: "Should I run `oc get ICP4ACluster` against your source cluster, or do you have the CR YAML?"
 
-**CP4BA containerized — target environment** — choose the first that applies:
+**Cloud Pak for Business Automation containerized — target environment** — choose the first that applies:
 - User pasted a CR YAML snippet **labelled as target** → parse it (Option C)
 - User provided a target namespace/CR name → run `oc get ICP4ACluster` on the target cluster (Option C)
 - User provided only a **hostname/URL** → use it directly as the target; no CR needed
 - None of the above → ask for the target hostname or CR YAML
 
-#### Option A — User provides existing `.properties` file (traditional BAW)
+#### Option A — User provides existing `.properties` file (traditional Business Automation Workflow)
 Read it directly with `read_file`. No further questions needed for the source.
 
 #### Option B — Run `BPMConfig -export` directly
 
-**Ask for the BAW install root if it is not already in the conversation:**
+**Ask for the Business Automation Workflow install root if it is not already in the conversation:**
 
-> "What is the BAW install root directory on the source server? (e.g. `/opt/IBM/BAW` on Linux or `C:\IBM\BAW` on Windows)"
+> "What is the Business Automation Workflow install root directory on the source server? (e.g. `/opt/IBM/BAW` on Linux or `C:\IBM\BAW` on Windows)"
 
-Once provided, discover everything else automatically. **Do not assume a fixed directory layout** — BAW installations vary; search the tree before asking anything.
+Once provided, discover everything else automatically. **Do not assume a fixed directory layout** — Business Automation Workflow installations vary; search the tree before asking anything.
 
 **Step B1 — Locate BPMConfig**
 
@@ -195,16 +195,16 @@ If multiple matches are found, prefer the one whose path contains `\bin\` or `/b
 **If BPMConfig is not found anywhere in the tree** — do not silently fail. Display:
 
 > ⚠️ **BPMConfig not found under `<install_root>`.**
-> `BPMConfig` ships only with traditional BAW (WebSphere-based). It is not present on CP4BA containerized deployments.
+> `BPMConfig` ships only with traditional Business Automation Workflow (WebSphere-based). It is not present on Cloud Pak for Business Automation containerized deployments.
 >
-> - If this is a **traditional BAW** installation, please confirm the correct install root — `BPMConfig.bat` / `BPMConfig.sh` should be under `<install_root>/bin/`.
-> - If this is a **CP4BA containerized deployment** on OpenShift/Kubernetes, `BPMConfig` is unavailable by design. I'll collect configuration from the `ICP4ACluster` custom resource instead.
+> - If this is a **traditional Business Automation Workflow** installation, please confirm the correct install root — `BPMConfig.bat` / `BPMConfig.sh` should be under `<install_root>/bin/`.
+> - If this is a **Cloud Pak for Business Automation containerized deployment** on OpenShift/Kubernetes, `BPMConfig` is unavailable by design. I'll collect configuration from the `ICP4ACluster` custom resource instead.
 
 Ask using `ask_followup_question`:
-- "This is traditional BAW — provide the correct install root"
-- "This is a CP4BA containerized deployment — proceed with ICP4ACluster CR"
+- "This is traditional Business Automation Workflow — provide the correct install root"
+- "This is a Cloud Pak for Business Automation containerized deployment — proceed with ICP4ACluster CR"
 
-If the user confirms CP4BA, stop Option B entirely and proceed to **Option C**.
+If the user confirms Cloud Pak for Business Automation, stop Option B entirely and proceed to **Option C**.
 
 **Step B2 — Locate the profiles directory**
 
@@ -267,7 +267,7 @@ The `-de` option can be omitted when only one DE exists in the cell. The command
 
 After the export completes, read the output file immediately.
 
-#### Option C — Read the `ICP4ACluster` custom resource (CP4BA containerized)
+#### Option C — Read the `ICP4ACluster` custom resource (Cloud Pak for Business Automation containerized)
 
 **Step C0 — Check whether `oc` is available**
 
@@ -303,16 +303,14 @@ oc version --client
 
 > **Note:** `kubectl` can substitute for `oc` for read-only CR access when the user is logged in via `kubeconfig`. If `oc` is absent but `kubectl` is present, run `kubectl get ICP4ACluster icp4adeploy -n <namespace> -o yaml` instead.
 
-> **Security note:** Store `{BAW_CSRF}` and `{BAW_SESSION}` in memory for this conversation only. Do not write them to any file. Ensure all calls use HTTPS.
-
 Parse the YAML output — the key fields to extract are:
 
-**Workflow hostname (BAW external URL)**
-- `spec.baw_configuration[*].hostname` — external hostname for each BAW instance
+**Workflow hostname (Business Automation Workflow external URL)**
+- `spec.baw_configuration[*].hostname` — external hostname for each Business Automation Workflow instance
 
 **Deployment hostname suffix (applies to all routes if `hostname` is not set per-component)**
 - `spec.shared_configuration.sc_deployment_hostname_suffix` — wildcard suffix (e.g. `apps.mycluster.example.com`)
-  - If set, the BAW route hostname is `<baw-instance-name>.<sc_deployment_hostname_suffix>`
+  - If set, the Business Automation Workflow route hostname is `<baw-instance-name>.<sc_deployment_hostname_suffix>`
 
 **Databases**
 - `spec.datasource_configuration.dc_baw_datasource[*].dc_database_type` — database type
@@ -322,7 +320,7 @@ Parse the YAML output — the key fields to extract are:
 **Namespace / cluster**
 - `metadata.namespace` — the namespace this CR lives in (used to identify the cluster)
 
-If the `hostname` field is absent, construct the BAW URL as `https://<cr-name>-baw-server.<sc_deployment_hostname_suffix>` or ask the user for the actual route:
+If the `hostname` field is absent, construct the Business Automation Workflow URL as `https://<cr-name>-baw-server.<sc_deployment_hostname_suffix>` or ask the user for the actual route:
 
 ```bash
 oc get route -n <namespace> | grep baw
@@ -332,7 +330,7 @@ Build a **Source Endpoints Map** from whichever fields are present. Include ever
 
 ### Step 2 — Parse source configuration
 
-**Traditional BAW path** — use `read_file` to read the source `.properties` file. Extract:
+**Traditional Business Automation Workflow path** — use `read_file` to read the source `.properties` file. Extract:
 
 **Server / topology**
 - `bpm.de.node.#.hostname` — managed node hostname(s)
@@ -345,25 +343,25 @@ Build a **Source Endpoints Map** from whichever fields are present. Include ever
 - `bpm.de.db.#.name` — logical DB label (e.g. `ProcessServerDb`)
 
 **Install paths**
-- `bpm.de.node.#.installPath` — BAW installation path on each node
+- `bpm.de.node.#.installPath` — Business Automation Workflow installation path on each node
 - `bpm.de.caseManager.networkSharedDirectory` — Case Manager shared directory
 
-**CP4BA containerized path** — parse the CR YAML obtained in Option C. Extract the fields listed in Option C above.
+**Cloud Pak for Business Automation containerized path** — parse the CR YAML obtained in Option C. Extract the fields listed in Option C above.
 
-Build a **Source Endpoints Map**: a deduplicated list of every distinct hostname, IP address, and (for traditional BAW only) file path found.
+Build a **Source Endpoints Map**: a deduplicated list of every distinct hostname, IP address, and (for traditional Business Automation Workflow only) file path found.
 
 ### Step 3 — Capture target environment
 
-**Traditional BAW:**
+**Traditional Business Automation Workflow:**
 1. **Explicit `.properties` path already provided** — read it with `read_file` and extract the same fields as Step 2.
 2. **No target `.properties` provided** — ask using `ask_followup_question`:
    > "Do you have a BPMConfig `.properties` file exported from the target server? If so, please provide the path. Otherwise I'll use the hostname/URL you've already stated."
 3. **User confirms no file** — fall back to verbal values already in the conversation (hostname, port, protocol). Extract the hostname and port from any URL provided; infer HTTPS if port is 9443.
 
-**CP4BA containerized:**
+**Cloud Pak for Business Automation containerized:**
 1. **User provided a target CR YAML or namespace** — run `oc get ICP4ACluster` on the target cluster (Option C) and extract the same fields.
-2. **User provided only a target hostname/URL** — use it directly. Note the BAW URL pattern on CP4BA containers is `https://<baw-route-hostname>/WorkflowCenter` or `/ProcessPortal`.
-3. **No target info provided** — ask: "What is the hostname or namespace of your target CP4BA cluster?"
+2. **User provided only a target hostname/URL** — use it directly. Note the Business Automation Workflow URL pattern on Cloud Pak for Business Automation containers is `https://<baw-route-hostname>/WorkflowCenter` or `/ProcessPortal`.
+3. **No target info provided** — ask: "What is the hostname or namespace of your target Cloud Pak for Business Automation cluster?"
 
 Build the **Target Endpoints Map** from whichever source is used.
 
@@ -380,29 +378,23 @@ If the user provided an acronym and snapshot, skip to Step 4b. Otherwise:
 
 1. **List containers:**
    ```
-   GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers
+   GET /ops/std/bpm/containers
    ```
    Match `container_name` against the app name the user gave. Record the `container` field as `{CONTAINER}`.
 
 2. **List versions:**
    ```
-   GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers/{CONTAINER}/versions
+   GET /ops/std/bpm/containers/{CONTAINER}/versions
    ```
    Pick the most recent non-archived version. Record its `version` field as `{VERSION}`. If there are multiple snapshots, show the user a brief table and ask which to export.
 
 #### Step 4b — Export the TWX
 
 ```
-GET {BAW_BASE_URL}{CTX}/ops/std/bpm/containers/{CONTAINER}/versions/{VERSION}/export?use_enhanced_filenames=true
+GET /ops/std/bpm/containers/{CONTAINER}/versions/{VERSION}/export?use_enhanced_filenames=true
 ```
 
-Include headers:
-```
-Authorization: Basic <base64(user:pass)>
-BPMCSRFToken: {BAW_CSRF}
-Cookie: {BAW_SESSION}
-Accept: application/octet-stream, */*
-```
+Send the extra header `Accept: application/octet-stream, */*` and save the response as a file (binary download). Authentication is handled as described in `references/CREDENTIAL_HANDLING.md`.
 
 The `Accept: application/octet-stream, */*` header is **required** — omitting it causes a `406 Not Acceptable` error.
 
@@ -534,7 +526,7 @@ The output is a JSON object mapping each TWX internal path to `{"tag": "<xml-ele
 | `externalActivity` | REST operation (child of External Service) |
 | `environmentVariableSet` | Environment Variables |
 | `teamworks` wrapping `process` with no processType | Service |
-| any other | BAW Artifact |
+| any other | Business Automation Workflow Artifact |
 
 To distinguish Service Flow from Heritage Human Service, check for `<processType>12</processType>` in the XML content (processType 12 = Service Flow, 11 = Heritage Human Service). If processType is absent or ambiguous, label it "Service".
 
@@ -625,32 +617,32 @@ After writing the report, give the user a plain-language summary inline covering
 - What the endpoint changes are (old → new, per property)
 - Whether the process app is ready to install on the new server
 
-For each Critical finding, tell the user exactly where to fix it in BAW 26.0.x:
+For each Critical finding, tell the user exactly where to fix it in Business Automation Workflow 26.0.x:
 
-| Finding type | Where to fix (BAW 26.0.x) |
+| Finding type | Where to fix (Business Automation Workflow 26.0.x) |
 |---|---|
-| REST server URL hardcoded in `<urlTemplate>` or `urlTemplate` attribute | **Traditional BAW:** In **Workflow Designer**, open the process app → **Process App Settings** → **Servers** tab → find the REST server entry → update **Host name** and **Port**. **CP4BA (Studio):** Business Automation Studio → open process app → **Process App Settings** → **Servers** tab → update the entry. |
+| REST server URL hardcoded in `<urlTemplate>` or `urlTemplate` attribute | **Traditional Business Automation Workflow:** In **Workflow Designer**, open the process app → **Process App Settings** → **Servers** tab → find the REST server entry → update **Host name** and **Port**. **Cloud Pak for Business Automation (Studio):** Business Automation Studio → open process app → **Process App Settings** → **Servers** tab → update the entry. |
 | REST server host/port needs updating post-deployment (without re-importing TWX) | In the **Process Admin Console** → **Installed Apps** → click the overflow menu of the snapshot → **App Details** → **Servers** tab → update **Hostname**, **Port**, and **Secure Server** on each REST server binding. (ref: https://www.ibm.com/docs/en/baw/26.0.x?topic=properties-changing-server-settings-in-process-admin-console) |
-| Hardcoded URL in a service flow script (`<script>` tag) | **Traditional BAW:** In **Workflow Designer**, navigate to the service flow → **Script** tab of the script task → update the hardcoded URL. **CP4BA (Studio):** Business Automation Studio → open process app → open the service flow → script task → **Script** tab. Consider replacing with a server variable bound via Process App Settings instead. |
-| Hardcoded URL in a client-side human service (coach view script) | **Traditional BAW:** In **Workflow Designer**, open the Coach or client-side human service → find the view with the inline script → **Script** tab. **CP4BA (Studio):** Business Automation Studio → open process app → open the coach view → **Script** tab. |
-| Hostname in a variable default value (`<defaultValue>`) | **Traditional BAW:** In **Workflow Designer**, open the service or process → **Variables** tab → find the variable → update the default value. **CP4BA (Studio):** Business Automation Studio → open process app → open the artifact → **Variables** tab. |
-| Hardcoded portal link in notification / task activity documentation | **Traditional BAW:** In **Workflow Designer**, open the process → click the notification or task activity → edit the **Documentation** or **Notification** field. **CP4BA (Studio):** Business Automation Studio → open process app → open the process → click the activity → edit **Documentation** / **Notification** field. |
+| Hardcoded URL in a service flow script (`<script>` tag) | **Traditional Business Automation Workflow:** In **Workflow Designer**, navigate to the service flow → **Script** tab of the script task → update the hardcoded URL. **Cloud Pak for Business Automation (Studio):** Business Automation Studio → open process app → open the service flow → script task → **Script** tab. Consider replacing with a server variable bound via Process App Settings instead. |
+| Hardcoded URL in a client-side human service (coach view script) | **Traditional Business Automation Workflow:** In **Workflow Designer**, open the Coach or client-side human service → find the view with the inline script → **Script** tab. **Cloud Pak for Business Automation (Studio):** Business Automation Studio → open process app → open the coach view → **Script** tab. |
+| Hostname in a variable default value (`<defaultValue>`) | **Traditional Business Automation Workflow:** In **Workflow Designer**, open the service or process → **Variables** tab → find the variable → update the default value. **Cloud Pak for Business Automation (Studio):** Business Automation Studio → open process app → open the artifact → **Variables** tab. |
+| Hardcoded portal link in notification / task activity documentation | **Traditional Business Automation Workflow:** In **Workflow Designer**, open the process → click the notification or task activity → edit the **Documentation** or **Notification** field. **Cloud Pak for Business Automation (Studio):** Business Automation Studio → open process app → open the process → click the activity → edit **Documentation** / **Notification** field. |
 | JDBC URL in a service SQL call | In the **WebSphere Integrated Solutions Console (ISC)** on the target server → **Resources → JDBC → Data Sources** → update the data source URL. This is a server-side change, not made in Designer. |
-| REST server URL hardcoded in TWX (CP4BA target) | REST server hostname/port can be updated post-deployment in the **Process Admin Console** → **Installed Apps** → overflow menu → **App Details** → **Servers** tab. On CP4BA containers the Process Admin Console is available at `https://<baw-route-hostname>/ProcessAdmin`. |
-| Environment endpoint needs updating at cluster level (CP4BA) | Edit `spec.baw_configuration[*].hostname` or the external service configuration in the `ICP4ACluster` CR and re-apply with `oc apply -f`. Server-level endpoint changes (e.g. database host) must be made in the CR, not in Designer. Consult your CP4BA platform administrator. |
+| REST server URL hardcoded in TWX (Cloud Pak for Business Automation target) | REST server hostname/port can be updated post-deployment in the **Process Admin Console** → **Installed Apps** → overflow menu → **App Details** → **Servers** tab. On Cloud Pak for Business Automation containers the Process Admin Console is available at `https://<baw-route-hostname>/ProcessAdmin`. |
+| Environment endpoint needs updating at cluster level (Cloud Pak for Business Automation) | Edit `spec.baw_configuration[*].hostname` or the external service configuration in the `ICP4ACluster` CR and re-apply with `oc apply -f`. Server-level endpoint changes (e.g. database host) must be made in the CR, not in Designer. Consult your Cloud Pak for Business Automation platform administrator. |
 
 Do not offer to generate XML patches, apply configuration, or edit files inside the TWX — that is out of scope.
 
 ## Disambiguation rules
 
-**No live BAW API calls**
-REST calls are only used to: (1) authenticate via `POST {CTX}/ops/system/login`, and (2) download the TWX via `GET {CTX}/ops/std/bpm/containers/{container}/versions/{version}/export`. Do not make any other REST calls to the BAW runtime. All environment analysis is file-based.
+**No live Business Automation Workflow API calls**
+REST calls are only used to: (1) list containers and versions, and (2) download the TWX via `GET /ops/std/bpm/containers/{container}/versions/{version}/export` (authentication follows `references/CREDENTIAL_HANDLING.md`). Do not make any other REST calls to the Business Automation Workflow runtime. All environment analysis is file-based.
 
 **No TWX path provided and no server access**
-If the user cannot connect to the BAW server and has no `.twx` file on disk, explain how to export based on their deployment:
+If the user cannot connect to the Business Automation Workflow server and has no `.twx` file on disk, explain how to export based on their deployment:
 
-- **Traditional BAW (Workflow Center):** Open Workflow Center → navigate to the process app → find the snapshot → click **Export** → select **.twx** → save the file. The `.twx` option is for Workflow Center import/export; use `.zip` only for installing directly to a runtime environment. (ref: https://www.ibm.com/docs/en/baw/26.0.x?topic=snapshots-importing-exporting-projects-toolkits)
-- **CP4BA containerized (Business Automation Studio):** Open Business Automation Studio → **Business automations** → open the process app → select the snapshot → overflow menu → **Export** → save the `.twx` file.
+- **Traditional Business Automation Workflow (Workflow Center):** Open Workflow Center → navigate to the process app → find the snapshot → click **Export** → select **.twx** → save the file. The `.twx` option is for Workflow Center import/export; use `.zip` only for installing directly to a runtime environment. (ref: https://www.ibm.com/docs/en/baw/26.0.x?topic=snapshots-importing-exporting-projects-toolkits)
+- **Cloud Pak for Business Automation containerized (Business Automation Studio):** Open Business Automation Studio → **Business automations** → open the process app → select the snapshot → overflow menu → **Export** → save the `.twx` file.
 
 **Multiple deployment environments**
 If the source properties file contains multiple `bpm.de.*` blocks, extract endpoints from all blocks and report them separately by DE number.
@@ -658,25 +650,25 @@ If the source properties file contains multiple `bpm.de.*` blocks, extract endpo
 **`localhost` in source properties**
 `localhost` in a single-node (Express/stand-alone) source environment is valid — include it in the source map so references to `http://localhost:9080/...` are caught in the TWX scan.
 
-**`localhost` findings in the TWX — BAW-internal vs external**
+**`localhost` findings in the TWX — internal to Business Automation Workflow vs external**
 Not all `localhost` findings are blockers. Apply this classification when reporting:
 
 | URL pattern | Classification | Rationale |
 |---|---|---|
-| `http://localhost:.../portal/...` | ⚠️ Warning | BAW portal — resolves to the local server. Valid for stand-alone. Only a concern if HTTPS is required. |
-| `http://localhost:.../teamworks/...` | ⚠️ Warning | BAW internal endpoint — same reasoning. |
-| `http://localhost:.../rest/bpm/...` | ⚠️ Warning | BAW REST API — resolves locally. |
-| `<defaultValue>` or variable binding with `"host":"localhost"` | ⚠️ Warning | Likely a BAW server variable, not an external service. |
-| `http://localhost:.../<custom-app>/...` | 🔴 Critical — conditional | External REST API (e.g. `MyAPI`, `OrderAPI`). Whether `localhost` is valid depends on whether the API is co-located on the target BAW server. Flag as conditional blocker and ask the user to confirm deployment topology. |
-| `urlTemplate` or `<url>` pointing to `localhost` with a non-BAW context root | 🔴 Critical — conditional | Same as above. |
+| `http://localhost:.../portal/...` | ⚠️ Warning | Business Automation Workflow portal — resolves to the local server. Valid for stand-alone. Only a concern if HTTPS is required. |
+| `http://localhost:.../teamworks/...` | ⚠️ Warning | Business Automation Workflow internal endpoint — same reasoning. |
+| `http://localhost:.../rest/bpm/...` | ⚠️ Warning | Business Automation Workflow REST API — resolves locally. |
+| `<defaultValue>` or variable binding with `"host":"localhost"` | ⚠️ Warning | Likely a Business Automation Workflow server variable, not an external service. |
+| `http://localhost:.../<custom-app>/...` | 🔴 Critical — conditional | External REST API (e.g. `MyAPI`, `OrderAPI`). Whether `localhost` is valid depends on whether the API is co-located on the target Business Automation Workflow server. Flag as conditional blocker and ask the user to confirm deployment topology. |
+| `urlTemplate` or `<url>` pointing to `localhost` with a context root that is not part of Business Automation Workflow | 🔴 Critical — conditional | Same as above. |
 
 When in doubt, flag as conditional and explain the two scenarios clearly rather than asserting it is definitely broken.
 
 ## Known limitations
 
-**CP4BA containerized — `oc` / `kubectl` access required** — Collecting source endpoints from a CP4BA deployment requires the OpenShift CLI (`oc`) or `kubectl` to be installed and logged in, or the user must supply the `ICP4ACluster` CR YAML manually. If neither is available, the skill pauses and asks for a paste rather than failing silently. The skill does **not** support `BPMConfig` on containerized deployments — that tool is absent by design on CP4BA.
+**Cloud Pak for Business Automation containerized — `oc` / `kubectl` access required** — Collecting source endpoints from a Cloud Pak for Business Automation deployment requires the OpenShift CLI (`oc`) or `kubectl` to be installed and logged in, or the user must supply the `ICP4ACluster` CR YAML manually. If neither is available, the skill pauses and asks for a paste rather than failing silently. The skill does **not** support `BPMConfig` on containerized deployments — that tool is absent by design on Cloud Pak for Business Automation.
 
-**Encrypted property values (traditional BAW)** — BPMConfig exports mask passwords with `{xor}` encoding. The scan does not attempt to decrypt these; the skill excludes them from the endpoint map.
+**Encrypted property values (traditional Business Automation Workflow)** — BPMConfig exports mask passwords with `{xor}` encoding. The scan does not attempt to decrypt these; the skill excludes them from the endpoint map.
 
 **Binary or compiled artifacts inside TWX** — some TWX files contain compiled JavaScript or minified CSS where pattern matching may miss encoded references. The scan reports binary files skipped; flag this in the report if relevant.
 
@@ -690,7 +682,7 @@ When in doubt, flag as conditional and explain the two scenarios clearly rather 
 - IBM Docs — Changing REST server settings in Process Admin Console: https://www.ibm.com/docs/en/baw/26.0.x?topic=properties-changing-server-settings-in-process-admin-console
 - IBM Docs — BPMInstallOfflinePackage command: https://www.ibm.com/docs/en/baw/26.0.x?topic=scripting-bpminstallofflinepackage
 - IBM Docs — Importing and exporting projects and toolkits from Workflow Center: https://www.ibm.com/docs/en/baw/26.0.x?topic=snapshots-importing-exporting-projects-toolkits
-- IBM Docs — CP4BA custom resource pattern structure: https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/26.0.0?topic=deployment-installing-capabilities-in-openshift-console
-- IBM Docs — BAW on containers — verifying installation (ConfigMap/route URLs): https://www.ibm.com/docs/en/baw/23.0.x?topic=deployment-verifying-installation
-- IBM Docs — Moving from BAW traditional to CP4BA: https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/26.0.0?topic=cloud-business-automation-workflow
+- IBM Docs — Cloud Pak for Business Automation custom resource pattern structure: https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/26.0.0?topic=deployment-installing-capabilities-in-openshift-console
+- IBM Docs — Business Automation Workflow on containers — verifying installation (ConfigMap/route URLs): https://www.ibm.com/docs/en/baw/23.0.x?topic=deployment-verifying-installation
+- IBM Docs — Moving from Business Automation Workflow traditional to Cloud Pak for Business Automation: https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/26.0.0?topic=cloud-business-automation-workflow
 - `references/BPMCONFIG_REFERENCE.md` — full properties key reference

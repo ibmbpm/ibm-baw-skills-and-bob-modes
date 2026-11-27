@@ -1,6 +1,6 @@
-# BAW TWX Python Tools
+# Business Automation Workflow TWX Python Tools
 
-A set of three Python scripts for working with IBM Business Automation Workflow (BAW) TWX files. All scripts are self-contained — they require **Python 3.9+** and no third-party packages.
+A set of three Python scripts for working with IBM Business Automation Workflow TWX files. All scripts are self-contained — they require **Python 3.9+** and no third-party packages.
 
 ---
 
@@ -18,7 +18,7 @@ This folder includes the reference template (`empty-project.twx`), which `create
 
 ## Background: what is a TWX?
 
-A TWX file is an IBM BAW process app or toolkit exported from the authoring environment — **Workflow Center** (traditional BAW) or **Business Automation Studio** (CP4BA containerized). It is a ZIP archive containing:
+A TWX file is an IBM Business Automation Workflow process app or toolkit exported from the authoring environment — **Workflow Center** (traditional Business Automation Workflow) or **Business Automation Studio** (Cloud Pak for Business Automation containerized). It is a ZIP archive containing:
 
 - `META-INF/package.xml` — the project manifest: identity (project/branch/snapshot UUIDs), dependency declarations, and an index of every artifact object
 - `objects/<id>.xml` — one XML file per artifact (Business Objects, Service Flows, Coach Views, etc.)
@@ -66,7 +66,7 @@ A record type with named, typed properties.
 | `type` | Yes | Data type — see type reference below. |
 | `array` | No | `true` to make this a list-valued property. Default `false`. |
 | `required` | No | `true` to mark the property required. Default `false`. |
-| `hidden` | No | `true` to hide the property in BAW tooling. Default `false`. |
+| `hidden` | No | `true` to hide the property in Business Automation Workflow tooling. Default `false`. |
 | `description` | No | Optional per-property description string. |
 
 **Type reference:**
@@ -87,7 +87,7 @@ Cross-toolkit BO references (e.g. `ref:TWSYS/SomeType`) are **not supported** by
 
 ### Selection BO
 
-An enumeration (list of value/display pairs). BAW calls these "Selection" type simple BOs.
+An enumeration (list of value/display pairs). Business Automation Workflow calls these "Selection" type simple BOs.
 
 ```json
 {
@@ -105,22 +105,22 @@ An enumeration (list of value/display pairs). BAW calls these "Selection" type s
 
 | Field | Required | Description |
 |---|---|---|
-| `value` | Yes | The stored value written to BAW data, e.g. `"NEW"`. |
-| `display` | Yes | The human-readable label shown in BAW UI, e.g. `"New"`. |
+| `value` | Yes | The stored value written to Business Automation Workflow data, e.g. `"NEW"`. |
+| `display` | Yes | The human-readable label shown in Business Automation Workflow UI, e.g. `"New"`. |
 
 Include at least one option.
 
 ### What is not supported
 
-BAW has a third BO kind — **simple restricted types** (e.g. a String with a min/max length constraint, like `ItemName` with `minLength=1, maxLength=100`). These are read-only in this toolset: `list_bos.py` will report them as `[Simple]`, but `apply_bos.py` cannot create them. If a TWX contains one, it passes through untouched to the output.
+Business Automation Workflow has a third BO kind — **simple restricted types** (e.g. a String with a min/max length constraint, like `ItemName` with `minLength=1, maxLength=100`). These are read-only in this toolset: `list_bos.py` will report them as `[Simple]`, but `apply_bos.py` cannot create them. If a TWX contains one, it passes through untouched to the output.
 
 ---
 
 ## `create_empty_twx.py`
 
-Creates a brand-new empty TWX from the bundled reference template (`empty-project.twx`). Every identity UUID in the template is rewritten to a fresh value, so the generated TWX is a distinct project that can be imported into BAW without colliding with anything.
+Creates a brand-new empty TWX from the bundled reference template (`empty-project.twx`). Every identity UUID in the template is rewritten to a fresh value, so the generated TWX is a distinct project that can be imported into Business Automation Workflow without colliding with anything.
 
-The output is an empty BAW process app or toolkit ready to have artifacts added to it (e.g. via `apply_bos.py`).
+The output is an empty Business Automation Workflow process app or toolkit ready to have artifacts added to it (e.g. via `apply_bos.py`).
 
 ### Usage
 
@@ -132,8 +132,8 @@ python create_empty_twx.py --name NAME --acronym ACRONYM --out OUTPUT.twx [optio
 
 | Argument | Required | Description |
 |---|---|---|
-| `--name` | Yes | Project display name shown in BAW, e.g. `"My Toolkit"`. |
-| `--acronym` | Yes | Project short name / acronym, e.g. `MYTK`. Used as the namespace prefix and in BAW URLs. |
+| `--name` | Yes | Project display name shown in Business Automation Workflow, e.g. `"My Toolkit"`. |
+| `--acronym` | Yes | Project short name / acronym, e.g. `MYTK`. Used as the namespace prefix and in Business Automation Workflow URLs. |
 | `--out` | Yes | Output `.twx` file path, e.g. `dist/MYTK.twx`. Parent directories are created automatically. |
 | `--snapshot` | No | Snapshot version name. Defaults to `0.0.0.1`. |
 | `--process-app` | No | Emit a process app instead of a toolkit. Default output is a **toolkit**. |
@@ -156,7 +156,7 @@ python create_empty_twx.py --name "Lean Toolkit" --acronym LEAN \
 
 ### What it does
 
-1. Loads `empty-project.twx` (a BAW 24 / 8.6.8 exported empty process app).
+1. Loads `empty-project.twx` (a Business Automation Workflow 24 / 8.6.8 exported empty process app).
 2. Scans `META-INF/package.xml` and every `objects/*.xml` for typed UUIDs.
 3. Rewrites every project-owned UUID to a fresh value, preserving IBM-owned system UUIDs (System Data, UI Toolkit, primitive types, the System participant, the default theme).
 4. Substitutes project name, acronym, namespace, and snapshot creation date.
@@ -164,9 +164,9 @@ python create_empty_twx.py --name "Lean Toolkit" --acronym LEAN \
 6. If `--process-app` is NOT set, flips `isToolkit="true"` and renames the settings object.
 7. Writes the result as a new ZIP to `--out`.
 
-### BAW version compatibility
+### Business Automation Workflow version compatibility
 
-The reference template is stamped as BAW 24 (`buildVersion="8.6.8"`, `fixPack="24010"`). BAW imports older TWXes into newer servers, so this template works on BAW 24, 25, 26, and beyond. A BAW 25-stamped TWX would not import into BAW 24 — using the BAW 24 template is the safe universal baseline.
+The reference template is stamped as Business Automation Workflow 24 (`buildVersion="8.6.8"`, `fixPack="24010"`). Business Automation Workflow imports older TWXes into newer servers, so this template works on Business Automation Workflow 24, 25, 26, and beyond. A Business Automation Workflow 25-stamped TWX would not import into Business Automation Workflow 24 — using the Business Automation Workflow 24 template is the safe universal baseline.
 
 ---
 
@@ -257,7 +257,7 @@ Found 4 Business Object(s):
 
 ### Notes on BO kinds
 
-| Kind reported | BAW description | `type` in XML | Notes |
+| Kind reported | Business Automation Workflow description | `type` in XML | Notes |
 |---|---|---|---|
 | `complex` | Complex BO | `1` | Has named typed properties |
 | `selection` | Selection (enum) | `0` with `base="Selection"` | Has value/display option pairs |
@@ -274,7 +274,7 @@ For `complex` BOs, property types are resolved to friendly names where possible:
 
 Applies a set of `.bo.json` descriptor files to an existing TWX, producing a new output TWX. The source TWX is never modified.
 
-- If a `.bo.json` name **matches an existing BO** in the TWX, the old artifact is replaced — using the same `12.<uuid>` — so BAW reads it as an updated version of the same object, not a deletion and re-creation.
+- If a `.bo.json` name **matches an existing BO** in the TWX, the old artifact is replaced — using the same `12.<uuid>` — so Business Automation Workflow reads it as an updated version of the same object, not a deletion and re-creation.
 - If a `.bo.json` name is **new**, the BO is added with a freshly minted UUID.
 - All other objects in the TWX (other artifact types, toolkit dependencies, binary assets) pass through byte-identical.
 - The output snapshot gets a new snapshot UUID and the version name you supply via `--version`.
@@ -318,13 +318,13 @@ If one BO's property references another BO by name (e.g. `Customer.orders` typed
 
 ### UUID stability
 
-When overwriting an existing BO, the original `12.<uuid>` is preserved. This is important: BAW tracks an object's history across snapshots by its UUID. If the UUID were re-minted on overwrite, BAW would treat the result as a brand-new object with no history, and the old one as deleted.
+When overwriting an existing BO, the original `12.<uuid>` is preserved. This is important: Business Automation Workflow tracks an object's history across snapshots by its UUID. If the UUID were re-minted on overwrite, Business Automation Workflow would treat the result as a brand-new object with no history, and the old one as deleted.
 
-When a BO is new (no matching name in the source TWX), a fresh UUID is minted. Because this tool has no lockfile, a BO that is new on one run and absent in the next run's source TWX receives a different UUID each time. To get stable UUIDs for new BOs across runs, start by importing one output TWX into BAW, then export it back and use that export as the `--source` for subsequent runs — the UUID is then in the exported TWX and is preserved on overwrite.
+When a BO is new (no matching name in the source TWX), a fresh UUID is minted. Because this tool has no lockfile, a BO that is new on one run and absent in the next run's source TWX receives a different UUID each time. To get stable UUIDs for new BOs across runs, start by importing one output TWX into Business Automation Workflow, then export it back and use that export as the `--source` for subsequent runs — the UUID is then in the exported TWX and is preserved on overwrite.
 
 ### Output snapshot identity
 
-The output TWX gets a **new snapshot UUID** and the version name from `--version`. The project UUID and branch UUID are preserved from the source TWX, so BAW recognizes the import as a new snapshot of the same project rather than a new project.
+The output TWX gets a **new snapshot UUID** and the version name from `--version`. The project UUID and branch UUID are preserved from the source TWX, so Business Automation Workflow recognizes the import as a new snapshot of the same project rather than a new project.
 
 ---
 
@@ -356,7 +356,7 @@ python apply_bos.py --source dist/MyApp-1.0.0.0.twx --version 1.1.0.0 \
 # Import dist/MyApp-1.1.0.0.twx into BAW
 ```
 
-### Inspect a TWX exported from BAW
+### Inspect a TWX exported from Business Automation Workflow
 
 ```bash
 # See all BOs in an exported TWX, including ones created in BAW directly

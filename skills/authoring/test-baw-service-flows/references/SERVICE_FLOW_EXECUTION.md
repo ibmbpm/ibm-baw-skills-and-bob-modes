@@ -35,9 +35,9 @@ Before executing any test case:
 1. **Read the test suite metadata.** Check `metadata.exposure_type` in the test suite file. This determines the invocation path for all tests. If `exposure_type` is absent, default to `automation_service` and fall back through the priority order on the first 404.
 
 2. **Authenticate (REST).** If `{BAW_CSRF}` and `{BAW_SESSION}` were established during Phase A, reuse them — do not ask for credentials again. Otherwise:
-   > *"What is your BAW server URL and credentials? — these are only used to get a session token and are not stored."*
+   > *"What is your Business Automation Workflow server URL and credentials? — these are only used to get a session token and are not stored."*
 
-   Use **Python stdlib `urllib`** for all HTTP calls — no third-party packages required. Never use `curl` or PowerShell; Python works on all supported platforms (Windows, macOS, Linux) and avoids shell quoting and alias incompatibilities. For CP4BA environments with self-signed certificates, disable verification:
+   Use **Python stdlib `urllib`** for all HTTP calls — no third-party packages required. Never use `curl` or PowerShell; Python works on all supported platforms (Windows, macOS, Linux) and avoids shell quoting and alias incompatibilities. For Cloud Pak for Business Automation environments with self-signed certificates, disable verification:
    ```python
    import ssl
    ctx = ssl.create_default_context()
@@ -56,7 +56,7 @@ Before executing any test case:
    On HTTP 201: capture `csrf_token` → `{BAW_CSRF}`; capture `LtpaToken2` and `JSESSIONID` cookies → `{BAW_SESSION}`.
    On 401/400: ask the user to re-enter credentials.
 
-   **CP4BA (Zen IAM):** First obtain the Zen JWT token, then exchange it:
+   **Cloud Pak for Business Automation (Zen IAM):** First obtain the Zen JWT token, then exchange it:
    ```
    GET https://<cpd-host>/v1/preauth/validateAuth
    Authorization: Basic <base64(username:password)>
@@ -68,7 +68,7 @@ Before executing any test case:
    Body: {"refresh_groups": false}
    → captures csrf_token → {BAW_CSRF}
    ```
-   Send `Authorization: Bearer {ZEN_TOKEN}` and `BPMCSRFToken: {BAW_CSRF}` on all subsequent CP4BA requests — there are no `LtpaToken2`/`JSESSIONID` cookies.
+   Send `Authorization: Bearer {ZEN_TOKEN}` and `BPMCSRFToken: {BAW_CSRF}` on all subsequent Cloud Pak for Business Automation requests — there are no `LtpaToken2`/`JSESSIONID` cookies.
 
 3. **Confirm test scope.** If not already specified, ask:
    - "Run all tests" → iterate through all test cases in order.
@@ -81,7 +81,7 @@ Before executing any test case:
    > *"⚠️ I'll invoke the Service Flow on the BAS integrated playback server. This targets the current tip branch — no deployed snapshot is needed. Any external side effects (database writes, REST calls to real APIs) the service triggers will be real. Do you want to continue? (yes / no)"*
 
    **Runtime / unknown:** For all other environments:
-   > *"⚠️ Running these tests will invoke the Service Flow on your BAW server. Any database writes, external API calls, or other side effects the service performs will be real. It is strongly recommended to run against a non-production environment. Do you want to continue? (yes / no)"*
+   > *"⚠️ Running these tests will invoke the Service Flow on your Business Automation Workflow server. Any database writes, external API calls, or other side effects the service performs will be real. It is strongly recommended to run against a non-production environment. Do you want to continue? (yes / no)"*
 
 ---
 
@@ -188,7 +188,7 @@ Body: params=<URL-encoded JSON of input variables, or {}>
 
 ### Step 2 — Poll for process completion
 
-Poll the WLE v1 process detail endpoint (not the `/bpm/processes/` path, which returns null fields on CP4BA runtimes):
+Poll the WLE v1 process detail endpoint (not the `/bpm/processes/` path, which returns null fields on Cloud Pak for Business Automation runtimes):
 
 ```
 GET {BAW_BASE_URL}/rest/bpm/wle/v1/process/{process_id}?parts=data,variables
@@ -202,7 +202,7 @@ Poll every **3 seconds** for up to **30 seconds**. Read `data.state`:
 - **`STATE_FAILED` or `STATE_TERMINATED`:** The service threw an unhandled error. If `test_case.expected_status` is `error`, capture error details from the response and proceed to assertion. Otherwise mark `FAIL`.
 - **State is still `STATE_RUNNING` after 30 seconds:** Mark the test `ERROR` with message: *"Process did not complete within the 30-second timeout. The Service Flow may be waiting on an external system or is stuck."*
 
-> **CP4BA note:** On CP4BA runtimes the `/bpm/processes/{id}` path returns a 200 with all fields `null` — it is not a reliable state source. Always use `/rest/bpm/wle/v1/process/{id}?parts=data,variables` to read process state and output variables.
+> **Cloud Pak for Business Automation note:** On Cloud Pak for Business Automation runtimes the `/bpm/processes/{id}` path returns a 200 with all fields `null` — it is not a reliable state source. Always use `/rest/bpm/wle/v1/process/{id}?parts=data,variables` to read process state and output variables.
 
 ### Step 3 — Assert
 

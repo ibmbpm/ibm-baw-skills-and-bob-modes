@@ -1,26 +1,26 @@
-# BAW export and import helper — documentation
+# Business Automation Workflow export and import helper — documentation
 
-> Migrate IBM BAW or CP4BA Process Apps, toolkits, case solutions, and Business Applications from one environment to another — automatically resolving toolkit dependencies and determining the correct import order.
+> Migrate IBM Business Automation Workflow or Cloud Pak for Business Automation Process Apps, toolkits, case solutions, and Business Applications from one environment to another — automatically resolving toolkit dependencies and determining the correct import order.
 
 ## Purpose
 
-This skill guides Bob through a complete, end-to-end migration of BAW or CP4BA projects between 2 servers. It handles authentication, discovers all snapshots and branches, resolves and exports custom toolkit dependencies in the correct order, skips system-managed toolkits, checks what already exists on the target to avoid duplicate imports, monitors each asynchronous import job to completion, and produces a formatted migration report. It is intended for BAW administrators and developers performing environment promotions (dev → test → prod), environment consolidation, or disaster recovery restores.
+This skill guides Bob through a complete, end-to-end migration of Business Automation Workflow or Cloud Pak for Business Automation projects between 2 servers. It handles authentication, discovers all snapshots and branches, resolves and exports custom toolkit dependencies in the correct order, skips system-managed toolkits, checks what already exists on the target to avoid duplicate imports, monitors each asynchronous import job to completion, and produces a formatted migration report. It is intended for Business Automation Workflow administrators and developers performing environment promotions (dev → test → prod), environment consolidation, or disaster recovery restores.
 
 ## Setup and configuration
 
-- **Network access:** The machine running Bob must have HTTP/HTTPS access to both the source and target BAW servers simultaneously.
+- **Network access:** The machine running Bob must have HTTP/HTTPS access to both the source and target Business Automation Workflow servers simultaneously.
 - **Credentials:** A username and password with sufficient permissions to export snapshots on the source and import them on the target. Use admin-level credentials.
-- **No MCP server required:** This skill uses the BAW REST API exclusively via direct HTTP calls. You do not need to connect a BAW MCP server.
+- **No MCP server required:** This skill uses the Business Automation Workflow REST API exclusively via direct HTTP calls. You do not need to connect a Business Automation Workflow MCP server.
 - **Local disk space:** Bob writes exported Teamworks Exchange (TWX) files to a temporary local directory during the migration. Ensure sufficient disk space for the containers being migrated. Temporary files are deleted automatically after a successful migration run; if the run fails, Bob prompts you to clean them up manually.
-- **Self-signed certificates:** On-premises BAW and CP4BA environments commonly use self-signed TLS certificates. When detected, the skill appends `-k` to `curl` calls and warns you that certificate validation is disabled for that session. Do not disable certificate validation in production environments unless your security policy explicitly permits it.
+- **Self-signed certificates:** On-premises Business Automation Workflow and Cloud Pak for Business Automation environments commonly use self-signed TLS certificates. When detected, the skill appends `-k` to `curl` calls and warns you that certificate validation is disabled for that session. Do not disable certificate validation in production environments unless your security policy explicitly permits it.
 
 ## Compatibility
 
-- IBM BAW and IBM Cloud Pak for Business Automation (CP4BA) environments are both supported.
-- **Target must be the same version or newer than source.** BAW does not support importing snapshots from a newer fix pack into an older one. The skill detects this automatically from the exported TWX manifest and warns you before proceeding. The warning is blocking — Bob does not continue until you explicitly confirm or cancel.
-- **Business Applications** are migrated transparently through the same flow as Process Apps. The public BAW REST API does not distinguish them by type — the app type (`workflow` vs `app`) is only visible after TWX manifest inspection, which the skill performs automatically.
+- IBM Business Automation Workflow and IBM Cloud Pak for Business Automation environments are both supported.
+- **Target must be the same version or newer than source.** Business Automation Workflow does not support importing snapshots from a newer fix pack into an older one. The skill detects this automatically from the exported TWX manifest and warns you before proceeding. The warning is blocking — Bob does not continue until you explicitly confirm or cancel.
+- **Business Applications** are migrated transparently through the same flow as Process Apps. The public Business Automation Workflow REST API does not distinguish them by type — the app type (`workflow` vs `app`) is only visible after TWX manifest inspection, which the skill performs automatically.
 - **Case solutions** appear in the same container list as Process Apps and are exported and imported using the same API flow.
-- **System toolkits** (for example, System Data, UI Toolkit, Coaches) are automatically detected and skipped — they are platform-managed and already present on every BAW server.
+- **System toolkits** (for example, System Data, UI Toolkit, Coaches) are automatically detected and skipped — they are platform-managed and already present on every Business Automation Workflow server.
 
 ## Prompt examples
 
@@ -29,7 +29,7 @@ This skill guides Bob through a complete, end-to-end migration of BAW or CP4BA p
 ### Migrate a specific Process App by name
 
 **Prompt:**
-> I need to migrate my Process App called 'Customer Onboarding' from our dev BAW server to our test server. Dev is at https://baw-dev.example.com:9443 and test is at https://baw-test.example.com:9443.
+> I need to migrate my Process App called 'Customer Onboarding' from our dev Business Automation Workflow server to our test server. Dev is at https://baw-dev.example.com:9443 and test is at https://baw-test.example.com:9443.
 
 **What to expect:** Bob asks for source and target credentials in a single turn, then proceeds to authenticate, discover snapshots and dependencies, and walk through the full migration flow.
 

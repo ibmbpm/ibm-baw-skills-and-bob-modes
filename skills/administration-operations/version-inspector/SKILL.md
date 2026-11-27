@@ -1,28 +1,28 @@
 ---
 name: version-inspector
 description: >-
-  Inspect IBM BAW snapshots and browse deployed containers. Handles read-only
+  Inspect IBM Business Automation Workflow snapshots and browse deployed containers. Handles read-only
   queries, including snapshot metadata (version name, lifecycle status, creation
   date, toolkit dependencies), process-app listings, and container inventories.
-  Works for both Process App and Toolkit types on BAW on-premises, BAW on Cloud,
-  and CP4BA. Use whenever an administrator wants to inspect, view, or browse
+  Works for both Process App and Toolkit types on Business Automation Workflow on-premises, Business Automation Workflow on Cloud,
+  and Cloud Pak for Business Automation. Use whenever an administrator wants to inspect, view, or browse
   versions or snapshots. This skill is read-only and does not change state.
   For state-changing lifecycle operations (installing applications, activating,
   deactivating, deleting snapshots, or setting/syncing environment variables),
   use version-lifecycle-manager.
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: BAW Version Inspector
-  short_description: Browse and inspect BAW snapshot metadata — version names, lifecycle status, creation dates, and toolkit dependencies.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Version Inspector
+  short_description: Browse and inspect Business Automation Workflow snapshot metadata — version names, lifecycle status, creation dates, and toolkit dependencies.
+  author: IBM Business Automation Workflow Team
 ---
 # Version Inspector
 
-Retrieve and present a plain-language summary of a BAW snapshot's current state — version name, lifecycle status, creation date, in-flight task count, and toolkit dependencies — using the public Operations REST API. No write operations are performed. Works for both Process App and Toolkit container types.
+Retrieve and present a plain-language summary of a Business Automation Workflow snapshot's current state — version name, lifecycle status, creation date, in-flight task count, and toolkit dependencies — using the public Operations REST API. No write operations are performed. Works for both Process App and Toolkit container types.
 
 **Companion skill:** The `version-lifecycle-manager` skill handles lifecycle actions (activate, deactivate, delete, env var management) — mention this after presenting the summary.
 
@@ -30,7 +30,7 @@ Retrieve and present a plain-language summary of a BAW snapshot's current state 
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 
@@ -50,15 +50,7 @@ Before calling any API, determine how much the user already knows:
 
 Use this path when the user says things like "what process apps are deployed?", "show me all toolkits", "list everything on this server", "what's installed?", or does not provide a container name.
 
-Call:
-
-```bash
-curl -sk -X GET \
-  "{BAW_BASE_URL}/ops/std/bpm/containers?optional_parts=versions" \
-  -H "Authorization: Basic <base64(BAW_USERNAME:BAW_PASSWORD)>" \
-  -H "BPMCSRFToken: {BAW_CSRF}" \
-  -b /tmp/baw_cookies.txt
-```
+Call `GET /ops/std/bpm/containers` with the query `optional_parts=versions`.
 
 The `optional_parts=versions` parameter returns containers **and** their snapshots in a single call. Use `type=PA` or `type=TK` to filter to Process Apps or Toolkits only; omit to return both.
 
@@ -86,13 +78,7 @@ After presenting the list, ask: "Which one would you like to inspect? I can show
 
 Use this path when the user provides a container acronym (or name) but not a snapshot version — or after selecting a container from the browser above.
 
-```bash
-curl -sk -X GET \
-  "{BAW_BASE_URL}/ops/std/bpm/containers/<CONTAINER>/versions" \
-  -H "Authorization: Basic <base64(BAW_USERNAME:BAW_PASSWORD)>" \
-  -H "BPMCSRFToken: {BAW_CSRF}" \
-  -b /tmp/baw_cookies.txt
-```
+Call `GET /ops/std/bpm/containers/<CONTAINER>/versions`.
 
 Present that container's snapshots as a table:
 
@@ -112,15 +98,7 @@ Then ask: "Which snapshot would you like to inspect in detail?"
 **Method:** `GET`  
 **Path:** `/ops/std/bpm/containers/{container}/versions/{version}`
 
-```bash
-curl -sk -X GET \
-  "{BAW_BASE_URL}/ops/std/bpm/containers/<CONTAINER>/versions/<VERSION>" \
-  -H "Authorization: Basic <base64(BAW_USERNAME:BAW_PASSWORD)>" \
-  -H "BPMCSRFToken: {BAW_CSRF}" \
-  -b /tmp/baw_cookies.txt
-```
-
-This is a read-only call — no confirmation is needed before making it. Show the exact `curl` command in the response.
+This is a read-only call — no confirmation is needed before making it. Show the method and path you called in the response.
 
 ### Step 2 — Enrich toolkit dependencies (if needed)
 
@@ -131,34 +109,18 @@ The Operations API `version` schema does not include a `toolkitDependencies` fie
 **Probe only once if the WLE context root is unknown:**
 If the WLE context root has not been determined yet, test prefixes (`/rest`, `""`, `/baw`, `/bas`) once and cache the working prefix for all subsequent calls in the session:
 
-```bash
-for prefix in "/rest" "" "/baw" "/bas"; do
-  code=$(curl -sk -o /dev/null -w "%{http_code}" \
-    "https://<host>:9443${prefix}/bpm/wle/v1/processApps?includeToolkitProcessApps=true" \
-    -H "Authorization: Basic <base64(user:pass)>" \
-    -H "BPMCSRFToken: <csrf_token>")
-  echo "prefix='${prefix}' -> HTTP $code"
-done
-```
+For each prefix in `/rest`, `""`, `/baw`, `/bas`, call `GET <prefix>/bpm/wle/v1/processApps` with the query `includeToolkitProcessApps=true` and note the HTTP status.
 
 Use the first prefix that returns HTTP 200 as `<WLE_BASE_URL>` for the calls below and reuse it across all subsequent queries.
 
 **For Process Apps:**
-```bash
-curl -sk -X GET \
-  "<WLE_BASE_URL>/bpm/wle/v1/processApps?includeToolkitProcessApps=true" \
-  -H "Authorization: Basic <base64(user:pass)>" \
-  -H "BPMCSRFToken: <csrf_token>"
-```
-Locate the container by `shortName`, then find the target snapshot in `installedSnapshots` by `acronym`. Look for toolkit references in `toolkits`, `dependencies`, or `usedToolkitSnapshots` (field name varies by BAW version).
+Call `GET <WLE_BASE_URL>/bpm/wle/v1/processApps` with the query `includeToolkitProcessApps=true`.
+
+Locate the container by `shortName`, then find the target snapshot in `installedSnapshots` by `acronym`. Look for toolkit references in `toolkits`, `dependencies`, or `usedToolkitSnapshots` (field name varies by Business Automation Workflow version).
 
 **For Toolkits:**
-```bash
-curl -sk -X GET \
-  "<WLE_BASE_URL>/bpm/wle/v1/toolkit?includeSnapshots=true" \
-  -H "Authorization: Basic <base64(user:pass)>" \
-  -H "BPMCSRFToken: <csrf_token>"
-```
+Call `GET <WLE_BASE_URL>/bpm/wle/v1/toolkit` with the query `includeSnapshots=true`.
+
 Locate the toolkit by `shortName`, then find the target snapshot in `installedSnapshots`.
 
 If no dependency data is found from either source, report "No toolkit dependencies found for this snapshot." — do not infer or guess.
@@ -226,11 +188,11 @@ End with: **Next steps:** To activate, deactivate, delete this snapshot, or mana
 | HTTP | Likely cause | What to say |
 |---|---|---|
 | `401` | Invalid credentials | "Authentication failed — check the username/password or API key and try again." |
-| `403` | Insufficient permissions or wrong auth type for CP4BA | "Access denied. Follow `references/CREDENTIAL_HANDLING.md` to check credentials and permissions. On-premises: ensure the account is in the `tw_admins` group." |
-| `400 CWTBG0651E` | Missing or invalid CSRF token | "CSRF token missing or expired. Re-read `references/CREDENTIAL_HANDLING.md` to obtain a fresh token and include it as the `BPMCSRFToken` header." |
+| `403` | Insufficient permissions or wrong auth type for Cloud Pak for Business Automation | "Access denied. Follow `references/CREDENTIAL_HANDLING.md` to check credentials and permissions. On-premises: ensure the account is in the `tw_admins` group." |
+| `400 CWTBG0651E` | Missing or invalid CSRF token | "CSRF token missing or expired. Retry the call as described in `references/CREDENTIAL_HANDLING.md`." |
 | `400 CWTBG0624E` | Container acronym not found | "The container `<acronym>` was not found — acronyms are case-sensitive. Offer to list containers to confirm the exact acronym." |
 | `400 CWTBG0646E` | Snapshot acronym not found | "The snapshot `<version>` was not found in container `<acronym>`. Offer to list snapshots to confirm the exact acronym." |
-| `404` | Operations API not present on server | "This server may be IBM BPM 8.x, which does not support the Operations REST API. Use the Process Admin Console to inspect snapshots manually." |
+| `404` | Operations API not present on server | "This server may be IBM Business Process Manager 8.x, which does not support the Operations REST API. Use the Process Admin Console to inspect snapshots manually." |
 
 Surface the full raw API response body alongside the plain-language explanation — do not filter it.
 
@@ -242,26 +204,26 @@ Surface the full raw API response body alongside the plain-language explanation 
 
 Input: "Show me the details for snapshot v2.0 of HRAPP."
 
-1. Authenticate via `references/CREDENTIAL_HANDLING.md` (read from `.env`).
-2. Call `GET {BAW_BASE_URL}/ops/std/bpm/containers/HRAPP/versions/v2.0` with authorization and CSRF headers.
+1. Follow `references/CREDENTIAL_HANDLING.md` to connect.
+2. Call `GET /ops/std/bpm/containers/HRAPP/versions/v2.0`.
 3. Probe the WLE context root (try `/rest`, `""`, `/baw`, `/bas`) to find the prefix that returns HTTP 200, then call `GET <WLE_BASE_URL>/bpm/wle/v1/processApps?includeToolkitProcessApps=true` to retrieve toolkit dependencies.
 4. Render the Snapshot Summary block.
 5. Offer lifecycle action next steps via `version-lifecycle-manager`.
 
-**Example 2 — CP4BA cluster**
+**Example 2 — Cloud Pak for Business Automation cluster**
 
-Input: "I want to inspect some versions from our CP4BA environment."
+Input: "I want to inspect some versions from our Cloud Pak for Business Automation environment."
 
-1. Authenticate via `references/CREDENTIAL_HANDLING.md` (read from `.env`).
-2. Call `GET {BAW_BASE_URL}/ops/std/bpm/containers?optional_parts=versions` with authorization and CSRF headers.
+1. Follow `references/CREDENTIAL_HANDLING.md` to connect.
+2. Call `GET /ops/std/bpm/containers?optional_parts=versions`.
 3. Present containers table and ask which one to inspect.
 
 **Example 3 — Toolkit snapshot**
 
 Input: "Get metadata for snapshot 1.5 of the SHAREDTK toolkit."
 
-1. Authenticate via `references/CREDENTIAL_HANDLING.md` (read from `.env`).
-2. Call `GET {BAW_BASE_URL}/ops/std/bpm/containers/SHAREDTK/versions/1.5` with authorization and CSRF headers. Note `toolkit: true` in the response — show container type as "Toolkit" in the summary.
+1. Follow `references/CREDENTIAL_HANDLING.md` to connect.
+2. Call `GET /ops/std/bpm/containers/SHAREDTK/versions/1.5`. Note `toolkit: true` in the response — show container type as "Toolkit" in the summary.
 3. Call `GET /bpm/wle/v1/toolkit?includeSnapshots=true` and locate SHAREDTK to find 1.5 for dependency data.
 4. Render the Snapshot Summary block.
 5. Offer lifecycle action next steps.
@@ -270,8 +232,8 @@ Input: "Get metadata for snapshot 1.5 of the SHAREDTK toolkit."
 
 Input: "I'm not sure what process apps we have deployed. Can you show me?"
 
-1. Authenticate via `references/CREDENTIAL_HANDLING.md` (read from `.env`).
-2. Call `GET {BAW_BASE_URL}/ops/std/bpm/containers?optional_parts=versions` and present all containers as labelled tables (Process Apps and Toolkits).
+1. Follow `references/CREDENTIAL_HANDLING.md` to connect.
+2. Call `GET /ops/std/bpm/containers?optional_parts=versions` and present all containers as labelled tables (Process Apps and Toolkits).
 3. Ask: "Which one would you like to inspect? I can show you its snapshots."
 4. Once the user picks a container, present its snapshots from the `branches[].versions[]` already returned, or call `GET /ops/std/bpm/containers/{container}/versions` if snapshots weren't included.
 5. Once the user picks a snapshot, proceed with the Snapshot Summary workflow (Steps 1–4).
@@ -280,7 +242,7 @@ Input: "I'm not sure what process apps we have deployed. Can you show me?"
 
 Input: "I want to check the status of our current INVOICING process app but I'm not sure what the snapshot name is."
 
-1. Authenticate via `references/CREDENTIAL_HANDLING.md` (read from `.env`).
+1. Follow `references/CREDENTIAL_HANDLING.md` to connect.
 2. Call `GET /ops/std/bpm/containers/INVOICING/versions` and present its snapshots as a picker table (Acronym, Name, Status, Created).
 3. Ask the user to confirm which snapshot to inspect.
 4. Then proceed with the Snapshot Summary workflow.

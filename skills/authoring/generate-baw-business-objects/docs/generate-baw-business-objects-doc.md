@@ -1,10 +1,10 @@
-# Generate BAW Business Objects — Documentation
+# Generate Business Automation Workflow Business Objects — Documentation
 
-> Generates and modifies BAW Business Object import files — individual `.bo.json` files, a combined OpenAPI 3.0 JSON, a discovery report, and an optional toolkit TWX.
+> Generates and modifies Business Automation Workflow Business Object import files — individual `.bo.json` files, a combined OpenAPI 3.0 JSON, a discovery report, and an optional toolkit TWX.
 
 ## Purpose
 
-This skill produces importable IBM Business Automation Workflow (BAW) Business Objects from any data-model description. It targets BAW developers and architects who need to define structured data types for process apps or toolkits. Use it when you want to create a new BO set from scratch, update an existing import file, convert enum fields to Selection BOs, or package BOs into a reusable toolkit TWX. The skill also provides the manual WebPD import sequence and can generate toolkit TWX files using bundled Python scripts.
+This skill produces importable IBM Business Automation Workflow Business Objects from any data-model description. It targets Business Automation Workflow developers and architects who need to define structured data types for process apps or toolkits. Use it when you want to create a new BO set from scratch, update an existing import file, convert enum fields to Selection BOs, or package BOs into a reusable toolkit TWX. The skill also provides the manual WebPD import sequence and can generate toolkit TWX files using bundled Python scripts.
 
 ## Setup and configuration
 
@@ -15,11 +15,11 @@ This skill produces importable IBM Business Automation Workflow (BAW) Business O
 
 ## Compatibility
 
-- **BAW WebPD only for manual import** — there is no public API for programmatic Business Object import. The skill generates the files; you perform the import step manually in the WebPD UI.
+- **Business Automation Workflow WebPD only for manual import** — there is no public API for programmatic Business Object import. The skill generates the files; you perform the import step manually in the WebPD UI.
 - **OpenAPI `3.0.x` required** — the combined import file must use `"openapi": "3.0.3"` (or another `3.0.x` value). OpenAPI `3.1.0` or `4.x` will not import correctly.
 - **WebPD treats imported BOs as read-only** — the correct update workflow is: finalize with Bob → import → re-import when changes are needed. There is no way to edit BOs in place after import.
-- **TWX template stamped as BAW 24 (`8.6.8`)** — the generated toolkit TWX is importable into BAW 24, 25, 26, and beyond. A TWX stamped for a newer version cannot be imported into an older server.
-- **Simple restricted types not creatable** — `apply_bos.py` cannot create BAW "simple restricted" BO types (for example, length-constrained strings). `apply_bos.py` supports only Complex and Selection BOs.
+- **TWX template stamped as Business Automation Workflow 24 (`8.6.8`)** — the generated toolkit TWX is importable into Business Automation Workflow 24, 25, 26, and beyond. A TWX stamped for a newer version cannot be imported into an older server.
+- **Simple restricted types not creatable** — `apply_bos.py` cannot create Business Automation Workflow "simple restricted" BO types (for example, length-constrained strings). `apply_bos.py` supports only Complex and Selection BOs.
 - **Cross-toolkit BO references not supported** — BO properties must reference either a primitive type or another local BO within the same project. `.bo.json` files cannot express references to BOs in dependency toolkits.
 
 ## Prompt examples
@@ -27,7 +27,7 @@ This skill produces importable IBM Business Automation Workflow (BAW) Business O
 ### Generate BOs from a natural-language description
 
 **Prompt:**
-> I'm building a claims management process. I need Business Objects for Claim (claimId, policyNumber, claimType — one of MEDICAL, DENTAL, VISION, LIFE — submittedAt as a timestamp, totalAmount as a decimal, and a reference to a Claimant), and Claimant (claimantId, firstName, lastName, email, phoneNumber, and a mailingAddress). Address should have street, city, state, postalCode, country. Generate the BAW import files.
+> I'm building a claims management process. I need Business Objects for Claim (claimId, policyNumber, claimType — one of MEDICAL, DENTAL, VISION, LIFE — submittedAt as a timestamp, totalAmount as a decimal, and a reference to a Claimant), and Claimant (claimantId, firstName, lastName, email, phoneNumber, and a mailingAddress). Address should have street, city, state, postalCode, country. Generate the Business Automation Workflow import files.
 
 **What to expect:** Bob generates `.bo.json` files for each object (including a `ClaimType` Selection BO), a combined OpenAPI 3.0 JSON ready for WebPD import, a discovery report with an ER diagram, then asks which delivery option you want.
 
@@ -36,7 +36,7 @@ This skill produces importable IBM Business Automation Workflow (BAW) Business O
 ### Generate BOs from a markdown table or bulleted list
 
 **Prompt:**
-> Create BAW Business Objects from this data model:
+> Create Business Automation Workflow Business Objects from this data model:
 >
 > **Order**: orderId (String, required), orderDate (date only), status (PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED), totalAmount (Decimal), customer (→ Customer), items (list of → OrderItem)
 > **OrderItem**: itemId, productName, quantity (Integer), unitPrice (Decimal)
@@ -135,7 +135,7 @@ This skill produces importable IBM Business Automation Workflow (BAW) Business O
 ### Handle an enum with multiple fixed-value fields
 
 **Prompt:**
-> Create BAW Business Objects for a policy management process: Policy (policyId, policyType — TERM_LIFE, WHOLE_LIFE, UNIVERSAL_LIFE — coverageAmount as a decimal, startDate as a date, endDate as a date, status — ACTIVE, LAPSED, CANCELLED, EXPIRED — and a reference to a Policyholder), Policyholder (holderId, firstName, lastName, dateOfBirth as a date, email).
+> Create Business Automation Workflow Business Objects for a policy management process: Policy (policyId, policyType — TERM_LIFE, WHOLE_LIFE, UNIVERSAL_LIFE — coverageAmount as a decimal, startDate as a date, endDate as a date, status — ACTIVE, LAPSED, CANCELLED, EXPIRED — and a reference to a Policyholder), Policyholder (holderId, firstName, lastName, dateOfBirth as a date, email).
 
 **What to expect:** Bob creates two Selection BOs (`PolicyType` and `Status`) in addition to the two complex BOs, wires `$ref` correctly for both enum fields in the OpenAPI JSON, and produces a discovery report with an enumeration table.
 
@@ -144,9 +144,9 @@ This skill produces importable IBM Business Automation Workflow (BAW) Business O
 ### Request for auto-import (out-of-scope redirect)
 
 **Prompt:**
-> Can you automatically import the generated Business Objects directly into my BAW server?
+> Can you automatically import the generated Business Objects directly into my Business Automation Workflow server?
 
-**What to expect:** Bob explains that no public API exists for programmatic BO import in BAW WebPD, provides the manual 6-step import sequence, and offers to help with the toolkit TWX path as an alternative.
+**What to expect:** Bob explains that no public API exists for programmatic BO import in Business Automation Workflow WebPD, provides the manual 6-step import sequence, and offers to help with the toolkit TWX path as an alternative.
 
 ---
 

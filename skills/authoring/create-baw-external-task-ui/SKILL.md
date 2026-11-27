@@ -1,55 +1,43 @@
 ---
 name: create-baw-external-task-ui
-description: >
-  Generate a custom external task UI for an IBM Business Automation Workflow (BAW)
-  human task configured with a Custom URL. Creates a Node.js Express server and a
-  React (default) or user-specified stack UI that fetches task data from BAW,
-  renders a Carbon-styled form, and completes the task on submission. Two intake
-  paths: provide a task schema file (OpenAPI exported from your BAW service flow) or
-  describe task fields verbally (generating a unified fields-spec.json). Includes
-  instructions for exporting the schema from BAW and setting the External Implementation
-  URL with {tw.system.task_id}. Use when building an external Node.js app for a BAW
-  Custom URL task or integrating with the BAW /bpm/user-tasks REST endpoints. Do NOT
-  use for task list portals (use create-baw-portal) or BAW Coach View widgets (use
-  create-baw-widget). Trigger phrases: "external task UI", "custom URL task",
-  "BAW external UI", "node.js BAW task", "external implementation", "Custom URL implementation".
+description: "Generate a custom external task UI for an IBM Business Automation Workflow human task configured with a Custom URL. Creates a Node.js Express server and a React (default) or user-specified stack UI that fetches task data from the server, renders a Carbon-styled form, and completes the task on submission. Two intake paths: provide a task schema file (OpenAPI exported from your service flow) or describe task fields verbally (generating a unified fields-spec.json). Includes instructions for exporting the schema and setting the External Implementation URL with {tw.system.task_id}. Use when building an external Node.js app for a Custom URL task or integrating with the /bpm/user-tasks REST endpoints. Do NOT use for task list portals (use create-baw-portal) or Coach View widgets (use create-baw-widget). Trigger phrases: 'external task UI', 'custom URL task', 'external implementation', 'Custom URL implementation'."
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: BAW External Task UI Builder
-  short_description: Generate a React + Express external task UI for IBM BAW Custom URL human tasks — with Carbon styling and full BAW REST API integration.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow External Task UI Builder
+  short_description: Generate a React + Express external task UI for IBM Business Automation Workflow Custom URL human tasks — with Carbon styling and full Business Automation Workflow REST API integration.
+  author: IBM Business Automation Workflow Team
   example_prompts:
-    - "Create an external task UI for a Manager Approval task in BAW"
-    - "Build a Node.js app to complete a BAW user task via Custom URL"
-    - "Generate an external UI for my BAW task — here is my task schema file"
-    - "Create a React form for a BAW human task with fields: firstName, lastName, approved"
-    - "How do I export the OpenAPI spec from my BAW service flow?"
+    - "Create an external task UI for a Manager Approval task in Business Automation Workflow"
+    - "Build a Node.js app to complete a Business Automation Workflow user task via Custom URL"
+    - "Generate an external UI for my Business Automation Workflow task — here is my task schema file"
+    - "Create a React form for a Business Automation Workflow human task with fields: firstName, lastName, approved"
+    - "How do I export the OpenAPI spec from my Business Automation Workflow service flow?"
 ---
 
 ## What this skill builds
 
-A BAW human task configured with a **Custom URL** opens an external application when
+A Business Automation Workflow human task configured with a **Custom URL** opens an external application when
 a user claims it in IBM Workplace. This skill generates that external application: a
 Node.js Express server paired with a React (default) or user-specified frontend that
-fetches the task's input data from BAW, renders a form for the user to complete, and
-submits the output back to BAW to complete the task.
+fetches the task's input data from Business Automation Workflow, renders a form for the user to complete, and
+submits the output back to Business Automation Workflow to complete the task.
 
-The generated application integrates with the BAW `/bpm/` REST API surface
+The generated application integrates with the Business Automation Workflow `/bpm/` REST API surface
 (base path `/bpm`, documented in `references/baw-rest.md` and `references/server-pattern.md`).
-This is the BPM Standard API — distinct from the WLE REST API (`/rest/bpm/wle/`) used by
-BAW portals for task lists.
+This is the Business Process Manager Standard API — distinct from the WLE REST API (`/rest/bpm/wle/`) used by
+Business Automation Workflow portals for task lists.
 
 ---
 
 ## Credentials (Skill REST Calls)
 
-When a REST call is about to be made by the skill during this session, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made by the skill during this session, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 
@@ -57,11 +45,11 @@ When a REST call is about to be made by the skill during this session, read `ref
 
 Ask the user which intake path applies. Both are supported:
 
-> **"Do you have a task schema file exported from your BAW service flow?
-> (This is an OpenAPI JSON file you can download from the BAW REST API Explorer.)
+> **"Do you have a task schema file exported from your Business Automation Workflow service flow?
+> (This is an OpenAPI JSON file you can download from the Business Automation Workflow REST API Explorer.)
 > If yes, share it and I will derive the form fields from it.
 > If not, describe your task's input fields (data shown to the user, read-only)
-> and output fields (data the user fills in and submits back to BAW)."**
+> and output fields (data the user fills in and submits back to Business Automation Workflow)."**
 
 - **Path A — task schema file provided:**
   - Parse `components/schemas/ioSpec_input` for read-only display fields and `components/schemas/ioSpec_output` for editable output fields.
@@ -93,8 +81,8 @@ those instructions before continuing.
 
 Ask only what is needed; combine into a single prompt where possible:
 
-1. **BAW server base URL** — e.g. `https://my-baw-server:9443` — read from `.env` via `references/CREDENTIAL_HANDLING.md`; ask only if missing (stored as `BAW_SERVER_BASE_URL` or `BAW_BASE_URL`)
-2. **SSL certificates** — does the BAW server use a self-signed certificate? (`IGNORE_SSL_CERTIFICATES=true`)
+1. **Business Automation Workflow server base URL** — e.g. `https://my-baw-server:9443` — obtained as described in `references/CREDENTIAL_HANDLING.md`; ask only if it is not available (the generated app stores it as `BAW_SERVER_BASE_URL`)
+2. **SSL certificates** — does the Business Automation Workflow server use a self-signed certificate? (`IGNORE_SSL_CERTIFICATES=true`)
 3. **Port** — port for the Node.js server (default: `3000`)
 
 Ask once. Use HTTP Basic Auth — no other mechanism is supported for this pattern.
@@ -155,8 +143,8 @@ SCHEMA_FILE=ExtRest.json
 **`server.js`** — Express server following `references/server-pattern.md`. Must include:
 - `GET /api/config` — exposes `BAW_SERVER_BASE_URL` to the client so the client can construct redirect URLs without hardcoded hostnames.
 - `GET /api/schema` — reads `SCHEMA_FILE`, resolves all `$ref` references inline, and returns clean field definitions.
-- `GET /api/user-task/:taskId` — fetches task data from BAW (`/bpm/user-tasks/{id}?optional_parts=data`).
-- `POST /api/user-task/:taskId/complete` — completes the task via BAW REST API.
+- `GET /api/user-task/:taskId` — fetches task data from Business Automation Workflow (`/bpm/user-tasks/{id}?optional_parts=data`).
+- `POST /api/user-task/:taskId/complete` — completes the task via Business Automation Workflow REST API.
 - Fresh CSRF token acquisition via `/bpm/system/login` and auto-retry on 403 `CWTBG0651E`.
 - Bound to `127.0.0.1` (never `0.0.0.0`).
 
@@ -177,7 +165,7 @@ Generate a single named HTML file (e.g., `manager-approval.html`) or `public/ind
 
 ---
 
-## Generated Application Runtime Security & BAW API Rules
+## Generated Application Runtime Security & Business Automation Workflow API Rules
 
 Read [`references/baw-rest.md`](references/baw-rest.md) and [`references/server-pattern.md`](references/server-pattern.md) when generating server code.
 
@@ -213,7 +201,7 @@ if (missing.length) {
 
 - Attach credentials in one place only — the server `axiosInstance`. Never return credentials to the browser.
 - Never log raw axios error objects containing the `Authorization` header.
-- On HTTP 401 from BAW, log a server-side hint to check `.env`.
+- On HTTP 401 from Business Automation Workflow, log a server-side hint to check `.env`.
 
 ### CSRF token acquisition & retry
 
@@ -263,7 +251,7 @@ if (window.opener) {
 
 ---
 
-## Step 6 — Post-generation instructions & BAW wiring
+## Step 6 — Post-generation instructions & Business Automation Workflow wiring
 
 After generating all files:
 
@@ -274,20 +262,20 @@ After generating all files:
    - `npm run build` (React only)
    - `npm start`
    - Access at `http://localhost:<PORT>/?taskId=YOUR_TASK_ID`
-3. Provide BAW Process Designer setup instructions:
+3. Provide Business Automation Workflow Process Designer setup instructions:
    - Set the User Task **Implementation Type** to **External Implementation** (or Custom URL).
    - Set the **External URL** to:
      ```
      http://localhost:<PORT>/?taskId={tw.system.task_id}
      ```
-     *(BAW substitutes `{tw.system.task_id}` at runtime with the active task ID).*
-   - Note: External Implementation on user tasks is deprecated in BAW 26.x but remains functional; for 26.x+ standalone SPAs using the standard REST API are recommended.
+     *(Business Automation Workflow substitutes `{tw.system.task_id}` at runtime with the active task ID).*
+   - Note: External Implementation on user tasks is deprecated in Business Automation Workflow 26.x but remains functional; for 26.x+ standalone SPAs using the standard REST API are recommended.
 
 ---
 
 ## What this skill does not do
 
-- Does not create BAW process diagrams, BPMN, or internal BAW XML → use `generate-baw-bpmn`
+- Does not create Business Automation Workflow process diagrams, BPMN, or internal Business Automation Workflow XML → use `generate-baw-bpmn`
 - Does not build task list portals that list and open multiple tasks → use `create-baw-portal`
-- Does not create BAW Coach View widgets → use `create-baw-widget`
-- Does not deploy files to the BAW VM — deployment is a manual copy step
+- Does not create Business Automation Workflow Coach View widgets → use `create-baw-widget`
+- Does not deploy files to the Business Automation Workflow VM — deployment is a manual copy step

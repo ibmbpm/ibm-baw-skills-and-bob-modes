@@ -1,23 +1,23 @@
-# Audit BAW readiness — documentation
+# Audit Business Automation Workflow readiness — documentation
 
-> Evaluates an IBM BAW process application's design for compliance and audit readiness — scores six internal design-time control domains (traceability, separation of duties, access control, SLA/timeliness, data completeness, error handling) and produces a Markdown scorecard with specific gaps and remediation steps.
+> Evaluates an IBM Business Automation Workflow process application's design for compliance and audit readiness — scores six internal design-time control domains (traceability, separation of duties, access control, SLA/timeliness, data completeness, error handling) and produces a Markdown scorecard with specific gaps and remediation steps.
 
 ## Purpose
 
-This skill is for IBM Business Automation Workflow (BAW) developers and architects preparing for internal audit reviews and design-time control readiness assessments. It exports the process application's `.twx` artifact, analyzes the BPMN design and business objects against six internal control domains, and produces a scored gap analysis telling you exactly what needs to be fixed before an audit begins. The skill writes a Markdown scorecard to `reports/` with a Pass / Needs Attention / Not Ready overall rating. This skill inspects internal process design only — it does not touch running instances, nor does it evaluate external regulatory policies. For evaluating process models against external compliance standards and policies (SOX, GDPR, ISO, corporate policies), use the `process-compliance-violation-detection` skill.
+This skill is for Business Automation Workflow developers and architects preparing for internal audit reviews and design-time control readiness assessments. It exports the process application's `.twx` artifact, analyzes the BPMN design and business objects against six internal control domains, and produces a scored gap analysis telling you exactly what needs to be fixed before an audit begins. The skill writes a Markdown scorecard to `reports/` with a Pass / Needs Attention / Not Ready overall rating. This skill inspects internal process design only — it does not touch running instances, nor does it evaluate external regulatory policies. For evaluating process models against external compliance standards and policies (SOX, GDPR, ISO, corporate policies), use the `process-compliance-violation-detection` skill.
 
 ## Setup and configuration
 
-- **REST only** — no MCP server required or used. All calls go directly to the BAW REST API.
-- Provide your BAW server URL and credentials when prompted. The skill uses credentials only to obtain a session token for the current conversation.
+- **REST only** — no MCP server required or used. All calls go directly to the Business Automation Workflow REST API.
+- Provide your Business Automation Workflow server URL and credentials when prompted. The skill uses credentials only to obtain a session token for the current conversation.
 - If you already have the `.twx` file on disk, provide the file path — no server connection needed.
 - Admin-level credentials are typically required for the TWX export endpoint (`GET /ops/std/bpm/containers/{container}/versions/{version}/export`).
 - The `reports/` directory is created automatically if it does not exist.
 
 ## Compatibility
 
-- BAW 26.x (REST endpoints: `/ops/system/login`, `/ops/std/bpm/containers`, `/ops/std/bpm/containers/{container}/versions`, `/ops/std/bpm/containers/{container}/versions/{version}/export`)
-- Authoring environments only (**Workflow Center** for traditional BAW, **Business Automation Studio** for CP4BA containerized) — Workflow Server (runtime-only) deployments do not support the export API
+- Business Automation Workflow 26.x (REST endpoints: `/ops/system/login`, `/ops/std/bpm/containers`, `/ops/std/bpm/containers/{container}/versions`, `/ops/std/bpm/containers/{container}/versions/{version}/export`)
+- Authoring environments only (**Workflow Center** for traditional Business Automation Workflow, **Business Automation Studio** for Cloud Pak for Business Automation containerized) — Workflow Server (runtime-only) deployments do not support the export API
 - This skill produces a gap analysis, not a certified compliance artifact for external submission
 
 ## Prompt examples
@@ -34,7 +34,7 @@ This skill is for IBM Business Automation Workflow (BAW) developers and architec
 
 ### SOX audit preparation
 **Prompt:**
-> I have a SOX audit next month. Does my Claims Processing app (acronym CP, snapshot CP_V2) meet the requirements? BAW is at https://baw.company.com:9443, <your-username>/<your-password>.
+> I have a SOX audit next month. Does my Claims Processing app (acronym CP, snapshot CP_V2) meet the requirements? Business Automation Workflow is at https://baw.company.com:9443, <your-username>/<your-password>.
 
 **What to expect:** Bob runs the full six-domain assessment with particular attention to Traceability and Separation of Duties (the domains most relevant to SOX). Writes the scorecard to `reports/CP-audit-readiness.md` with an overall Pass / Needs Attention / Not Ready verdict.
 
@@ -50,7 +50,7 @@ This skill is for IBM Business Automation Workflow (BAW) developers and architec
 
 ### GDPR compliance gap check
 **Prompt:**
-> Check my Employee Onboarding app for GDPR compliance gaps. BAW: https://baw.internal:9443, user <your-username>, pass <your-password>.
+> Check my Employee Onboarding app for GDPR compliance gaps. Business Automation Workflow: https://baw.internal:9443, user <your-username>, pass <your-password>.
 
 **What to expect:** Bob runs the full assessment with particular attention to the Data Completeness domain (personal data fields, retention/deletion controls). Scores all six standard domains — no additional GDPR-specific domains are invented. Writes the scorecard with any gaps identified.
 
@@ -58,7 +58,7 @@ This skill is for IBM Business Automation Workflow (BAW) developers and architec
 
 ### Missing app name — Bob asks
 **Prompt:**
-> Run an audit check on my BAW server at https://baw.example.com:9443.
+> Run an audit check on my Business Automation Workflow server at https://baw.example.com:9443.
 
 **What to expect:** Bob asks for credentials, then lists all available process applications and asks which one to assess before proceeding.
 

@@ -1,28 +1,28 @@
 # Version Inspector — Documentation
 
-> Inspect IBM BAW snapshots and browse deployed containers — handles read-only queries, including snapshot metadata (version name, lifecycle status, creation date, toolkit dependencies), process-app listings, and container inventories without changing state.
+> Inspect IBM Business Automation Workflow snapshots and browse deployed containers — handles read-only queries, including snapshot metadata (version name, lifecycle status, creation date, toolkit dependencies), process-app listings, and container inventories without changing state.
 
 ## Purpose
 
-This skill retrieves and presents read-only snapshot metadata from a BAW server using the Operations REST API. It targets BAW administrators who want to know what is deployed, what state a snapshot is in, or what toolkit dependencies it carries — before taking any lifecycle action. The skill is strictly read-only and does not change state. It handles three levels of discovery automatically: browsing all containers when nothing is known, listing snapshots within a container when only the app name is known, and retrieving the full detail summary when both the container and snapshot are known.
+This skill retrieves and presents read-only snapshot metadata from a Business Automation Workflow server using the Operations REST API. It targets Business Automation Workflow administrators who want to know what is deployed, what state a snapshot is in, or what toolkit dependencies it carries — before taking any lifecycle action. The skill is strictly read-only and does not change state. It handles three levels of discovery automatically: browsing all containers when nothing is known, listing snapshots within a container when only the app name is known, and retrieving the full detail summary when both the container and snapshot are known.
 
 > **Companion skill:** For state-changing lifecycle operations (installing applications, activating, deactivating, or deleting snapshots, and reading, setting, or synchronizing environment variables), use the `version-lifecycle-manager` skill. The two skills work together — inspect first, act there.
 
 ## Setup and configuration
 
-- **BAW server URL and credentials are required.** The skill will ask for them if not supplied.
+- **Business Automation Workflow server URL and credentials are required.** The skill will ask for them if not supplied.
 - **On-premises:** provide `https://<host>:9443` and a username/password for Basic authentication.
-- **CP4BA (Cloud Pak for Business Automation):** provide the CP4BA route (e.g. `https://<cpd-route>/bas`) and credentials. The skill exchanges them automatically for a Bearer token when Basic auth returns `403`.
-- **BAW on Cloud:** provide the tenant URL (`https://<tenant>.baw.ibmcloud.com`) and an IBM Cloud IAM Bearer token.
+- **Cloud Pak for Business Automation:** provide the Cloud Pak for Business Automation route (e.g. `https://<cpd-route>/bas`) and credentials. The skill exchanges them automatically for a Bearer token when Basic auth returns `403`.
+- **Business Automation Workflow on Cloud:** provide the tenant URL (`https://<tenant>.baw.ibmcloud.com`) and an IBM Cloud IAM Bearer token.
 - No local software, packages, or MCP servers are required. The skill uses `execute_command` (curl) when available, or shows the exact command for you to run.
 - The skill obtains a `BPMCSRFToken` from the login endpoint automatically at the start of each session — you do not need to supply one.
 
 ## Compatibility
 
-- **BAW 18.0.0.0 or later required.** IBM BPM 8.x does not support the Operations REST API (`/ops/std/bpm/...`) used for snapshot inspection. If the server returns `404` on the Operations path, this skill cannot retrieve snapshot metadata — use the Process Admin Console instead.
+- **Business Automation Workflow 18.0.0.0 or later required.** IBM Business Process Manager 8.x does not support the Operations REST API (`/ops/std/bpm/...`) used for snapshot inspection. If the server returns `404` on the Operations path, this skill cannot retrieve snapshot metadata — use the Process Admin Console instead.
 - Every Operations API call requires a `BPMCSRFToken` header obtained from `POST .../ops/system/login`. The skill handles this automatically, but if the server returns `CWTBG0651E` after a pause the token has expired — re-authenticate to refresh it.
 - Container and snapshot acronyms are **case-sensitive** — a mismatch returns `CWTBG0624E` (container not found) or `CWTBG0646E` (snapshot not found).
-- Supported deployment types: BAW on-premises (root-mount or prefixed context root), BAW on Cloud, and CP4BA (Zen runtime).
+- Supported deployment types: Business Automation Workflow on-premises (root-mount or prefixed context root), Business Automation Workflow on Cloud, and Cloud Pak for Business Automation (Zen runtime).
 
 ## Prompt examples
 
@@ -73,12 +73,12 @@ This skill retrieves and presents read-only snapshot metadata from a BAW server 
 
 ---
 
-### Inspect on a CP4BA cluster
+### Inspect on a Cloud Pak for Business Automation cluster
 
 **Prompt:**
-> Inspect snapshot v4.0 of LOANAPP on our CP4BA cluster at https://cpd.openshift.myorg.com/bas. Username: <username>, password: <password>.
+> Inspect snapshot v4.0 of LOANAPP on our Cloud Pak for Business Automation cluster at https://cpd.openshift.myorg.com/bas. Username: <username>, password: <password>.
 
-**What to expect:** The skill exchanges credentials for a Bearer token via the CP4BA authorize endpoint, obtains the CSRF token, then retrieves and presents the Snapshot Summary block for LOANAPP v4.0.
+**What to expect:** The skill exchanges credentials for a Bearer token via the Cloud Pak for Business Automation authorize endpoint, obtains the CSRF token, then retrieves and presents the Snapshot Summary block for LOANAPP v4.0.
 
 ---
 
@@ -91,12 +91,12 @@ This skill retrieves and presents read-only snapshot metadata from a BAW server 
 
 ---
 
-### Diagnose an API error — server may be BPM 8.x
+### Diagnose an API error — server may be Business Process Manager 8.x
 
 **Prompt:**
-> I'm getting a 404 when trying to inspect snapshots on https://baw-legacy.corp.example.com:9443. The server is running an older version that predates BAW 18.0.
+> I'm getting a 404 when trying to inspect snapshots on https://baw-legacy.corp.example.com:9443. The server is running an older version that predates Business Automation Workflow 18.0.
 
-**What to expect:** An explanation that the Operations REST API is not present on this server (likely IBM BPM 8.x, which predates BAW 18.0), and a recommendation to use the Process Admin Console to inspect snapshots manually instead.
+**What to expect:** An explanation that the Operations REST API is not present on this server (likely IBM Business Process Manager 8.x, which predates Business Automation Workflow 18.0), and a recommendation to use the Process Admin Console to inspect snapshots manually instead.
 
 ---
 

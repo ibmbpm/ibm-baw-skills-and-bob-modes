@@ -1,3 +1,5 @@
 # Local environment — credentials, never commit
 .env
 .env.local
+**/.env
+**/.env.local

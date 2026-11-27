@@ -1,6 +1,6 @@
-# BAW connection: standard procedure
+# Business Automation Workflow connection: standard procedure
 
-This file is shared across all BAW skills. Do not modify it per skill.
+This file is shared across all Business Automation Workflow skills. Do not modify it per skill.
 Copy it into `references/BAW_CONNECTION.md` in your skill folder.
 
 Each skill declares its skill-specific details (which MCP server and which sentinel tool)
@@ -13,9 +13,9 @@ loading this file.
 
 Tell the user exactly this:
 
-> "I do not see the required BAW MCP server connected. Would you like to:
+> "I do not see the required Business Automation Workflow MCP server connected. Would you like to:
 > 1. Reconnect: connect your MCP server, and I will retry automatically.
-> 2. Use REST mode: I will use the BAW REST API directly instead."
+> 2. Use REST mode: I will use the Business Automation Workflow REST API directly instead."
 
 Wait for their choice before continuing.
 
@@ -31,12 +31,12 @@ Do not switch to REST mode after a single failed call. Switch only if the tool i
 
 ---
 
-## REST mode: BAW server URL
+## REST mode: Business Automation Workflow server URL
 
 All paths in `references/baw-rest.md` are relative. Prepend `{BAW_BASE_URL}` to construct the full URL.
 
-If the user has not provided their BAW server URL, ask before making any REST call:
+If the user has not provided their Business Automation Workflow server URL, ask before making any REST call:
 
-> "What is your BAW server URL? (for example, `https://baw.example.com:9443`)"
+> "What is your Business Automation Workflow server URL? (for example, `https://baw.example.com:9443`)"
 
 Store it as `{BAW_BASE_URL}` and use it for all subsequent REST calls in the session.

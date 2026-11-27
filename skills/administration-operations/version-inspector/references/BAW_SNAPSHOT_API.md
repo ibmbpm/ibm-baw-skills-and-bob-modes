@@ -1,4 +1,4 @@
-# BAW Snapshot Inspector — API Reference
+# Business Automation Workflow Snapshot Inspector — API Reference
 
 Covers read-only endpoints for retrieving snapshot metadata. For lifecycle-action endpoints (activate, deactivate, delete, env vars), see the `version-lifecycle-manager` skill.
 
@@ -23,10 +23,10 @@ Covers read-only endpoints for retrieving snapshot metadata. For lifecycle-actio
 
 | Deployment | Base URL pattern | Notes |
 |---|---|---|
-| BAW on-premises (root mount) | `https://<host>:9443` | Most standalone on-prem installations mount Operations API directly at `/ops/...` |
-| BAW on-premises (prefixed) | `https://<host>:9443/rest`, `/bas`, or `/baw` | Some installations use context roots |
-| BAW on Cloud | `https://<tenant>.baw.ibmcloud.com` | Tenant-specific |
-| CP4BA | `https://<cpd-route>/bas` | OpenShift route for the BAW component |
+| Business Automation Workflow on-premises (root mount) | `https://<host>:9443` | Most standalone on-prem installations mount Operations API directly at `/ops/...` |
+| Business Automation Workflow on-premises (prefixed) | `https://<host>:9443/rest`, `/bas`, or `/baw` | Some installations use context roots |
+| Business Automation Workflow on Cloud | `https://<tenant>.baw.ibmcloud.com` | Tenant-specific |
+| Cloud Pak for Business Automation | `https://<cpd-route>/bas` | OpenShift route for the Business Automation Workflow component |
 
 > **Path prefix note:** All Operations API calls use the prefix `/ops/std/bpm/...` appended to the base URL. The CSRF token acquisition endpoint is `/ops/system/login`.
 
@@ -41,8 +41,8 @@ If the user provides only a hostname, probe port **9443** and try root context `
 #### On-premises: Basic auth
 Send `Authorization: Basic <base64(username:password)>` on every request.
 
-#### CP4BA: exchange credentials for a Bearer token
-Basic auth returns `403` on most CP4BA clusters. Exchange credentials once per session:
+#### Cloud Pak for Business Automation: exchange credentials for a Bearer token
+Basic auth returns `403` on most Cloud Pak for Business Automation clusters. Exchange credentials once per session:
 
 ```bash
 curl -sk -X POST "https://<cpd-host>/icp4d-api/v1/authorize" \
@@ -72,7 +72,7 @@ curl -sk -X POST "<BAW_BASE_URL>/ops/system/login" \
   -d '{"refresh_groups": false}'
 ```
 
-**CP4BA example (Bearer token):**
+**Cloud Pak for Business Automation example (Bearer token):**
 ```bash
 curl -sk -X POST "https://cpd.example.com/bas/ops/system/login" \
   -H "Authorization: Bearer <token>" \
@@ -92,7 +92,7 @@ Pass the returned `csrf_token` value as the `BPMCSRFToken` header on every subse
 
 > **Note:** To request a shorter-lived token, add `"requested_lifetime": <seconds>` to the POST body. Must be ≤ 7200.
 
-> **Note:** The WLE endpoints (`/bpm/wle/v1/...`) do **not** appear in the Operations API spec and have separate CSRF handling. On some CP4BA clusters they also enforce `BPMCSRFToken`. If a WLE call returns `CWTBG0651E`, re-use the same token obtained from `POST /ops/system/login`.
+> **Note:** The WLE endpoints (`/bpm/wle/v1/...`) do **not** appear in the Operations API spec and have separate CSRF handling. On some Cloud Pak for Business Automation clusters they also enforce `BPMCSRFToken`. If a WLE call returns `CWTBG0651E`, re-use the same token obtained from `POST /ops/system/login`.
 
 ---
 
@@ -245,7 +245,7 @@ curl -sk -X GET \
 | `container` | string | Acronym of the Process App or Toolkit |
 | `is_default` | boolean | `true` = this is the default snapshot |
 | `status` | string | Development state, e.g. `New`, `Validated`, `Released` |
-| `capability` | string | BPM capability: `Standard` or `Advanced` |
+| `capability` | string | Business Process Manager capability: `Standard` or `Advanced` |
 | `archived` | boolean | `true` = snapshot is archived |
 | `installable` | boolean | `false` = snapshot has install errors; cannot be deployed |
 
@@ -273,7 +273,7 @@ curl -sk -X GET \
   -H "BPMCSRFToken: <csrf_token>"
 ```
 
-> **Note:** On CP4BA clusters, this WLE endpoint also enforces `BPMCSRFToken`. Reuse the token obtained from `POST /ops/system/login`.
+> **Note:** On Cloud Pak for Business Automation clusters, this WLE endpoint also enforces `BPMCSRFToken`. Reuse the token obtained from `POST /ops/system/login`.
 
 **Response (excerpt):**
 ```json
@@ -302,7 +302,7 @@ curl -sk -X GET \
 }
 ```
 
-**Dependency enrichment:** Locate the container by `shortName`, then the target snapshot in `installedSnapshots` by `acronym`. Look for toolkit references in `toolkits`, `dependencies`, or `usedToolkitSnapshots` (field name varies by BAW version).
+**Dependency enrichment:** Locate the container by `shortName`, then the target snapshot in `installedSnapshots` by `acronym`. Look for toolkit references in `toolkits`, `dependencies`, or `usedToolkitSnapshots` (field name varies by Business Automation Workflow version).
 
 ---
 
@@ -330,11 +330,11 @@ Locate the toolkit in `data.toolkitList` by `shortName`, then navigate to the ta
 | HTTP | Code | Cause | Action |
 |---|---|---|---|
 | `401` | `CWTBG0019E` | Invalid credentials | Verify username/password or token |
-| `403` | `CWTBG0020E` | Insufficient permissions or wrong auth type for CP4BA | Check `tw_admins` group membership (on-premises) or switch to Bearer token (CP4BA) |
+| `403` | `CWTBG0020E` | Insufficient permissions or wrong auth type for Cloud Pak for Business Automation | Check `tw_admins` group membership (on-premises) or switch to Bearer token (Cloud Pak for Business Automation) |
 | `400` | `CWTBG0651E` | Missing or invalid CSRF token | Run `POST /ops/system/login` to obtain a fresh `BPMCSRFToken` and include it in the `BPMCSRFToken` header |
 | `400` | `CWTBG0624E` | Container acronym not found | Acronyms are case-sensitive — list containers to confirm |
 | `400` | `CWTBG0646E` | Snapshot acronym not found | List snapshots for the container to confirm the exact acronym |
-| `404` | — | Operations API not available | Server may be BPM 8.x; Operations API requires BAW 18.0+ |
-| `500` | — | BAW server error | Check `SystemOut.log`; may indicate a cluster or database issue |
+| `404` | — | Operations API not available | Server may be Business Process Manager 8.x; Operations API requires Business Automation Workflow 18.0+ |
+| `500` | — | Business Automation Workflow server error | Check `SystemOut.log`; may indicate a cluster or database issue |
 
 **Case sensitivity:** `HRAPP` and `hrapp` are different values. Always use the exact acronym as returned by the list endpoints.

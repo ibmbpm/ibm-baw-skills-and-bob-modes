@@ -1,7 +1,7 @@
 # server.js Reference Pattern
 
 This annotated reference shows the exact patterns to follow when generating `server.js` for a
-BAW custom user task interface. Adapt field names and routes to match the user's schema.
+Business Automation Workflow custom user task interface. Adapt field names and routes to match the user's schema.
 
 ---
 
@@ -220,7 +220,7 @@ app.listen(PORT, '127.0.0.1', () => {
 
 ## Data transformation helpers (Client or Server)
 
-**Reading input array from BAW:**
+**Reading input array from Business Automation Workflow:**
 ```js
 function inputArrayToMap(inputArray) {
   const map = {};
@@ -233,7 +233,7 @@ function inputArrayToMap(inputArray) {
 }
 ```
 
-**Serializing form values to output array for BAW:**
+**Serializing form values to output array for Business Automation Workflow:**
 ```js
 function formDataToOutputArray(formValues) {
   return Object.entries(formValues)

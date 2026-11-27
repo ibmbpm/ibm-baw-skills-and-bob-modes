@@ -1,6 +1,6 @@
-# BAW Connection — standard procedure
+# Business Automation Workflow Connection — standard procedure
 
-This file is shared across all BAW skills. Do not modify it per skill.
+This file is shared across all Business Automation Workflow skills. Do not modify it per skill.
 Copy it into `references/BAW_CONNECTION.md` in your skill folder.
 
 The skill-specific details (which MCP server, which sentinel tool) are declared
@@ -13,9 +13,9 @@ loading this file.
 
 Tell the user exactly this:
 
-> "I don't see the required BAW MCP server connected. Would you like to:
+> "I don't see the required Business Automation Workflow MCP server connected. Would you like to:
 > 1. **Reconnect** — connect your MCP server and I'll retry automatically, or
-> 2. **REST mode** — I'll use the BAW REST API directly instead."
+> 2. **REST mode** — I'll use the Business Automation Workflow REST API directly instead."
 
 Wait for their choice before continuing.
 
@@ -31,20 +31,20 @@ Do not switch to REST mode after a single failed call — only switch if the too
 
 ---
 
-## REST mode — BAW server URL and environment resolution
+## REST mode — Business Automation Workflow server URL and environment resolution
 
 All paths in `references/baw-rest.md` are relative. Prepend `{BAW_BASE_URL}` to construct the full URL.
 
 ### Base URL Patterns
 - **On-premises / Standalone containers:** `{BAW_BASE_URL}` = `https://<host>:<port>` (for example, `https://baw.example.com:9443`). Paths follow `/ops/...`, `/bpm/...`, `/rest/bpm/wle/v1/...`.
-- **CP4BA (Cloud Pak for Business Automation):** `{BAW_BASE_URL}` includes the deployment instance route prefix:
+- **Cloud Pak for Business Automation:** `{BAW_BASE_URL}` includes the deployment instance route prefix:
   - Studio / Workflow Authoring: `https://<cpd-host>/bas`
   - Runtime instances: `https://<cpd-host>/baw-<instance>` (for example, `/baw-aut`, `/baw-dev`, `/baw-bawins1`)
   Full API paths are appended directly: `{BAW_BASE_URL}/ops/...`, `{BAW_BASE_URL}/bpm/...`, etc.
 
-### CP4BA — Disambiguate authoring vs runtime before proceeding
+### Cloud Pak for Business Automation — Disambiguate authoring vs runtime before proceeding
 
-When the user provides a CP4BA URL, identify which type it is **before making any API call**:
+When the user provides a Cloud Pak for Business Automation URL, identify which type it is **before making any API call**:
 
 | URL contains | Environment type | Can run tests? |
 |---|---|---|
@@ -62,7 +62,7 @@ GET https://<cpd-host>/bas/ops/std/bpm/servers/workflow
 
 **When the user provides a BAS URL and no runtime URL is known:** Do not ask for a runtime URL. Use the BAS playback server. Only ask if the user explicitly states they want to test against a deployed runtime snapshot.
 
-> **CP4BA multi-cluster deployments — BAS and runtime may be on completely different hostnames.** On some CP4BA installations the Workflow Authoring cluster (`/bas`) and the BAW runtime cluster (`/baw-<instance>`) are deployed on entirely separate OpenShift clusters with different base hostnames — not just different path segments of the same host. For example:
+> **Cloud Pak for Business Automation multi-cluster deployments — BAS and runtime may be on completely different hostnames.** On some Cloud Pak for Business Automation installations the Workflow Authoring cluster (`/bas`) and the Business Automation Workflow runtime cluster (`/baw-<instance>`) are deployed on entirely separate OpenShift clusters with different base hostnames — not just different path segments of the same host. For example:
 > - BAS: `https://cpd-demo-project.apps.**baas**.cp.fyre.ibm.com/bas`
 > - Runtime: `https://cpd-demo-project.apps.**buis**.cp.fyre.ibm.com/baw-bawins1`
 >
@@ -77,7 +77,7 @@ GET https://<cpd-host>/bas/ops/std/bpm/servers/workflow
 
 ### Authentication and token acquisition
 
-> **Cross-platform HTTP — always use Python stdlib `urllib` for all HTTP calls.** Never use `curl` or PowerShell for REST calls — Python is available on all supported platforms (Windows, macOS, Linux) and avoids shell quoting and alias incompatibilities. No third-party packages are needed. For CP4BA environments with self-signed or private CA certificates, disable certificate verification:
+> **Cross-platform HTTP — always use Python stdlib `urllib` for all HTTP calls.** Never use `curl` or PowerShell for REST calls — Python is available on all supported platforms (Windows, macOS, Linux) and avoids shell quoting and alias incompatibilities. No third-party packages are needed. For Cloud Pak for Business Automation environments with self-signed or private CA certificates, disable certificate verification:
 > ```python
 > import ssl
 > ctx = ssl.create_default_context()
@@ -87,28 +87,28 @@ GET https://<cpd-host>/bas/ops/std/bpm/servers/workflow
 > ```
 
 - **On-premises / Containers:** HTTP Basic auth on `POST {BAW_BASE_URL}/ops/system/login` to obtain `{BAW_CSRF}` and session cookies (`LtpaToken2`, `JSESSIONID`).
-- **CP4BA (Zen IAM):**
+- **Cloud Pak for Business Automation (Zen IAM):**
   1. Obtain Zen JWT access token via `GET https://<cpd-host>/v1/preauth/validateAuth` with Basic auth (`username:password`).
   2. Exchange for CSRF token via `POST {BAW_BASE_URL}/ops/system/login` with `Authorization: Bearer <accessToken>` and body `{"refresh_groups": false}`.
   3. Send `Authorization: Bearer <accessToken>` and `BPMCSRFToken: <csrf_token>` on all subsequent requests.
 
-If the user has not provided their BAW server URL, ask before making any REST call:
+If the user has not provided their Business Automation Workflow server URL, ask before making any REST call:
 
-> "What is your BAW server URL? (e.g. `https://baw.example.com:9443` for on-prem or `https://<cpd-host>/bas` for CP4BA)"
+> "What is your Business Automation Workflow server URL? (e.g. `https://baw.example.com:9443` for on-prem or `https://<cpd-host>/bas` for Cloud Pak for Business Automation)"
 
 Store it as `{BAW_BASE_URL}` and use it for all subsequent REST calls in the session.
 
 ### URL validation — resolve port ambiguity before proceeding
 
-On-premises BAW servers almost always listen on port **9443** (HTTPS) or 9080 (HTTP). When the user provides a URL with no port (for example, `https://host.example.com/`), do **not** assume port 443 is the BAW runtime. Instead:
+On-premises Business Automation Workflow servers almost always listen on port **9443** (HTTPS) or 9080 (HTTP). When the user provides a URL with no port (for example, `https://host.example.com/`), do **not** assume port 443 is the Business Automation Workflow runtime. Instead:
 
 1. Attempt `POST {url}/ops/system/login` with Basic auth.
-2. If that returns HTTP 404 or a non-BAW HTML page, probe `https://<host>:9443/ops/system/login`.
+2. If that returns HTTP 404 or an HTML page that is not from Business Automation Workflow, probe `https://<host>:9443/ops/system/login`.
 3. If 9443 also fails, try `https://<host>:9080/ops/system/login`.
 4. Use the first URL that returns a JSON login response (with a `csrf_token` field).
 
 If none of these succeed, tell the user:
 
-> "I couldn't find a BAW server at `<url>`. Common BAW ports are 9443 (HTTPS) and 9080 (HTTP). Could you confirm the full server URL including port, e.g. `https://host.example.com:9443`?"
+> "I couldn't find a Business Automation Workflow server at `<url>`. Common Business Automation Workflow ports are 9443 (HTTPS) and 9080 (HTTP). Could you confirm the full server URL including port, e.g. `https://host.example.com:9443`?"
 
 Do not probe further without an explicit URL from the user.

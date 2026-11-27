@@ -1,20 +1,20 @@
 ---
 name: baw-project-doc
-description: "Generates comprehensive, up-to-date documentation for IBM Business Automation Workflow (BAW) applications by analyzing process models, services, integrations, business objects, and application artifacts — no MCP server or live server connection required. Accepts three input types: a TWX export file, a BPMN + XSD pair (output of the generate-baw-bpmn skill), or a ZIP archive containing a BPMN + XSD. Use whenever the user wants to document a BAW application, generate technical or functional documentation, understand what a BAW process app contains, or keep documentation synchronized with an application. Trigger phrases include \"document this BAW app\", \"generate documentation for\", \"what does this process app do\", \"document my TWX file\", \"generate a README for my BAW process\", \"summarize my BAW project\", \"document this BPMN\"."
+description: "Generates comprehensive, up-to-date documentation for IBM Business Automation Workflow applications by analyzing process models, services, integrations, business objects, and application artifacts — no MCP server or live server connection required. Accepts three input types: a TWX export file, a BPMN + XSD pair (output of the generate-baw-bpmn skill), or a ZIP archive containing a BPMN + XSD. Use whenever the user wants to document a Business Automation Workflow application, generate technical or functional documentation, understand what a Business Automation Workflow process app contains, or keep documentation synchronized with an application. Trigger phrases include \"document this Business Automation Workflow app\", \"generate documentation for\", \"what does this process app do\", \"document my TWX file\", \"generate a README for my Business Automation Workflow process\", \"summarize my Business Automation Workflow project\", \"document this BPMN\"."
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
 metadata:
   version: "1.0.0"
-  display_name: BAW Project Documentation
-  short_description: Generate comprehensive Markdown documentation for a BAW application from a TWX export, BPMN+XSD pair, or ZIP archive.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Project Documentation
+  short_description: Generate comprehensive Markdown documentation for a Business Automation Workflow application from a TWX export, BPMN+XSD pair, or ZIP archive.
+  author: IBM Business Automation Workflow Team
 ---
-# BAW documentation
+# Business Automation Workflow documentation
 
-Generate comprehensive Markdown documentation for an IBM BAW application. No MCP server
+Generate comprehensive Markdown documentation for an IBM Business Automation Workflow application. No MCP server
 or live server connection required.
 
 ## Input paths
@@ -39,7 +39,7 @@ Before saying anything to the user, use the file tools to search:
 - If **no specific project was named** — stop and ask. This applies even when only one
   artifact exists in the workspace. Do not assume or proceed:
 
-  > "I found the following BAW artifacts in your workspace:
+  > "I found the following Business Automation Workflow artifacts in your workspace:
   >
   > - `<path/to/File1.bpmn>` (BPMN + XSD)
   > - `<path/to/File2.twx>` (TWX export)
@@ -49,19 +49,19 @@ Before saying anything to the user, use the file tools to search:
   Wait for the user's answer before doing anything else.
 
 **Found nothing?** Do not ask the user to "provide a file". Instead, tell them how to
-get one — the most natural source for a BAW project is a TWX export from the authoring
+get one — the most natural source for a Business Automation Workflow project is a TWX export from the authoring
 environment:
 
-> "I couldn't find any BAW artifacts for that project in `business-processes/`. To
-> document it, export the application from your BAW authoring environment:
+> "I couldn't find any Business Automation Workflow artifacts for that project in `business-processes/`. To
+> document it, export the application from your Business Automation Workflow authoring environment:
 >
-> - **Traditional BAW (Workflow Center):**
+> - **Traditional Business Automation Workflow (Workflow Center):**
 >   1. Open **Workflow Center** and navigate to your process app.
 >   2. Click the snapshot you want to document (or create one if needed).
 >   3. Select **Export** and save the `.twx` file.
 >      (ref: [Importing and exporting projects and toolkits](https://www.ibm.com/docs/en/baw/26.0.x?topic=snapshots-importing-exporting-projects-toolkits))
 >
-> - **CP4BA containerized (Business Automation Studio):**
+> - **Cloud Pak for Business Automation containerized (Business Automation Studio):**
 >   1. Open **Business Automation Studio** and navigate to **Business automations**.
 >   2. Open your process application and select the snapshot.
 >   3. Use the overflow menu → **Export** to save the `.twx` file.
@@ -91,7 +91,7 @@ Wait for the user's selection before proceeding. Store the chosen audience as `<
 
 ### Path A — TWX file
 
-A BAW process application or toolkit export (`.twx`).
+A Business Automation Workflow process application or toolkit export (`.twx`).
 
 **Coverage:** processes, services (all types), business objects, coach views.
 
@@ -207,7 +207,7 @@ Close with:
 > Full technical documentation written to `docs/baw/<AppName>/<AppName>-documentation.md`.
 
 **Tone rules (all audiences):**
-- Write in plain English. Avoid BAW jargon unless the term is immediately explained.
+- Write in plain English. Avoid Business Automation Workflow jargon unless the term is immediately explained.
 - Be concrete: name the roles, name the decisions, name what data flows through.
 - Keep the summary readable without needing to open the document.
 
@@ -222,7 +222,7 @@ Close with:
 **Out of scope — redirect clearly:**
 - **REST API path:** not in scope
 - **MCP path** (`get_process_model`, `export_solution_expanded`): not in scope
-- **Deploying to BAW or managing versions**: use `baw-deployment-manager` or `version-lifecycle-manager`
+- **Deploying to Business Automation Workflow or managing versions**: use `baw-deployment-manager` or `version-lifecycle-manager`
 - **Generating new BPMN from descriptions**: use `generate-baw-bpmn`
 - **Generating or modifying Business Object import files**: use `generate-baw-business-objects`
 - **Creating coach widgets or task portals**: use `create-baw-widget` or `create-baw-portal`

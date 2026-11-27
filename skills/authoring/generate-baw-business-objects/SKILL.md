@@ -1,22 +1,22 @@
 ---
 name: generate-baw-business-objects
-description: "Generates and modifies BAW Business Object import files — individual .bo.json files, a combined OpenAPI 3.0 JSON, a discovery report, and an optional toolkit TWX. Use when the user wants to generate Business Objects or BOs for a BAW process app or toolkit, modify an existing BO .json file, handle enum-to-Selection-BO conversion, or package BOs into a reusable TWX toolkit. Always use this skill for BO modifications — even simple field additions, removals, or renames — because the output must comply with BAW's specific OpenAPI format rules, include import instructions, and surface safety warnings when fields are removed or renamed. Three delivery options are available: WebPD UI import, new toolkit TWX, or updating an existing toolkit TWX. This skill covers ONLY Business Object artifacts — for BPMN process generation use generate-baw-bpmn instead."
+description: "Generates and modifies Business Automation Workflow Business Object import files — individual .bo.json files, a combined OpenAPI 3.0 JSON, a discovery report, and an optional toolkit TWX. Use when the user wants to generate Business Objects or BOs for a Business Automation Workflow process app or toolkit, modify an existing BO .json file, handle enum-to-Selection-BO conversion, or package BOs into a reusable TWX toolkit. Always use this skill for BO modifications — even simple field additions, removals, or renames — because the output must comply with Business Automation Workflow's specific OpenAPI format rules, include import instructions, and surface safety warnings when fields are removed or renamed. Three delivery options are available: WebPD UI import, new toolkit TWX, or updating an existing toolkit TWX. This skill covers ONLY Business Object artifacts — for BPMN process generation use generate-baw-bpmn instead."
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: Generate BAW Business Objects
-  short_description: Generate and modify importable BAW Business Object files (OpenAPI JSON, TWX toolkit) from any data model description.
-  author: IBM BAW Team
+  display_name: Generate Business Automation Workflow Business Objects
+  short_description: Generate and modify importable Business Automation Workflow Business Object files (OpenAPI JSON, TWX toolkit) from any data model description.
+  author: IBM Business Automation Workflow Team
 ---
 
-# Generate BAW Business Objects
+# Generate Business Automation Workflow Business Objects
 
-Produce importable BAW Business Objects from any data-model description, generating structured output files and helping the user choose how to deliver them into BAW.
+Produce importable Business Automation Workflow Business Objects from any data-model description, generating structured output files and helping the user choose how to deliver them into Business Automation Workflow.
 
 **One important note about imported BOs:** they appear as read-only in WebPD after import. The correct workflow is: finalize all BO specs with Bob before importing, then import once. If changes are needed later, update the files with Bob and re-import — re-importing overrides the previous BOs.
 
@@ -139,7 +139,7 @@ Write one `<BOName>.bo.json` file per Business Object to `generated_bos/`. See `
 
 Write `output/<domain-slug>.json` — a valid OpenAPI 3.0 file importable via the WebPD "Import business objects" dialog. Follow the full rules in `references/BAW_BO_OPENAPI_RULES.md`. Key points:
 
-- Root keys: `openapi` (emit `"3.0.3"`; any `"3.0.x"` value is accepted by BAW), `info`, `components`
+- Root keys: `openapi` (emit `"3.0.3"`; any `"3.0.x"` value is accepted by Business Automation Workflow), `info`, `components`
 - All schemas go under `components.schemas`
 - Schema names → PascalCase (become the BO names in WebPD)
 - Field names → camelCase
@@ -179,7 +179,7 @@ After all files are written:
 
 **Option 1 — Import via WebPD UI** *(BOs will be read-only in the designer)*
 
-BOs imported this way are **read-only** in the BAW designer — you cannot edit their fields directly in the tool after import. To change them later, update the files with Bob and re-import.
+BOs imported this way are **read-only** in the Business Automation Workflow designer — you cannot edit their fields directly in the tool after import. To change them later, update the files with Bob and re-import.
 
 Copy the import steps from `references/IMPORT_STEPS.md` and paste them directly.
 
@@ -243,13 +243,13 @@ See `references/TWX_BO_TOOLS_README.md` for full argument reference.
 **In scope:**
 - Generating a new BO set from any description, document, table, or natural language
 - Modifying an existing BO import file (JSON) and producing an updated importable set
-- Explaining the BAW BO data model, field type constraints, and import behavior
+- Explaining the Business Automation Workflow BO data model, field type constraints, and import behavior
 - Walking the user through WebPD manual import steps
 - Generating toolkit TWX files via the bundled Python scripts
 
 **Out of scope — redirect clearly:**
-- **Auto-importing into BAW:** there is no public API for programmatic Business Object import in BAW WebPD. This skill generates the files; the import is a manual step the user performs in the WebPD UI. Tell the user this directly if they ask.
-- **Making imported BOs editable after import:** imported BOs are read-only in BAW WebPD. The correct workflow is finalize → import → re-import if changes are needed.
+- **Auto-importing into Business Automation Workflow:** there is no public API for programmatic Business Object import in Business Automation Workflow WebPD. This skill generates the files; the import is a manual step the user performs in the WebPD UI. Tell the user this directly if they ask.
+- **Making imported BOs editable after import:** imported BOs are read-only in Business Automation Workflow WebPD. The correct workflow is finalize → import → re-import if changes are needed.
 - **Generating BPMN processes or service flows:** that is `generate-baw-bpmn`. If the user asks for both BOs and a process in the same request, generate the BO files first, then suggest `generate-baw-bpmn` for the process.
   - **Do NOT proactively ask or prompt the user** if they want to generate BPMN processes or service flows to go with the Business Objects. BPMN generation is strictly out of scope. Suggest `generate-baw-bpmn` ONLY if the user explicitly asks how to build process workflows for these BOs.
 
@@ -291,7 +291,7 @@ Then the import option prompt.
 
 ## Reference files
 
-- **`references/BAW_BO_OPENAPI_RULES.md`** — full import format rules. Read whenever you need to check a specific rule (array syntax, `$ref` path format, what keys BAW ignores, enum-to-Selection-BO mapping, etc.).
+- **`references/BAW_BO_OPENAPI_RULES.md`** — full import format rules. Read whenever you need to check a specific rule (array syntax, `$ref` path format, what keys Business Automation Workflow ignores, enum-to-Selection-BO mapping, etc.).
 - **`references/IMPORT_STEPS.md`** — the manual WebPD import sequence. Paste verbatim for Option 1.
 - **`references/TWX_BO_TOOLS_README.md`** — full argument reference for all three twx-bo-tools scripts (`apply_bos.py`, `create_empty_twx.py`, `list_bos.py`).
 - **`scripts/twx-bo-tools/apply_bos.py`** — adds or overwrites BOs in an existing TWX.
