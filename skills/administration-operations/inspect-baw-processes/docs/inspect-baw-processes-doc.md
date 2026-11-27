@@ -1,21 +1,21 @@
-# Inspect BAW Processes: Documentation
+# Inspect Business Automation Workflow Processes: Documentation
 
-> Use when an IBM Business Automation Workflow (BAW) administrator or operator wants to find, investigate, or take action on running BAW process instances: retry failed processes, suspend or resume instances, change due dates, or answer questions like "what's broken right now?" or "why did this instance fail?"
+> Use when an IBM Business Automation Workflow administrator or operator wants to find, investigate, or take action on running Business Automation Workflow process instances: retry failed processes, suspend or resume instances, change due dates, or answer questions like "what's broken right now?" or "why did this instance fail?"
 
 ## Purpose
 
-This skill lets you search, inspect, and act on live BAW process instances without writing scripts or using the BAW admin console directly. You can filter instances by status, application, or date range; drill into a specific instance to see its business data and open tasks; and take lifecycle actions: suspend, resume, retry, terminate, or change a due date. It works whether you have the BAW Runtime MCP server connected or just a BAW server URL.
+This skill lets you search, inspect, and act on live Business Automation Workflow process instances without writing scripts or using the Business Automation Workflow admin console directly. You can filter instances by status, application, or date range; drill into a specific instance to see its business data and open tasks; and take lifecycle actions: suspend, resume, retry, terminate, or change a due date. It works whether you have the Business Automation Workflow Runtime MCP server connected or just a Business Automation Workflow server URL.
 
 ## Setting up and configuring
 
-- **MCP mode (preferred):** Connect the BAW Runtime MCP server (`workflow-runtime`). Bob detects it automatically and uses MCP tools.
-- **REST mode (fallback):** You do not need MCP. Provide your BAW server URL (for example, `https://baw.example.com:9443`) and credentials when prompted. Bob authenticates by using `POST /ops/system/login` and uses the REST API for all operations.
-- You need BAW administrator credentials. Standard user credentials might lack permission to search all instances or take lifecycle actions.
+- **MCP mode (preferred):** Connect the Business Automation Workflow Runtime MCP server (`workflow-runtime`). Bob detects it automatically and uses MCP tools.
+- **REST mode (fallback):** You do not need MCP. Provide your Business Automation Workflow server URL (for example, `https://baw.example.com:9443`) and credentials when prompted. Bob authenticates by using `POST /ops/system/login` and uses the REST API for all operations.
+- You need Business Automation Workflow administrator credentials. Standard user credentials might lack permission to search all instances or take lifecycle actions.
 
 ## Compatibility
 
-- BAW 26.x and later (REST API paths used: `/ops/system/login`, `/std/bpm/processes`, `/std/bpm/processes/count`)
-- In IBM Cloud Pak for Business Automation (CP4BA) federated deployments, the skill automatically handles the `system_id` in instance results. You do not need to take any action.
+- Business Automation Workflow 26.x and later (REST API paths used: `/ops/system/login`, `/std/bpm/processes`, `/std/bpm/processes/count`)
+- In IBM Cloud Pak for Business Automation federated deployments, the skill automatically handles the `system_id` in instance results. You do not need to take any action.
 - Workflow Server (runtime-only) environments do not support export or authoring operations. This skill targets runtime instance management only.
 
 ## Prompt examples
@@ -24,7 +24,7 @@ This skill lets you search, inspect, and act on live BAW process instances witho
 
 ### Find all broken or overdue instances in an app
 **Prompt:**
-> Show me everything failed or late in the Claims Processing app on my BAW server at https://baw.company.com:9443, username <your-baw-username>, password <your-baw-password>.
+> Show me everything failed or late in the Claims Processing app on my Business Automation Workflow server at https://baw.company.com:9443, username <your-baw-username>, password <your-baw-password>.
 
 **What to expect:** A table of matching instances (ID, name, status, due date) filtered to the Claims Processing app, with an offer to inspect or act on any of them.
 

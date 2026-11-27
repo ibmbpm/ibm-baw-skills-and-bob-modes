@@ -3,7 +3,7 @@
 This file documents the key properties extracted from a BPMConfig `-export` output
 that are relevant to environment transition and endpoint validation.
 
-Source: IBM Docs — Configuration properties for the BPMConfig command (BAW 26.0.x):
+Source: IBM Docs — Configuration properties for the BPMConfig command (Business Automation Workflow 26.0.x):
 https://www.ibm.com/docs/en/baw/26.0.x?topic=utility-configuration-properties-bpmconfig-command
 
 ## Exporting the properties file
@@ -37,7 +37,7 @@ The output is a `<DE_name>.properties` file plus optional `fileRegistry.xml` and
 |---|---|
 | `bpm.dmgr.hostname` | Deployment manager hostname — the primary server address |
 | `bpm.dmgr.nodeName` | Deployment manager node name |
-| `bpm.dmgr.installPath` | BAW installation root on the dmgr host |
+| `bpm.dmgr.installPath` | Business Automation Workflow installation root on the dmgr host |
 | `bpm.dmgr.profileName` | Deployment manager profile name |
 | `bpm.dmgr.profilePath` | Fully-qualified path to the dmgr profile directory |
 
@@ -49,7 +49,7 @@ Nodes are numbered from 1. For node N:
 |---|---|
 | `bpm.de.node.N.hostname` | Managed node hostname |
 | `bpm.de.node.N.name` | Managed node name |
-| `bpm.de.node.N.installPath` | BAW installation root on the managed node |
+| `bpm.de.node.N.installPath` | Business Automation Workflow installation root on the managed node |
 | `bpm.de.node.N.profilePath` | Managed node profile path |
 | `bpm.de.node.N.profileName` | Managed node profile name |
 

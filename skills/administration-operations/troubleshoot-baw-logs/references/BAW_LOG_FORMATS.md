@@ -1,6 +1,6 @@
-# IBM BAW log formats and error patterns: reference
+# IBM Business Automation Workflow log formats and error patterns: reference
 
-> **Scope:** IBM Business Automation Workflow (BAW) 22.x–26.x on Liberty and traditional WebSphere Application Server.
+> **Scope:** IBM Business Automation Workflow on Liberty and traditional WebSphere Application Server.
 > Items marked **(verify in your environment)** reflect patterns that may vary by version or topology.
 
 ---
@@ -10,7 +10,7 @@
 1. [Overview: log files and locations](#1-overview-log-files-and-locations)
 2. [SystemOut.log / SystemErr.log](#2-systemoutlog--systemerrlog)
 3. [messages.log: SIMPLE versus JSON](#3-messageslog-simple-versus-json)
-4. [trace.log: trace specification and BPM components](#4-tracelog-trace-specification-and-bpm-components)
+4. [trace.log: trace specification and Business Process Manager components](#4-tracelog-trace-specification-and-bpm-components)
 5. [FFDC files](#5-ffdc-files)
 6. [Process/errors API response](#6-processerrors-api-response)
 7. [Common error patterns](#7-common-error-patterns)
@@ -26,10 +26,10 @@
 
 | Log file | Default path | Notes |
 |---|---|---|
-| `SystemOut.log` | `<install_root>/profiles/<profile>/logs/<server>/SystemOut.log` | JVM stdout; all INFO+ entries. Traditional WAS log file. See [BAW log files](https://www.ibm.com/docs/en/baw/22.0.x?topic=support-business-automation-workflow-log-files). |
+| `SystemOut.log` | `<install_root>/profiles/<profile>/logs/<server>/SystemOut.log` | JVM stdout; all INFO+ entries. Traditional WAS log file. See [Business Automation Workflow log files](https://www.ibm.com/docs/en/baw/22.0.x?topic=support-business-automation-workflow-log-files). |
 | `SystemErr.log` | `<install_root>/profiles/<profile>/logs/<server>/SystemErr.log` | JVM stderr; exception stack traces. Traditional WAS log file. |
 | `messages.log` | `<WLP_HOME>/usr/servers/<server>/logs/messages.log` | Liberty-structured INFO+ messages with thread IDs and message codes. Liberty log file. See [Liberty Logging and Trace](https://www.ibm.com/docs/en/was-liberty/nd?topic=liberty-logging-trace). |
-| `trace.log` | `<WLP_HOME>/usr/servers/<server>/logs/trace.log` (Liberty) or `<install_root>/profiles/<profile>/logs/<server>/trace.log` (traditional) | Verbose trace; BAW creates it only when trace is enabled. Present on both deployments. |
+| `trace.log` | `<WLP_HOME>/usr/servers/<server>/logs/trace.log` (Liberty) or `<install_root>/profiles/<profile>/logs/<server>/trace.log` (traditional) | Verbose trace; Business Automation Workflow creates it only when trace is enabled. Present on both deployments. |
 | `ffdc/` directory | `<WLP_HOME>/usr/servers/<server>/logs/ffdc/` (Liberty) or `<install_root>/profiles/<profile>/logs/ffdc/` (traditional) | One `.txt` file per incident + `<server>_exception.log` summary. Present on both deployments. |
 
 ### Container (IBM Cloud Pak for Business Automation on Red Hat OpenShift)
@@ -37,7 +37,7 @@
 | Log | Container path | Notes |
 |---|---|---|
 | `liberty-message.log` | `/logs/application/liberty-message.log` | Equivalent to messages.log |
-| `liberty-trace.log` | `/logs/application/liberty-trace.log` | BAW creates it when trace_specification is non-default |
+| `liberty-trace.log` | `/logs/application/liberty-trace.log` | Business Automation Workflow creates it when trace_specification is non-default |
 | `ffdc/` | `/logs/ffdc/` | Incident files |
 | Console (stdout) | `kubectl logs <pod>` | JSON by default; controlled by `console_format` |
 
@@ -101,7 +101,7 @@ Key fields: `ibm_threadId` (cross-file correlation), `ibm_messageId` (CWWK*/BPM*
 
 ---
 
-## 4. trace.log: trace specification and BPM components
+## 4. trace.log: trace specification and Business Process Manager components
 
 Create `trace.log` only when at least one component is traced below INFO. Enable targeted components; disable when done.
 
@@ -118,7 +118,7 @@ Component patterns:
 - `*=all`—every component (extremely verbose—use only as last resort)
 
 Examples:
-- `WLE.*=all:com.ibm.bpm.*=all:*=info`—trace BAW engine, reset everything else to INFO
+- `WLE.*=all:com.ibm.bpm.*=all:*=info`—trace Business Automation Workflow engine, reset everything else to INFO
 
 ### Enabling trace
 
@@ -134,17 +134,17 @@ logs:
   trace_specification: "WLE.*=all:com.ibm.bpm.*=all:com.ibm.workflow.*=all:*=info"
 ```
 
-### Key BPM/BAW trace component names
+### Key Business Process Manager or Business Automation Workflow trace component names
 
 | Trace string | Area |
 |---|---|
-| `WLE.*=all` | Workflow Logger Engine group—core BAW server-side code |
+| `WLE.*=all` | Workflow Logger Engine group—core Business Automation Workflow server-side code |
 | `WLE.wle_bpd=all` | BPD execution engine |
 | `WLE.wle_rest=all` | REST API layer |
 | `WLE.wle_eventmgr=all` | Event Manager / scheduler |
 | `com.ibm.bpm.bpdengine.*=all` | BPD script execution |
 | `com.ibm.bpm.integration.*=all` | Integration service calls |
-| `com.ibm.bpm.mon.oi.*=all` | BPM event emitter / tracking |
+| `com.ibm.bpm.mon.oi.*=all` | Business Process Manager event emitter / tracking |
 | `com.ibm.workflow.*=all` | Workflow-specific components |
 | `com.ibm.ws.security.*=all` | Liberty security (SSO, LDAP, OIDC) |
 
@@ -266,7 +266,7 @@ Returns `RuntimeErrorResponse` with per-instance runtime error details.
 | `ProcessNavigationException: Cannot navigate past end of process` | Token routing issue; gateway misconfiguration | Compare flow model with FFDC stack; check gateway conditions |
 | `TaskCompletionException: Task already completed` | Race condition or duplicate completion | Check for concurrent submissions; enable `WLE.*=all` trace |
 | `ServiceException: Integration service call failed` | Downstream REST/SOAP unavailable or returned error | Check service output mapping; verify endpoint availability |
-| `SQLCODE=-911` / `DB2 DEADLOCK` | DB lock contention on BPM schema | Review Db2 lock timeout; check for long-running transactions |
+| `SQLCODE=-911` / `DB2 DEADLOCK` | DB lock contention on Business Process Manager schema | Review Db2 lock timeout; check for long-running transactions |
 | `OutOfMemoryError: Java heap space` | Heap exhausted; often caused by large variable payloads | Review JVM heap config; inspect large Business Objects |
 | `ConnectionPoolException: Unable to get connection` | JDBC pool exhausted | Check DataSource pool size; look for connection leaks in FFDC |
 | `CWWKW0101E: failed with status 500` | Unhandled exception in REST handler | Follow `FFDC1015I` pointer in messages.log to incident file |
@@ -285,7 +285,7 @@ grep "00000087" messages.log trace.log ffdc/*.txt
 
 ### By process instance ID
 
-BAW log messages often include `BPDInstance.<number>` in the text.
+Business Automation Workflow log messages often include `BPDInstance.<number>` in the text.
 
 ```bash
 grep "BPDInstance.1234" messages.log trace.log ffdc/*.txt
@@ -314,4 +314,4 @@ kubectl logs <pod> | jq 'select(.loglevel == "ERROR" or .loglevel == "FAILURE")'
 
 ---
 
-*Based on IBM BAW 24.x/25.x and Liberty documentation. Verify paths and field names against your specific version.*
+*Based on IBM Business Automation Workflow 24.x/25.x and Liberty documentation. Verify paths and field names against your specific version.*

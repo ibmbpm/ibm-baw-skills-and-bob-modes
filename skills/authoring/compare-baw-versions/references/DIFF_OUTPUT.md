@@ -1,6 +1,6 @@
 # Diff output format
 
-This file defines the exact structure for the comparison report that `compare-baw-versions` produces in Step 6.
+This file defines the exact structure for the comparison report that `compare-baw-versions` produces in Step 5.
 
 ---
 
@@ -32,11 +32,15 @@ These artifacts were modified in both versions. Review each carefully before rec
 |---|---|---|---|---|
 | Processes | 0 | 0 | 2 | 1 |
 | Services | 1 | 0 | 0 | 0 |
+| User Interface | 1 | 0 | 2 | 0 |
 | Business Objects | 0 | 0 | 1 | 1 |
 | Variables | 2 | 1 | 0 | 0 |
 | Scripts | 0 | 0 | 1 | 0 |
 | Configuration | 0 | 0 | 0 | 0 |
+| Other changes | 0 | 0 | 0 | 0 |
 **Total changes: N**
+
+**Coverage:** {N} files changed between the two versions. {N} reviewed and accounted for in this report ({X} with functional changes, {Y} with no functional change, {Z} not fully reviewed).
 
 ---
 
@@ -56,6 +60,21 @@ These artifacts were modified in both versions. Review each carefully before rec
 - New REST integration service
 - Endpoint: `GET /api/v2/credit-score/{applicantId}`
 - Output mapped to: `LoanApplication.creditScore`
+
+---
+
+## User Interface
+
+### ✏️ Modified: Loan Intake (Coach Flow)
+- **Component added:** `Button` labeled "Save draft" in the Coach "Applicant details" (after the "Submit" button)
+- **Component removed:** `Select` labeled "Loan type" (was bound to `tw.local.loan.type`)
+- **Component changed:** `Text` labeled "Applicant name" — label changed to "Full legal name", binding unchanged
+
+### ✏️ Modified: Applicant CV (Coach View)
+- **Component added:** `Text` labeled "Middle name" in the section "Person data"
+
+### ➕ Added: Interviewer CV (Coach View)
+- New Coach View artifact
 
 ---
 
@@ -88,6 +107,25 @@ These artifacts were modified in both versions. Review each carefully before rec
 
 ---
 
+## Other changes
+
+### ✏️ Modified: {artifact display name}
+- {Plain description of what changed}
+
+---
+
+## Reviewed, no functional change  _(only if present)_
+These files differ between the two versions, but the difference is a re-save, a regenerated ID, or a timestamp, with no change in behavior or appearance.
+
+- {artifact display name} ({artifact type}) — {one-line reason, for example "internal IDs regenerated"}
+
+---
+
+## Not fully reviewed  _(only if present)_
+- {artifact display name} — {reason it could not be reviewed reliably}
+
+---
+
 > ⚠️ The changes above are informational only — no modifications have been made to either version. To apply changes, open the target version in BAW Process Designer and make the edits manually.
 ```
 
@@ -99,8 +137,8 @@ The skill always produces two files. Producing them is never optional and never 
 
 | File | When | Contents |
 |---|---|---|
-| `<acronym>-<versionA>-vs-<versionB>-diff.md` | End of Step 6 | Full diff report |
-| `<acronym>-<versionA>-vs-<versionB>-reconciliation.md` | End of Step 7 (if run) | Reconciliation checklist |
+| `<acronym>-<versionA>-vs-<versionB>-diff.md` | End of Step 5 | Full diff report |
+| `<acronym>-<versionA>-vs-<versionB>-reconciliation.md` | End of Step 6 (if run) | Reconciliation checklist |
 
 Use the snapshot acronyms (not the full names) in the file name. They are short and suitable for file names. Example: `HSS-v10-vs-v11-diff.md`.
 
@@ -122,6 +160,12 @@ Use the snapshot acronyms (not the full names) in the file name. They are short 
 
 **Empty categories.** Omit entire sections (heading and all content) when a category has zero changes. Do not write "No changes" entries. The absence of a section is the signal.
 
+**Coverage line.** Always include the coverage line under the summary table. The "changed" count is the number of files that differ between the two versions, as determined in Step 4a. If the numbers do not add up, review the missing files before you present the report.
+
+**Coach components.** Describe added or changed components in terms a developer sees in Process Designer: the component type, its visible label, and the Coach that contains it. Do not quote raw XML or JSON.
+
+**Reviewed, no functional change.** Use this section for files whose differences you confirmed are not functional (regenerated IDs, timestamps, re-saved content). Never use it for a file you did not review.
+
 **Artifact names.** Use the human-readable display name from the TWX file (the `name` attribute on the element), not the internal ID or file name.
 
 **Length.** For large diffs (more than about 20 changed artifacts), offer to break the report into sections:
@@ -133,7 +177,7 @@ Use the snapshot acronyms (not the full names) in the file name. They are short 
 
 ## Reconciliation checklist format
 
-Produce the checklist at the end of Step 7 (interactive conflict resolution). Always use this exact structure:
+Produce the checklist at the end of Step 6 (interactive conflict resolution). Always use this exact structure:
 
 ```
 # Reconciliation Checklist: {App Name} — {Version A} → {Version B}
@@ -164,8 +208,8 @@ These exist on one side only. Apply them directly in Process Designer:
 ```
 
 **Checklist rules:**
-- List decisions in the order the user made them during Step 7.
+- List decisions in the order the user made them during Step 6.
 - For "Blend" decisions, write out the user's described outcome verbatim, not a summary.
-- One-sided changes come from the diff that Steps 5 and 6 produce. Include all of them, not just the ones discussed.
+- One-sided changes come from the diff that Steps 4 and 5 produce. Include all of them, not just the ones discussed.
 - If the user skipped zero conflicts, omit the "Skipped conflicts" section entirely.
-- If the user skipped all conflicts, or declined Step 7, the checklist still includes the one-sided changes section. It is always useful.
+- If the user skipped all conflicts, or declined Step 6, the checklist still includes the one-sided changes section. It is always useful.

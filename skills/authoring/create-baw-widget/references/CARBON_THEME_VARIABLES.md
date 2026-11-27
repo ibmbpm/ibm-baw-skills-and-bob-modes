@@ -1,10 +1,10 @@
 # Carbon Theme Variables Reference
 
-This document provides a reference for using Carbon Design System theme variables in BAW Coach widgets.
+This document provides a reference for using Carbon Design System theme variables in Business Automation Workflow Coach widgets.
 
 ## How to use Carbon theme variables in widgets
 
-BAW does not run LESS preprocessing on widget `InlineCSS.css` files, so you cannot reference `@variable-name` directly. To use a theme value:
+Business Automation Workflow does not run LESS preprocessing on widget `InlineCSS.css` files, so you cannot reference `@variable-name` directly. To use a theme value:
 
 1. Find the variable in this reference.
 2. Write its literal value in the CSS property.
@@ -226,7 +226,7 @@ When you update widgets, use these mappings:
 
 ## Why to use literal values with comments
 
-BAW does not run LESS preprocessing on `InlineCSS.css` widget files. The `@bpm-*` variable syntax produces invalid CSS that the browser silently ignores, so the widget renders with no styling and no error message. Always write the literal value in the property and the variable name in a `/* comment */`.
+Business Automation Workflow does not run LESS preprocessing on `InlineCSS.css` widget files. The `@bpm-*` variable syntax produces invalid CSS that the browser silently ignores, so the widget renders with no styling and no error message. Always write the literal value in the property and the variable name in a `/* comment */`.
 
 ## Notes
 

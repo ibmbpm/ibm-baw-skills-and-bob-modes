@@ -166,4 +166,4 @@ Before finalizing the test suite, verify:
 - [ ] Coach conditional visibility assertions generated for every visibility rule
 - [ ] All test case IDs are unique
 - [ ] All `task_name` values in steps match the exact BPMN task label (copy-paste from XML, do not paraphrase)
-- [ ] `app.process_model` matches the exact process name as defined in BAW
+- [ ] `app.process_model` matches the exact process name as defined in Business Automation Workflow

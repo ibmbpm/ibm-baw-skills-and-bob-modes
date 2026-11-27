@@ -1,43 +1,36 @@
 ---
 name: baw-export-import-helper
-description: Migrate IBM BAW or CP4BA Process Apps, toolkits, case solutions, and Business Applications from one environment to another, automatically resolving toolkit dependencies and determining the correct import order. Use when someone says "migrate my process app", "move my workflow to another environment", "export and import BAW projects", "copy my toolkit to production", "migrate between BAW servers", or "transfer my process application". Also use proactively when a user describes environment promotion (dev to test to prod), environment consolidation, disaster recovery restores, or any scenario where BAW artifacts need to move between servers.
+description: Migrate IBM Business Automation Workflow or Cloud Pak for Business Automation Process Apps, toolkits, case solutions, and Business Applications from one environment to another, automatically resolving toolkit dependencies and determining the correct import order. Use when someone says "migrate my process app", "move my workflow to another environment", "export and import Business Automation Workflow projects", "copy my toolkit to production", "migrate between Business Automation Workflow servers", or "transfer my process application". Also use proactively when a user describes environment promotion (dev to test to prod), environment consolidation, disaster recovery restores, or any scenario where Business Automation Workflow artifacts need to move between servers.
 allowed-tools:
   - execute
   - write
   - read
   - fetch
 license: Apache-2.0
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 metadata:
   version: "1.0.0"
 ---
 
 
-> **⚠️ REST only. MCP is not supported by this skill.** All BAW interactions use the BAW REST API exclusively via HTTP calls. Do not call any MCP tools at any point, regardless of whether an MCP server is connected or not. This skill has no MCP dependency. If you find yourself reaching for an MCP tool, stop and use the REST equivalent from `references/baw-rest.md` instead.
+> **⚠️ REST only. MCP is not supported by this skill.** All Business Automation Workflow interactions use the Business Automation Workflow REST API exclusively via HTTP calls. Do not call any MCP tools at any point, regardless of whether an MCP server is connected or not. This skill has no MCP dependency. If you find yourself reaching for an MCP tool, stop and use the REST equivalent from `references/baw-rest.md` instead.
 
-# BAW export and import helper
+# Business Automation Workflow export and import helper
 
-Migrate IBM BAW or CP4BA Process Apps, toolkits, case solutions, and Business Applications between environments. The skill handles authentication, dependency discovery, correct import ordering, and produces a migration report using public BAW REST APIs.
+Migrate IBM Business Automation Workflow or Cloud Pak for Business Automation Process Apps, toolkits, case solutions, and Business Applications between environments. The skill handles authentication, dependency discovery, correct import ordering, and produces a migration report using public Business Automation Workflow REST APIs.
 
 ## Execution mode
 
-This skill operates in **REST mode only**. All calls use the BAW REST API documented in `references/baw-rest.md`.
+This skill operates in **REST mode only**. All calls use the Business Automation Workflow REST API documented in `references/baw-rest.md`.
 
 ---
 
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read source credentials from `.env` automatically. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute calls against both the source and the target server. Do this once per session only.
 
-This skill connects to **two** BAW servers. The source server uses the standard `BAW_BASE_URL`, `BAW_USERNAME`, and `BAW_PASSWORD` variables. For the target server, the following additional variables must be present in `.env` — add them if they are not already there, replacing the placeholders:
-
-```dotenv
-BAW_TARGET_BASE_URL=https://your-target-baw-server.example.com:9443
-BAW_TARGET_USERNAME=<your-target-baw-username>
-BAW_TARGET_PASSWORD=<your-target-baw-password>
-```
-
-Apply the same missing-value detection as the source credentials. If any target variable is missing, ask for all three together in a single message — never one at a time.
+This skill connects to **two** Business Automation Workflow servers (source and target). `references/CREDENTIAL_HANDLING.md` explains how each is selected for a call. If the connection check reports the target as not configured, tell the user which variable **names** to fill in themselves; never ask them to paste values in chat.
 
 ---
 
@@ -45,13 +38,13 @@ Apply the same missing-value detection as the source credentials. If any target 
 
 | Operation | What it does |
 |---|---|
-| `login` | Authenticate to a BAW server and obtain a CSRF token and session |
+| `login` | Authenticate to a Business Automation Workflow server (handled per `references/CREDENTIAL_HANDLING.md`) |
 | `list containers` | List all Process Apps and toolkits visible on a server |
 | `get container` | Retrieve details for a specific Process App or toolkit by acronym |
 | `list branches` | List all branches (tracks) for a given Process App or toolkit |
 | `list snapshots` | List all snapshots for a given container, optionally filtered by branch |
 | `export snapshot` | Download a snapshot as a `.twx` binary file |
-| `inspect twx` | Unzip a local Teamworks Exchange (TWX) file and read its package manifest. Extracts dependency info and BAW version (`buildVersion`, `fixPack`) |
+| `inspect twx` | Unzip a local Teamworks Exchange (TWX) file and read its package manifest. Extracts dependency info and Business Automation Workflow version (`buildVersion`, `fixPack`) |
 | `check exists on target` | Determine whether a given container and snapshot already exists on the target server |
 | `import twx` | Upload a `.twx` file to the target server (returns HTTP 202, asynchronous) |
 | `poll import job` | Poll `GET /ops/system/queue/{id}` every 5 s until the job reaches `success` or `failure` |
@@ -62,14 +55,11 @@ All REST details for each operation are in `references/baw-rest.md`. The step lo
 
 ## Step 0a — establish connections
 
-Credentials are resolved automatically from `.env` via `references/CREDENTIAL_HANDLING.md` (handled by the `## Credentials` section above). Once credentials are resolved, call `login` on both servers:
-- Call `login` on the **source** server. Store the CSRF token as `{SOURCE_CSRF}`.
-- Call `login` on the **target** server. Store the CSRF token as `{TARGET_CSRF}`.
-- Never repeat, echo, log, or include raw credentials in any output, report, or tool call after the session token is obtained.
+Authentication is handled as described in `references/CREDENTIAL_HANDLING.md`. Verify both connections with a harmless `GET /ops/std/bpm/containers` on the **source** server and on the **target** server before continuing. Never repeat, echo, log, or include credentials in any output, report, or tool call.
 
-If either login fails (HTTP 401 or 400), tell the user which server rejected the credentials and ask them to re-enter before continuing. Do not proceed until both logins succeed.
+If either call fails with HTTP 401 or 400, tell the user which server rejected the credentials and ask them to correct their connection settings themselves. Do not proceed until both succeed.
 
-**Self-signed certificates:** On-premises BAW and CP4BA environments commonly use self-signed TLS certificates. When a connection fails due to a certificate error, append `-k` to `curl` calls to bypass validation and warn the user explicitly:
+**Self-signed certificates:** On-premises Business Automation Workflow and Cloud Pak for Business Automation environments commonly use self-signed TLS certificates. If a connection fails because of a certificate error, `references/CREDENTIAL_HANDLING.md` explains the user-side setting. Warn the user explicitly:
 
 > *"Certificate validation is disabled for this session because the server uses a self-signed certificate. Do not disable certificate validation in production environments unless your security policy explicitly permits it."*
 
@@ -77,12 +67,12 @@ If either login fails (HTTP 401 or 400), tell the user which server rejected the
 
 ## Step 0b — validate version compatibility
 
-Check server versions before exporting any TWX files. Read the BAW version from the login response headers or from the `fixPack` field in `META-INF/package.xml` of the first exported TWX, whichever is available first.
+Check server versions before exporting any TWX files. Read the Business Automation Workflow version from the login response headers or from the `fixPack` field in `META-INF/package.xml` of the first exported TWX, whichever is available first.
 
 - Store the source server version as `{SOURCE_VERSION}`.
 - Store the target server version as `{TARGET_VERSION}`.
 - If `{TARGET_VERSION}` < `{SOURCE_VERSION}`, warn the user before continuing:
-  > *"Warning: source is BAW {SOURCE_VERSION} and target is BAW {TARGET_VERSION}. IBM BAW does not support importing snapshots into an older version. Do you want to continue anyway?"*
+  > *"Warning: source is Business Automation Workflow {SOURCE_VERSION} and target is Business Automation Workflow {TARGET_VERSION}. IBM Business Automation Workflow does not support importing snapshots into an older version. Do you want to continue anyway?"*
 - Same version or target newer: proceed silently.
 - User confirms despite mismatch: proceed and note it in the report.
 
@@ -122,7 +112,7 @@ For each Process App or toolkit the user wants to migrate:
 
 ## Step 3 — build the full migration set
 
-> **Why toolkit snapshots need separate handling:** When BAW exports a Process App, it bundles only the specific toolkit snapshot version that app depends on (verified by manual test). Older snapshots of that toolkit are not bundled. For a complete environment migration, export and import all historical snapshots of every toolkit dependency separately so the target has the full snapshot history, not just the versions each app happens to need.
+> **Why toolkit snapshots need separate handling:** When Business Automation Workflow exports a Process App, it bundles only the specific toolkit snapshot version that app depends on (verified by manual test). Older snapshots of that toolkit are not bundled. For a complete environment migration, export and import all historical snapshots of every toolkit dependency separately so the target has the full snapshot history, not just the versions each app happens to need.
 
 > **System toolkits** (`isSystem="true"` in the manifest) are platform-managed and must not be migrated. Skip them entirely.
 
@@ -171,7 +161,7 @@ For each (container, snapshot) pair marked `to import`, oldest snapshot first wi
 
 1. Call `import twx` to upload the `.twx` file to the target server.
 2. The import endpoint returns **HTTP 202** (asynchronous). Extract the queue job URL from the `url` field of the JSON response body.
-3. Poll `GET /ops/system/queue/{id}` on the target server (using `{TARGET_CSRF}` and `{TARGET_SESSION}`) every 10 seconds until the job reaches a terminal state:
+3. Poll `GET /ops/system/queue/{id}` on the target server  every 10 seconds until the job reaches a terminal state:
    - `state: "success"` — import completed successfully; proceed to the next snapshot.
    - `state: "failure"` — import failed; capture the `result` field for the error message.
    - Any other state (`pending`, `running`) — continue polling. After 10 minutes without a terminal state, treat the job as timed out and stop.
@@ -228,8 +218,6 @@ If any snapshots were identified but not imported (for example, user cancelled, 
 
 ## Error handling
 
-**Login fails:** Ask the user to re-enter credentials for the failing server. Do not proceed.
-
 **Container not found on source:** Tell the user which name or acronym was not found. Ask them to confirm the correct one via `list containers`.
 
 **Export fails (HTTP 4xx/5xx):** Report which snapshot failed and the HTTP status. Common causes: insufficient permissions (403), snapshot archived or deleted (404). Ask the user if they want to skip and continue or stop.
@@ -245,6 +233,6 @@ If any snapshots were identified but not imported (for example, user cancelled, 
 ## Important constraints
 
 - **Verify all acronyms against live API responses** before using them in export or import calls.
-- **Skip system toolkits** (`isSystem="true"` in the manifest) — do not export or import them. They are platform-managed and already present on every BAW server.
+- **Skip system toolkits** (`isSystem="true"` in the manifest) — do not export or import them. They are platform-managed and already present on every Business Automation Workflow server.
 - **Migrate all toolkit snapshots across all branches** — not just the version bundled in a process app's TWX. The bundled version covers runtime correctness; the separate export covers full history.
 - **Never log, echo, or store raw credentials.** Do not include credentials, session tokens, or CSRF tokens in any output, report, tool call, or saved file.

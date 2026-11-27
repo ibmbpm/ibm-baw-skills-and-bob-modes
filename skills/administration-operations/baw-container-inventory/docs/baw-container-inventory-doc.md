@@ -1,31 +1,31 @@
-# BAW Container Inventory — Documentation
+# Business Automation Workflow Container Inventory — Documentation
 
-> Inspect the container inventory of a live IBM BAW server — list all Process Apps and Toolkits, count them, search by name or acronym, view metadata, and confirm whether a specific container exists.
+> Inspect the container inventory of a live IBM Business Automation Workflow server — list all Process Apps and Toolkits, count them, search by name or acronym, view metadata, and confirm whether a specific container exists.
 
 ## Purpose
 
-Inspect and query the container inventory of a live IBM Business Automation Workflow (BAW) server directly via the BAW REST API. This skill enables BAW administrators, operators, and developers to discover installed Process Apps and Toolkits, check counts, search for specific containers, or review metadata without logging into Workflow Center or Business Automation Studio. It is strictly read-only and never modifies or deletes server resources.
+Inspect and query the container inventory of a live IBM Business Automation Workflow server directly via the Business Automation Workflow REST API. This skill enables Business Automation Workflow administrators, operators, and developers to discover installed Process Apps and Toolkits, check counts, search for specific containers, or review metadata without logging into Workflow Center or Business Automation Studio. It is strictly read-only and never modifies or deletes server resources.
 
 ## Setup and configuration
 
-- **BAW server URL:** Base URL of your BAW server (e.g., `https://baw.example.com:9443`) with no trailing slash.
-- **BAW credentials:** Username and password for an account authorized on the BAW instance. The skill uses these in-session to acquire a cross-site request forgery (CSRF) token and never stores them permanently.
-- **Network access:** Direct HTTP/HTTPS connectivity to the BAW server REST API endpoints.
+- **Business Automation Workflow server URL:** Base URL of your Business Automation Workflow server (e.g., `https://baw.example.com:9443`) with no trailing slash.
+- **Business Automation Workflow credentials:** Username and password for an account authorized on the Business Automation Workflow instance. The skill uses these in-session to acquire a cross-site request forgery (CSRF) token and never stores them permanently.
+- **Network access:** Direct HTTP/HTTPS connectivity to the Business Automation Workflow server REST API endpoints.
 - **Tools / runtime:** `curl` (for REST API communication) and `Python 3.x` (stdlib only, for running the deterministic processing script [`process_containers.py`](../scripts/process_containers.py)).
-- **No MCP required:** The skill operates via the BAW REST API; no external MCP server connection is needed.
+- **No MCP required:** The skill operates via the Business Automation Workflow REST API; no external MCP server connection is needed.
 
 ## Compatibility
 
-- **BAW REST Operations API:** The skill requires access to the `/ops/system/login` and `/ops/std/bpm/containers` endpoints (BAW 22.x and later, including 26.x).
+- **Business Automation Workflow REST Operations API:** The skill requires access to the `/ops/system/login` and `/ops/std/bpm/containers` endpoints (all IBM-supported Business Automation Workflow releases, including 26.x).
 - **REST only:** The skill performs all server operations via HTTP calls and does not use MCP tools for container querying.
-- **Role permissions:** Requires a BAW user with permissions to view Process Apps and Toolkits on the authoring or runtime server (**Workflow Center** or **Business Automation Studio** for authoring; Workflow Server for runtime-only environments).
+- **Role permissions:** Requires a Business Automation Workflow user with permissions to view Process Apps and Toolkits on the authoring or runtime server (**Workflow Center** or **Business Automation Studio** for authoring; Workflow Server for runtime-only environments).
 
 ## Prompt examples
 
 ### List all installed containers
 
 **Prompt:**
-> Please list all Process Apps and Toolkits installed on our BAW server.
+> Please list all Process Apps and Toolkits installed on our Business Automation Workflow server.
 
 **What to expect:** Bob prompts for the server URL and credentials if not already supplied, fetches all containers across paginated REST responses, and returns two structured tables (Process Apps and Toolkits) followed by a total count summary.
 
@@ -34,7 +34,7 @@ Inspect and query the container inventory of a live IBM Business Automation Work
 ### Count installed containers
 
 **Prompt:**
-> Give me a breakdown and total count of all Process Apps and Toolkits on BAW.
+> Give me a breakdown and total count of all Process Apps and Toolkits on Business Automation Workflow.
 
 **What to expect:** Bob fetches the full container inventory and outputs an inline count summary showing the exact number of Process Apps, Toolkits, and combined total.
 
@@ -43,7 +43,7 @@ Inspect and query the container inventory of a live IBM Business Automation Work
 ### Filter by container type (Toolkits only)
 
 **Prompt:**
-> Show me only the toolkits available on our BAW environment.
+> Show me only the toolkits available on our Business Automation Workflow environment.
 
 **What to expect:** Bob queries the server with the toolkit type filter and displays a single Markdown table listing toolkit names and acronyms along with the toolkit count.
 
@@ -61,7 +61,7 @@ Inspect and query the container inventory of a live IBM Business Automation Work
 ### Search by container name or acronym
 
 **Prompt:**
-> Find any containers related to "Claims" on our BAW server.
+> Find any containers related to "Claims" on our Business Automation Workflow server.
 
 **What to expect:** Bob retrieves the container inventory, performs a case-insensitive search across names and acronyms, and returns matching Process Apps or Toolkits.
 

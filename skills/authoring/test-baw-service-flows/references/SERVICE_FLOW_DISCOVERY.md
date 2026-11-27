@@ -18,7 +18,7 @@ It covers how to find a Service Flow, read its input/output contract, and determ
 
 ## 1. What is a Service Flow
 
-A Service Flow (also called a Service Component in some BAW versions) is a synchronous integration service in IBM BAW. It accepts a set of typed input variables, executes internal logic (REST calls, database queries, script tasks, decision services), and returns typed output variables. Unlike a BPMN process, it has no user tasks and no task claim/complete lifecycle — it runs start-to-finish in a single synchronous call.
+A Service Flow (also called a Service Component in some Business Automation Workflow versions) is a synchronous integration service in IBM Business Automation Workflow. It accepts a set of typed input variables, executes internal logic (REST calls, database queries, script tasks, decision services), and returns typed output variables. Unlike a BPMN process, it has no user tasks and no task claim/complete lifecycle — it runs start-to-finish in a single synchronous call.
 
 A Service Flow can be:
 
@@ -55,9 +55,9 @@ If Authoring MCP tools are present, use them as follows:
 
 If Authoring MCP tools are absent, use REST.
 
-### Step 0 — Detect the BAW version and environment type
+### Step 0 — Detect the Business Automation Workflow version and environment type
 
-Before searching for service flows, establish the BAW version and environment type.
+Before searching for service flows, establish the Business Automation Workflow version and environment type.
 
 ```
 GET {BAW_BASE_URL}/rest/bpm/wle/v1/systems
@@ -68,7 +68,7 @@ GET {BAW_BASE_URL}/rest/bpm/wle/v1/systems
 Read `data.systems[0].version` from the response. Store this as `{BAW_VERSION}` for use in subsequent steps.
 
 **Version implications:**
-- `{BAW_VERSION}` starts with `8.6` → This is BAW 8.6. The Automation Services endpoint (`/automationservices/rest/...`) **does not exist** on this version — skip Step 4 entirely and proceed directly to Step 5 (exposed processes) then Step 6 (TWX-based discovery). Do not probe the Automation Services endpoint on BAW 8.6.
+- `{BAW_VERSION}` starts with `8.6` → This is Business Automation Workflow 8.6. The Automation Services endpoint (`/automationservices/rest/...`) **does not exist** on this version — skip Step 4 entirely and proceed directly to Step 5 (exposed processes) then Step 6 (TWX-based discovery). Do not probe the Automation Services endpoint on Business Automation Workflow 8.6.
 - `{BAW_VERSION}` starts with `21`, `22`, `23`, `24`, `25`, or `26` → Automation Services may be available. Proceed through Steps 4–6 in order.
 
 Then establish the environment type:
@@ -89,7 +89,7 @@ Only ask about an external runtime if the user explicitly says they want to test
 
 **BAS playback server — API paths:**
 
-> ⚠️ **`/bpm/dev/` prefix applies to discovery endpoints only — NOT to invocation.** Tested on BAW 26.x (CP4BA): `POST /bpm/dev/rest/bpm/wle/v1/service/{id}?action=start` returns HTTP 404. Service invocation must use the standard path without the playback prefix:
+> ⚠️ **`/bpm/dev/` prefix applies to discovery endpoints only — NOT to invocation.** Tested on Business Automation Workflow 26.x (Cloud Pak for Business Automation): `POST /bpm/dev/rest/bpm/wle/v1/service/{id}?action=start` returns HTTP 404. Service invocation must use the standard path without the playback prefix:
 
 | Action | Correct BAS path |
 |---|---|
@@ -98,7 +98,7 @@ Only ask about an external runtime if the user explicitly says they want to test
 | Discover exposed services | `{BAS_BASE_URL}/rest/bpm/wle/v1/exposed/service` — **no `/bpm/dev/`** (returns 404 with prefix) |
 | Discover exposed processes | `{BAS_BASE_URL}/rest/bpm/wle/v1/exposed/process` — **no `/bpm/dev/`** |
 
-The `/bpm/dev/` prefix was documented in IBM docs as the playback path, but live testing shows it is not honoured on CP4BA BAS 26.x for these endpoints. Use `{BAS_BASE_URL}` as the base for all calls.
+The `/bpm/dev/` prefix was documented in IBM docs as the playback path, but live testing shows it is not honoured on Cloud Pak for Business Automation BAS 26.x for these endpoints. Use `{BAS_BASE_URL}` as the base for all calls.
 
 Authentication uses the same Zen token flow as the BAS host (already obtained). No separate login is required.
 
@@ -110,14 +110,14 @@ For the playback server, use `{BAS_BASE_URL}` as the base for all subsequent ste
 
 If the user explicitly requests testing against a deployed runtime, ask for the URL and proceed as normal.
 
-**CP4BA URL patterns to know:**
+**Cloud Pak for Business Automation URL patterns to know:**
 
 | URL pattern | Environment type |
 |---|---|
 | `https://<host>/bas/...` | Workflow Authoring (BAS) — has playback server at `/bas/bpm/dev/...` |
 | `https://<host>/baw-dev/...` | Workflow Runtime — execution-capable |
 | `https://<host>/baw-aut/...` | Workflow Runtime (alternate naming) |
-| `https://<host>:<port>/...` | On-premises BAW — always a runtime |
+| `https://<host>:<port>/...` | On-premises Business Automation Workflow — always a runtime |
 
 ### Step 1 — Verify the app is deployed
 
@@ -132,8 +132,8 @@ If the app is not listed, the user must deploy it first. Do not attempt to impor
 > *"The app '[name]' does not appear to be deployed on this server. Please deploy it first — you can use the `baw-deployment-manager` skill or the Process Admin Console to install the snapshot, then come back here to run the tests."*
 
 **TWX version mismatch (if the user attempts a manual import and it fails with `CWTBG0737E`):**
-Check the server API version from `/ops/docs` → `info.version` (for example, `8.6.2.21021` = BAW v21) and compare it against the `buildVersion` attribute in the TWX's `META-INF/package.xml` (for example, `buildVersion="8.6.12.26030"` = BAW 26.0.3). If the TWX version is newer than the server version, tell the user:
-> *"The TWX was exported from BAW [TWX version] but this server is running BAW [server version]. A TWX cannot be imported into an older server. You need a server running BAW [TWX version] or later."*
+Check the server API version from `/ops/docs` → `info.version` (for example, `8.6.2.21021` = Business Automation Workflow v21) and compare it against the `buildVersion` attribute in the TWX's `META-INF/package.xml` (for example, `buildVersion="8.6.12.26030"` = Business Automation Workflow 26.0.3). If the TWX version is newer than the server version, tell the user:
+> *"The TWX was exported from Business Automation Workflow [TWX version] but this server is running Business Automation Workflow [server version]. A TWX cannot be imported into an older server. You need a server running Business Automation Workflow [TWX version] or later."*
 
 **App exists on the runtime but not on Workflow Authoring (BAS):**
 An app can be deployed directly to the runtime without going through Workflow Authoring — for example, by importing a TWX file directly via the Process Admin Console. In this case, the app is not available on the BAS host and a TWX cannot be exported from there. When the runtime confirms the app is deployed but the BAS export returns `CWTBG0624E: Container does not exist`:
@@ -141,7 +141,7 @@ An app can be deployed directly to the runtime without going through Workflow Au
 If the user cannot provide a local TWX, offer to probe startability without a contract: the service IDs can be guessed from the `/exposed/service` endpoint and probed live, but typed test case generation will not be possible.
 
 **App exists on Workflow Authoring but not on the runtime:**
-The snapshot was never installed on this BAW runtime. The TWX can be exported from BAS for contract analysis, but service invocations fail at Phase B. Tell the user:
+The snapshot was never installed on this Business Automation Workflow runtime. The TWX can be exported from BAS for contract analysis, but service invocations fail at Phase B. Tell the user:
 > *"I can read the service flow contract from Workflow Authoring, but this app isn't installed on the runtime (`{BAW_BASE_URL}`). Phase A test generation will work, but Phase B execution will fail until the snapshot is deployed. Would you like to proceed with generation only, or deploy the app first?"*
 
 ### Step 2 — Authenticate
@@ -150,7 +150,7 @@ Call `POST {BAW_BASE_URL}/ops/system/login` (see `baw-rest.md` for full request 
 
 ### Step 3 — List exposed services
 
-Use **both** WLE v1 exposed-item endpoints — `/exposed/process` and `/exposed/service` are separate on CP4BA runtimes and must each be called:
+Use **both** WLE v1 exposed-item endpoints — `/exposed/process` and `/exposed/service` are separate on Cloud Pak for Business Automation runtimes and must each be called:
 
 ```
 GET {BAW_BASE_URL}/rest/bpm/wle/v1/exposed/process
@@ -164,7 +164,7 @@ GET {BAW_BASE_URL}/rest/bpm/wle/v1/exposed/service
            — or — Authorization: Bearer <zen_token> (CP4BA)
 ```
 
-> **CP4BA behaviour:** On CP4BA runtimes, integration Service Flows do **not** appear in `/exposed/process` — they are only returned by `/exposed/service`. Always call both endpoints and merge the results. Do not skip `/exposed/service` because `/exposed/process` returned results.
+> **Cloud Pak for Business Automation behaviour:** On Cloud Pak for Business Automation runtimes, integration Service Flows do **not** appear in `/exposed/process` — they are only returned by `/exposed/service`. Always call both endpoints and merge the results. Do not skip `/exposed/service` because `/exposed/process` returned results.
 
 From `/exposed/process`: Items with `type=service` are candidate Service Flows. Items with `type=process` are BPMN processes.
 
@@ -176,7 +176,7 @@ If both endpoints return no items from the target app, proceed directly to Step 
 
 If `{BAW_VERSION}` starts with `8.6`, skip Step 4 — the `/automationservices` endpoint is not present and will always 404.
 
-### Step 4 — Check for Automation Services (BAW 21+ only)
+### Step 4 — Check for Automation Services (Business Automation Workflow 21+ only)
 
 ```
 GET {BAW_BASE_URL}/bpm/exposed-services?type=rest&optional_parts=definition
@@ -193,7 +193,7 @@ Search the `exposed_services` array for the Service Flow name or container acron
 
 If `exposed_services` is an empty array (`[]`), or the `exposed_services` key is absent: no Automation Services are published. Fall through to Step 5.
 
-> **Note on `/automationservices/rest`:** Directly calling `GET {BAW_BASE_URL}/automationservices/rest` without an app path returns an empty body or 404 on most BAW versions — it is not a directory listing. Always use `GET /bpm/exposed-services?type=rest` as the discovery endpoint.
+> **Note on `/automationservices/rest`:** Directly calling `GET {BAW_BASE_URL}/automationservices/rest` without an app path returns an empty body or 404 on most Business Automation Workflow versions — it is not a directory listing. Always use `GET /bpm/exposed-services?type=rest` as the discovery endpoint.
 
 ### Step 5 — Check for exposed processes (if not found as Automation Service)
 
@@ -207,11 +207,11 @@ Look for a process whose name matches or wraps the Service Flow. If found, recor
 
 ### Step 6 — TWX export and direct startability check
 
-Directly startable Service Flows are not reliably listed via REST discovery endpoints alone. The TWX export is the primary and most complete source for service flow IDs and I/O contracts on all BAW versions.
+Directly startable Service Flows are not reliably listed via REST discovery endpoints alone. The TWX export is the primary and most complete source for service flow IDs and I/O contracts on all Business Automation Workflow versions.
 
-**TWX export — CP4BA: always try BAS first**
+**TWX export — Cloud Pak for Business Automation: always try BAS first**
 
-On CP4BA, the runtime export endpoint (`/baw-<instance>/ops/.../export`) is known to fail with `CWTBG0019E` (`errorVariableObjArr is null`) for many snapshots. This is not a configuration problem — it is a server-side bug on certain CP4BA runtime versions. **Do not spend time retrying or troubleshooting it.** Go straight to BAS:
+On Cloud Pak for Business Automation, the runtime export endpoint (`/baw-<instance>/ops/.../export`) is known to fail with `CWTBG0019E` (`errorVariableObjArr is null`) for many snapshots. This is not a configuration problem — it is a server-side bug on certain Cloud Pak for Business Automation runtime versions. **Do not spend time retrying or troubleshooting it.** Go straight to BAS:
 
 ```
 GET https://<bas-host>/bas/ops/std/bpm/containers/{app_acronym}/versions/{snapshot_acronym}/export
@@ -223,7 +223,7 @@ GET https://<bas-host>/bas/ops/std/bpm/containers/{app_acronym}/versions/{snapsh
 
 > **Fix 1 — 406 Not Acceptable:** The export endpoint requires an explicit `Accept` header. Omitting it causes the server to return HTTP 406. Always include `Accept: application/zip, application/octet-stream, */*` on this request.
 
-> **BAS may be on a different hostname from the runtime.** On CP4BA multi-cluster deployments, the BAS host (`<bas-host>`) and the BAW runtime host (`<runtime-host>`) are often on completely different subdomains — for example `baas.cp.fyre.ibm.com` vs `buis.cp.fyre.ibm.com`. They are not always the same base URL with different path segments. If `POST https://<runtime-host>/bas/ops/system/login` returns 404, ask the user:
+> **BAS may be on a different hostname from the runtime.** On Cloud Pak for Business Automation multi-cluster deployments, the BAS host (`<bas-host>`) and the Business Automation Workflow runtime host (`<runtime-host>`) are often on completely different subdomains — for example `baas.cp.fyre.ibm.com` vs `buis.cp.fyre.ibm.com`. They are not always the same base URL with different path segments. If `POST https://<runtime-host>/bas/ops/system/login` returns 404, ask the user:
 > *"What is your Workflow Authoring (BAS) URL? It may be on a different host from the runtime — for example `https://cpd-demo.apps.bas-cluster.example.com`."*
 > A separate Zen token is required for the BAS host: re-run `GET https://<bas-host>/v1/preauth/validateAuth` and `POST https://<bas-host>/bas/ops/system/login`.
 
@@ -231,7 +231,7 @@ The TWX content from BAS is identical to the runtime version — use it for disc
 
 **TWX export — on-premises / standalone containers (runtime export):**
 
-On non-CP4BA environments, use the runtime export directly:
+On environments other than Cloud Pak for Business Automation, use the runtime export directly:
 
 ```
 GET {BAW_BASE_URL}/ops/std/bpm/containers/{app_acronym}/versions/{snapshot_acronym}/export
@@ -260,7 +260,7 @@ Classification rules from the XML:
 | `true` | `true` | Candidate `startable` on BAS playback; `process_embedded` on runtime — **must confirm with a live probe** |
 | `true` | `false` | Candidate `startable` — **must confirm with a live probe** |
 
-> **BAS playback note:** On the BAS integrated playback server, `isSecured=true` does not always block direct invocation — live testing on BAW 26.x CP4BA shows that services with `isSecured=true` can return HTTP 200 on direct start. The XML flags are a guide only; the mandatory live probe below is the authoritative classification for all environments.
+> **BAS playback note:** On the BAS integrated playback server, `isSecured=true` does not always block direct invocation — live testing on Business Automation Workflow 26.x Cloud Pak for Business Automation shows that services with `isSecured=true` can return HTTP 200 on direct start. The XML flags are a guide only; the mandatory live probe below is the authoritative classification for all environments.
 
 Extract `<processParameter>` elements to read input/output variable names and types (`parameterType` 1 = input, 2 = output).
 

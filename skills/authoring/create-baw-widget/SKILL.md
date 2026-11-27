@@ -1,22 +1,22 @@
 ---
 name: create-baw-widget
-description: Creates or modifies IBM Business Automation Workflow (BAW) custom Coach View widgets — the widgets/{WidgetName}/ folder structure with Layout.html, InlineCSS.css, inlineJavascript.js, config.json, business object JSON, optional event handlers, and BAW-integrated preview files — then packages them into an importable .twx toolkit file. Use this whenever the user asks to build, scaffold, update, or fix a BAW/BPM coach widget, custom coach view, or "widget" in a BAW/BPMN/Process Designer project — including requests like "add a new coach widget for X", "package my widgets into a TWX", "this widget's preview isn't showing in the designer", "the widget isn't picking up my list data", or "style this widget with the Carbon theme." Does not deploy to a BAW server — that is a separate step.
+description: Creates or modifies IBM Business Automation Workflow custom Coach View widgets — the widgets/{WidgetName}/ folder structure with Layout.html, InlineCSS.css, inlineJavascript.js, config.json, business object JSON, optional event handlers, and preview files integrated with Business Automation Workflow — then packages them into an importable .twx toolkit file. Use this whenever the user asks to build, scaffold, update, or fix a Business Automation Workflow or Business Process Manager coach widget, custom coach view, or "widget" in a Business Automation Workflow BPMN or Process Designer project — including requests like "add a new coach widget for X", "package my widgets into a TWX", "this widget's preview isn't showing in the designer", "the widget isn't picking up my list data", or "style this widget with the Carbon theme." Does not deploy to a Business Automation Workflow server — that is a separate step.
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle. The bundled packaging template and samples are from Business Automation Workflow 25.0.1."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: BAW Coach Widget Builder
-  short_description: Scaffold, modify, and package IBM BAW custom Coach View widgets into an importable TWX toolkit file.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Coach Widget Builder
+  short_description: Scaffold, modify, and package IBM Business Automation Workflow custom Coach View widgets into an importable TWX toolkit file.
+  author: IBM Business Automation Workflow Team
 ---
 
-# Create BAW Widget
+# Create Business Automation Workflow Widget
 
-Build or modify an IBM BAW (Business Automation Workflow) custom Coach View widget, then package it into an importable `.twx` toolkit file. A widget lives under `widgets/{WidgetName}/` in a BAW toolkit project and is a small bundle of HTML/CSS/JS that BAW's Coach Designer loads into a running coach.
+Build or modify an IBM Business Automation Workflow custom Coach View widget, then package it into an importable `.twx` toolkit file. A widget lives under `widgets/{WidgetName}/` in a Business Automation Workflow toolkit project and is a small bundle of HTML/CSS/JS that Business Automation Workflow's Coach Designer loads into a running coach.
 
 Two real widgets are bundled as reference implementations in `assets/examples/`:
 - `assets/examples/DateOutput/` — a simple display-only widget (formats and shows a date, one `change.js` event handler, no business object)
@@ -40,27 +40,27 @@ Open the one structurally closer to what you are building and mirror its pattern
 
 3. **Create the required files** under `widgets/{WidgetName}/widget/`:
    - `Layout.html` — the outermost element must be `<div class="{widgetname}_maincontentbox">` (underscore before `maincontentbox`). This class is the scope anchor for both CSS and JS. Add ARIA roles and labels where the widget conveys state (for example, `role="progressbar"` with `aria-valuenow`). Do not add `id` attributes. See the DOM element lookup gotcha below for the reason.
-   - `InlineCSS.css` — every rule must be prefixed with `.{widgetname}_maincontentbox` to prevent collisions with BAW's own styles and other widgets. Read the **CSS scoping** and **Carbon theme** gotchas below before writing CSS.
+   - `InlineCSS.css` — every rule must be prefixed with `.{widgetname}_maincontentbox` to prevent collisions with Business Automation Workflow's own styles and other widgets. Read the **CSS scoping** and **Carbon theme** gotchas below before writing CSS.
    - `inlineJavascript.js` — look up DOM elements using `this.context.element.querySelector(".{widgetname}_maincontentbox")` then `.querySelector()` from that container. Never use `document.getElementById()` or `getElementsByTagName`. Read the **DOM element lookup** gotcha below before writing JS.
 
 4. **Add config.json and business objects only if the widget needs them.** If the widget binds to more than a plain string/date/boolean, or exposes configurable options, create `widget/config.json` and any business-object JSON files it references. Read the **Business object format rules** section below — format errors here cause packaging failures. Skip this step for a widget with no meaningful config.
 
 5. **Add event handlers only if the widget's behavior requires them.** Event handler files go in `widget/events/` and are entirely optional. Decide per-event:
-   - `load.js` — one-time init or registering a custom BAW event handler
+   - `load.js` — one-time init or registering a custom Business Automation Workflow event handler
    - `change.js` — re-render when bound data changes; only use this when `"changeFunction": true` in `config.json` (see Business object format rules)
    - `view.js` — refresh when the widget becomes visible (for example, when it is in a tab)
    - `validate.js` — custom validation beyond HTML5 (return `true`/`false`)
    - `unload.js` — clean up timers/listeners the widget created
 
-   Start event handler files with `var _this = this;` to capture the BAW widget context — `this` loses its binding inside nested callbacks.
+   Start event handler files with `var _this = this;` to capture the Business Automation Workflow widget context — `this` loses its binding inside nested callbacks.
 
-6. **Always add a preview** under `AdvancePreview/{WidgetName}.html` + `AdvancePreview/{WidgetName}Snippet.js`. Every widget must have these two files or BAW Designer shows "Error loading helper JS or HTML snippet files" on the canvas. See **Preview rules** below before writing them — the `.html` file content rule is a common source of the doubled-widget bug.
+6. **Always add a preview** under `AdvancePreview/{WidgetName}.html` + `AdvancePreview/{WidgetName}Snippet.js`. Every widget must have these two files or Business Automation Workflow Designer shows "Error loading helper JS or HTML snippet files" on the canvas. See **Preview rules** below before writing them — the `.html` file content rule is a common source of the doubled-widget bug.
 
-7. **Add a palette icon.** `widgets/{WidgetName}/{WidgetName}.svg`, 120×120px square, visually representing the widget so it is recognizable in the BAW Designer widget catalog. The packager auto-detects this file by name — naming must match exactly (case-sensitive).
+7. **Add a palette icon.** `widgets/{WidgetName}/{WidgetName}.svg`, 120×120px square, visually representing the widget so it is recognizable in the Business Automation Workflow Designer widget catalog. The packager auto-detects this file by name — naming must match exactly (case-sensitive).
 
 8. **Write or update widget-local docs.** `widget/datamodel.md` (what shape of data the widget expects) and, if it has events, `widget/eventHandler.md` (what each event does). Keep these in sync with the actual implementation — stale docs are worse than no docs.
 
-9. **Validate before moving to packaging.** Check naming is consistent across the widget folder, preview files, and config (a `WidgetNameSnippet.js` that does not match the folder name silently breaks the BAW preview loader). Check docs match the real inputs/options/events.
+9. **Validate before moving to packaging.** Check naming is consistent across the widget folder, preview files, and config (a `WidgetNameSnippet.js` that does not match the folder name silently breaks the Business Automation Workflow preview loader). Check docs match the real inputs/options/events.
 
 ### Optional: scaffold with the bundled script
 
@@ -86,7 +86,7 @@ All commands run from the skill root (the `create-baw-widget/` folder, for examp
 ```bash
 python scripts/register_business_objects.py
 ```
-This assigns stable BAW class IDs to all business object JSON files under `widgets/*/widget/` and writes them to `scripts/toolkit_packager/baw_custom_types.json`. The script creates this file the first time it runs. Idempotent — safe to run multiple times.
+This assigns stable Business Automation Workflow class IDs to all business object JSON files under `widgets/*/widget/` and writes them to `scripts/toolkit_packager/baw_custom_types.json`. The script creates this file the first time it runs. Idempotent — safe to run multiple times.
 
 **Step B — No action needed.** The packager discovers every subfolder inside `widgets/`. You do not maintain a widget list.
 
@@ -96,18 +96,18 @@ python scripts/package_baw.py
 ```
 This auto-increments the patch version in `assets/toolkit.config.json`, builds the TWX, and writes it to `output/{ToolkitName}_{version}.twx`. The `widgets/` and `output/` folders are created inside the skill root by the scaffold and packaging scripts, so they might not exist in a fresh clone.
 
-**Step D — Report the result.** Tell the user the output path, the version, which widgets were included, and that the file is ready to import into BAW:
-- **Traditional BAW (Workflow Center):** Workflow Center > Process Apps > Import
-- **CP4BA containerized (Business Automation Studio):** Business Automation Studio > Business automations > Toolkits > Import
+**Step D — Report the result.** Tell the user the output path, the version, which widgets were included, and that the file is ready to import into Business Automation Workflow:
+- **Traditional Business Automation Workflow (Workflow Center):** Workflow Center > Process Apps > Import
+- **Cloud Pak for Business Automation containerized (Business Automation Studio):** Business Automation Studio > Business automations > Toolkits > Import
 
 ### toolkit.config.json fields
 
 | Field | Purpose |
 |---|---|
-| `toolkit.name` | Display name in BAW (for example, `"Custom Widgets"`) |
+| `toolkit.name` | Display name in Business Automation Workflow (for example, `"Custom Widgets"`) |
 | `toolkit.shortName` | Short alias (for example, `"CW"`) |
 | `toolkit.version` | The packager increments this value each run |
-| `toolkit.bawVersion` | BAW template version — must match a folder under `assets/templates/BaseTWX/` (use `"25.0.1"` for CP4BA 25.x/26.x) |
+| `toolkit.bawVersion` | Business Automation Workflow template version — must match a folder under `assets/templates/BaseTWX/` (use `"25.0.1"` for Cloud Pak for Business Automation 25.x/26.x) |
 | `toolkit.id` | Stable GUID for the toolkit — do not change after first import |
 
 ---
@@ -116,9 +116,9 @@ This auto-increments the patch version in `assets/toolkit.config.json`, builds t
 
 ### DOM element lookup — always use `this.context.element.querySelector()`
 
-BAW rewrites element `id` attributes at runtime when it inserts a coach view into the page, so `document.getElementById()` silently returns `null`.
+Business Automation Workflow rewrites element `id` attributes at runtime when it inserts a coach view into the page, so `document.getElementById()` silently returns `null`.
 
-The legacy `getElementsByTagName("div").ElementName` pattern (using HTML `name=` attributes) may work inside BAW's embedded browser, but it is not portable to standard browsers and is fragile when elements are renamed. **The preferred pattern** is `querySelector` scoped to `this.context.element`, which is BAW's own reference to this widget's root node and is consistent across all environments:
+The legacy `getElementsByTagName("div").ElementName` pattern (using HTML `name=` attributes) may work inside Business Automation Workflow's embedded browser, but it is not portable to standard browsers and is fragile when elements are renamed. **The preferred pattern** is `querySelector` scoped to `this.context.element`, which is Business Automation Workflow's own reference to this widget's root node and is consistent across all environments:
 
 ```html
 <!-- Layout.html — use a unique outer wrapper class as the scope anchor -->
@@ -143,13 +143,13 @@ var valueEl = container.querySelector(".mywidget-value");
 The outer wrapper class (`mywidget_maincontentbox`) also serves as the CSS scope prefix — see the **CSS scoping** gotcha below.
 
 **Never use:**
-- `document.getElementById("…")` — BAW rewrites IDs at runtime, always returns null
+- `document.getElementById("…")` — Business Automation Workflow rewrites IDs at runtime, always returns null
 
 ---
 
 ### Always use `min-height`, not `height`
 
-BAW renders each widget inside a `<table>` cell. Setting a CSS `height` on a `<div>` child of a `<td>` is unreliable — in some browser and BAW combinations the browser ignores it and the div collapses to zero. If the widget has no visible content on initial load (for example, the binding has not resolved yet), the outer wrapper collapses and the widget disappears on the canvas. Use `min-height` throughout — browsers honor it reliably inside table cells.
+Business Automation Workflow renders each widget inside a `<table>` cell. Setting a CSS `height` on a `<div>` child of a `<td>` is unreliable — in some browser and Business Automation Workflow combinations the browser ignores it and the div collapses to zero. If the widget has no visible content on initial load (for example, the binding has not resolved yet), the outer wrapper collapses and the widget disappears on the canvas. Use `min-height` throughout — browsers honor it reliably inside table cells.
 
 Set `min-height` on `{widgetname}_maincontentbox` and on inner track elements:
 
@@ -178,7 +178,7 @@ A nested `<table>` layout is not necessary — `min-height` on plain `<div>` ele
 
 ### CSS scoping — prefix every rule with the outer wrapper class
 
-BAW loads all widget stylesheets into a single page scope. Generic selectors like `.progressbar-track` collide with BAW styles and with other widgets. Prefix every CSS rule with the unique outer wrapper class:
+Business Automation Workflow loads all widget stylesheets into a single page scope. Generic selectors like `.progressbar-track` collide with Business Automation Workflow styles and with other widgets. Prefix every CSS rule with the unique outer wrapper class:
 
 ```css
 /* CORRECT — scoped, collision-safe */
@@ -195,7 +195,7 @@ Name the outer wrapper class with an **underscore** separator (`mywidget_maincon
 
 ### InlineCSS.css is plain CSS, not LESS
 
-BAW widget stylesheets do not go through LESS preprocessing — `color: @bpm-color-primary;` is invalid CSS and will silently produce no styling. Use the literal hex value and put the Carbon variable name in a comment:
+Business Automation Workflow widget stylesheets do not go through LESS preprocessing — `color: @bpm-color-primary;` is invalid CSS and will silently produce no styling. Use the literal hex value and put the Carbon variable name in a comment:
 
 ```css
 .progressbar-fill {
@@ -209,7 +209,7 @@ The full color/typography/spacing table is in `references/CARBON_THEME_VARIABLES
 
 ### List-bound data comes wrapped in `.items`
 
-When `config.json`'s `bindingType` has `"isList": true`, BAW wraps the array in an object: `{ items: [...] }`. Reading `this.getData()` directly gives you that wrapper object, not the array:
+When `config.json`'s `bindingType` has `"isList": true`, Business Automation Workflow wraps the array in an object: `{ items: [...] }`. Reading `this.getData()` directly gives you that wrapper object, not the array:
 
 ```javascript
 // bindingType.isList === true
@@ -273,11 +273,11 @@ Valid property types: `String`, `Integer`, `Decimal`, `Boolean`, `Date`. Every p
 
 ## Preview rules — read before writing AdvancePreview/ files
 
-Every widget must have both `AdvancePreview/{WidgetName}.html` and `AdvancePreview/{WidgetName}Snippet.js`. Missing either file causes BAW Designer to show "Error loading helper JS or HTML snippet files" on the canvas.
+Every widget must have both `AdvancePreview/{WidgetName}.html` and `AdvancePreview/{WidgetName}Snippet.js`. Missing either file causes Business Automation Workflow Designer to show "Error loading helper JS or HTML snippet files" on the canvas.
 
 ### Two valid preview patterns — choose based on CSS approach
 
-BAW injects `{WidgetName}.html` content **and** runs `{WidgetName}Snippet.js`. The two files work together; the right pattern depends on how you write CSS:
+Business Automation Workflow injects `{WidgetName}.html` content **and** runs `{WidgetName}Snippet.js`. The two files work together; the right pattern depends on how you write CSS:
 
 **Pattern A — Blank HTML + inline `style=` in Snippet (simple widgets)**
 
@@ -355,9 +355,9 @@ Copy the full wiring from `assets/examples/TasksList/AdvancePreview/task.js` (Pa
 
 ## Boundaries
 
-**In scope:** creating/editing widget files, preview files, widget config and business objects, widget-local documentation, and packaging widgets into a `.twx` file for manual import into BAW.
+**In scope:** creating/editing widget files, preview files, widget config and business objects, widget-local documentation, and packaging widgets into a `.twx` file for manual import into Business Automation Workflow.
 
-**Out of scope:** deploying the `.twx` to a BAW server via API or MCP tools (that is a separate deployment step), designing overall coach layouts that compose multiple widgets into a screen, and parsing business documents into business objects.
+**Out of scope:** deploying the `.twx` to a Business Automation Workflow server via API or MCP tools (that is a separate deployment step), designing overall coach layouts that compose multiple widgets into a screen, and parsing business documents into business objects.
 
 ---
 
@@ -376,7 +376,7 @@ After delivering the Phase 1 summary, always ask the user whether they want to p
 
 ## Example
 
-**Input:** "Create a BAW widget called RatingStars that displays a 1–5 star rating bound to an integer, then package it."
+**Input:** "Create a Business Automation Workflow widget called RatingStars that displays a 1–5 star rating bound to an integer, then package it."
 
 **Phase 1 output:**
 1. Read `assets/examples/DateOutput/` (primary reference — simple, single-value, no business object needed).
@@ -393,5 +393,5 @@ After delivering the Phase 1 summary, always ask the user whether they want to p
 1. The packager discovers `RatingStars` in the `widgets/` folder. No manual step is needed.
 2. Run `python3 scripts/package_baw.py`.
 3. Report: `output/Custom_Widgets_1.0.1.twx` (42 KB) — contains RatingStars. Ready to import via:
-   - **Traditional BAW:** Workflow Center > Process Apps > Import
-   - **CP4BA (Studio):** Business Automation Studio > Business automations > Toolkits > Import
+   - **Traditional Business Automation Workflow:** Workflow Center > Process Apps > Import
+   - **Cloud Pak for Business Automation (Studio):** Business Automation Studio > Business automations > Toolkits > Import

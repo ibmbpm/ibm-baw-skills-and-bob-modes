@@ -1,7 +1,7 @@
 # BPMN + XSD analysis guide
 
 This guide covers parsing the output of the `generate-baw-bpmn` skill: a `.bpmn` file
-(BPMN 2.0 XML in BAW's export dialect) and its companion `.xsd` (business object schema).
+(BPMN 2.0 XML in Business Automation Workflow's export dialect) and its companion `.xsd` (business object schema).
 These files are also bundled together in a `.zip` — unzip first if the user provides a ZIP.
 
 ---
@@ -12,14 +12,14 @@ These files are also bundled together in a `.zip` — unzip first if the user pr
 |---|---|
 | `<Name>.bpmn` | Process definition: lanes, tasks, gateways, events, sequence flows, variable I/O |
 | `<Name>.xsd` | Business object type definitions with field names, types, and cardinality |
-| `<Name>.zip` | Both of the above bundled for BAW import — unzip to get the two files |
+| `<Name>.zip` | Both of the above bundled for Business Automation Workflow import — unzip to get the two files |
 
 ---
 
 ## BPMN file structure
 
 The BPMN uses the `bpmn:` namespace (`http://www.omg.org/spec/BPMN/20100524/MODEL`) and
-BAW's own `bpmnid-` UUID identifier convention.
+Business Automation Workflow's own `bpmnid-` UUID identifier convention.
 
 ### Key elements to extract
 
@@ -75,7 +75,7 @@ Each `<complexType name="TypeName">` is one business object:
 - `<annotation><documentation>` — BO description
 - `<sequence><element>` children — fields:
   - `name` — field name
-  - `type` — XSD type (map to BAW primitives: `string`→String, `integer`→Integer,
+  - `type` — XSD type (map to Business Automation Workflow primitives: `string`→String, `integer`→Integer,
     `decimal`→Decimal, `boolean`→Boolean, `date`→Date, `dateTime`→DateTime)
   - `minOccurs="0"` → optional; `minOccurs="1"` → required
 
@@ -149,4 +149,4 @@ for ct in xsd_root.findall('xs:complexType', XSD_NS):
 
 Always note in Section 7 (Assumptions & Gaps):
 > "Source is BPMN + XSD. Services, coach views, and integration endpoint details are not
-> available from this input type. Export a TWX from BAW after import for full coverage."
+> available from this input type. Export a TWX from Business Automation Workflow after import for full coverage."

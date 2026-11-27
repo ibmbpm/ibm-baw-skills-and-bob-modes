@@ -10,10 +10,10 @@
 
 | Persona | Portal purpose | Validation status |
 |---|---|---|
-| Task worker | Personal task list and launch | Runtime-verified (non-federated and federated) |
-| Manager/team lead | Team workload and member overview | Runtime-verified (non-federated and federated) |
-| Executive/process owner | Cross-team aggregate and trend | Runtime-verified (client-side rollup over per-team APIs) |
-| Administrator | Cross-user task and process visibility; scoped by BAW server-side role | ✅ Runtime-verified (CP4BA 26.0.0) |
+| Task worker | Personal task list and launch | List/detail: runtime-verified, HTTP 200 (non-federated and federated); launch documentation-verified |
+| Manager/team lead | Team workload and member overview | Dashboard calls runtime-verified (non-federated and federated; HTTP status only) |
+| Executive/process owner | Cross-team aggregate and trend | Documentation-verified; product definition required |
+| Administrator | Cross-user task and process visibility; scoped by Business Automation Workflow server-side role | No reproducible runtime test; exact entitlement unknown |
 
 ---
 
@@ -22,37 +22,37 @@
 ### Portal purpose
 
 A process participant who has personal tasks assigned to them.
-The portal shows their task backlog, highlights overdue and at-risk items, and allows them to open and complete tasks using the existing BAW task UI.
+The portal shows their task backlog, highlights overdue and at-risk items, and allows them to open and complete tasks using the existing Business Automation Workflow task UI.
 
 ### Required dashboards
 
-- Personal task list with stat cards (Overdue, At Risk, Active, Total)
+- Personal task list (summary counts such as Overdue, At Risk, Active, Total are optional)
 - Search, filter, and sort controls
-- Task detail / launch via iframe modal
+- Task detail / launch (iframe modal, panel or new tab, per hosting profile)
 
 ### Required data
 
 | Data | Endpoint | Verification |
 |---|---|---|
-| Current user identity | `GET /rest/bpm/wle/v1/user/current?parts=all` | ✅ VERIFIED |
-| Personal task list | `GET /rest/bpm/wle/v1/tasks?interaction=claimed_and_available&size=500` | ✅ VERIFIED |
-| Task launch | `/teamworks/process.lsw?zWorkflowState=1&zTaskId={TKIID}&zResetContext=true` | ✅ VERIFIED |
-| Federated task list | `GET /rest/bpm/federated/v1/tasks?calcStats=true&size=500` | ✅ VERIFIED (PFS01) — two federated source systems confirmed |
+| Current user identity | `GET /rest/bpm/wle/v1/user/current?parts=all` | runtime-verified |
+| Personal task list | `GET /rest/bpm/wle/v1/tasks?interaction=claimed_and_available&size=500` | runtime-verified |
+| Task launch | `/teamworks/process.lsw?zWorkflowState=1&zTaskId={TKIID}&zResetContext=true` | documentation-verified URL pattern; no runtime check loads a task form (`NF-TASK-LAUNCH`) |
+| Federated task list | `GET /rest/bpm/federated/v1/tasks?calcStats=true&size=500` | runtime-verified (HTTP 200) against two federated source systems; `federationResult[]` present |
 
 ### Authorization expectations
 
-- Session-cookie authentication for same-origin BAW-hosted portals
+- Session-cookie authentication for same-origin portals hosted on Business Automation Workflow
 - Only the authenticated user's tasks are returned by `interaction=claimed_and_available`
-- No special permissions required beyond a valid BAW user session
+- No special permissions required beyond a valid Business Automation Workflow user session
 
 ### Validation status
 
-- Non-federated personal task dashboard: ✅ runtime-verified
-- Federated personal task dashboard: ✅ VERIFIED (PFS01) — two source systems confirmed; `federationResult[]` top-level; partial-failure pattern documented
+- Non-federated personal task dashboard: task list/detail and claim/assign-back/priority-update runtime-verified (HTTP 200); finish/cancel and task launch documentation-verified
+- Federated personal task dashboard: task list runtime-verified (HTTP 200) against two source systems; task launch documentation-verified (the runtime check asserts only that `federationResult[]` is present); `federationResult[]` is top-level; partial-failure pattern documented
 
 ### Known blockers
 
-- `sandbox` attribute on task iframe: test against BAW task forms before enabling (deployment advisory; see `references/quality-and-validation.md`)
+- `sandbox` attribute on task iframe: test against Business Automation Workflow task forms before enabling (deployment advisory; see [Open deployment decisions](hosting-and-generation.md#open-deployment-decisions))
 - Server-side paging beyond 500 tasks: deployment-time validation item (documented advisory)
 
 ---
@@ -61,7 +61,7 @@ The portal shows their task backlog, highlights overdue and at-risk items, and a
 
 ### Portal purpose
 
-A manager or team lead is responsible for one or more teams. The portal shows team workload at a glance,
+A person responsible for one or more teams. The portal shows team workload at a glance,
 identifies at-risk members, and allows drill-down to individual team member tasks.
 
 ### Required dashboards
@@ -76,27 +76,27 @@ identifies at-risk members, and allows drill-down to individual team member task
 
 | Data | NF Endpoint | FED Endpoint | Verification |
 |---|---|---|---|
-| Managed teams | `GET /rest/bpm/wle/v1/managedGlobalTeams` | N/A | ✅ VERIFIED |
-| All teams | `GET /rest/bpm/wle/v1/globalTeams` | `GET /rest/bpm/federated/v1/globalTeams` | ✅ VERIFIED — FED endpoint documented only |
-| Team summary (all) | `GET /rest/bpm/wle/v2/dashboards/teamsummary` | `GET /rest/bpm/federated/v2/dashboards/teamsummary` | ✅ VERIFIED |
-| Team summary (single) | `GET /rest/bpm/wle/v2/dashboards/teamsummary/{teamId}` | `GET /rest/bpm/federated/v2/dashboards/teamsummary/{teamId}` | ✅ VERIFIED |
-| Team members | `GET /rest/bpm/wle/v2/dashboards/teammember/{teamId}` | `GET /rest/bpm/federated/v2/dashboards/teammember/{teamId}` | ✅ VERIFIED |
-| Member workload | `GET /rest/bpm/wle/v2/dashboards/teammember/{teamId}/{username}` | `GET /rest/bpm/federated/v2/dashboards/teammember/{teamId}/{username}` | ⚠️ Documented |
-| Team tasks (both PUT) | `PUT /rest/bpm/wle/v2/dashboards/teamtasks/{teamId}` | `PUT /rest/bpm/federated/v2/dashboards/teamtasks/{teamId}` | ✅ VERIFIED |
-| Team task trend | `GET /rest/bpm/wle/v2/dashboards/teamtasktrend/{teamId}` | `GET /rest/bpm/federated/v2/dashboards/teamtasktrend/{teamId}` | ✅ VERIFIED |
-| Task reassignment | `PUT /rest/bpm/wle/v1/task/{taskId}?action=assign` | N/A (V2 scope) | ⚠️ Documented |
+| Managed teams | `GET /rest/bpm/wle/v1/managedGlobalTeams` | N/A | runtime-verified |
+| All teams | `GET /rest/bpm/wle/v1/globalTeams` | `GET /rest/bpm/federated/v1/globalTeams` | NF: runtime-verified (HTTP 200); FED: documentation-verified only |
+| Team summary (all) | `GET /rest/bpm/wle/v2/dashboards/teamsummary` | `GET /rest/bpm/federated/v2/dashboards/teamsummary` | runtime-verified (HTTP 200, status only) |
+| Team summary (single) | `GET /rest/bpm/wle/v2/dashboards/teamsummary/{teamId}` | `GET /rest/bpm/federated/v2/dashboards/teamsummary/{teamId}` | runtime-verified (HTTP 200, status only) |
+| Team members | `GET /rest/bpm/wle/v2/dashboards/teammember/{teamId}` | `GET /rest/bpm/federated/v2/dashboards/teammember/{teamId}` | runtime-verified (HTTP 200, status only) |
+| Member workload | `GET /rest/bpm/wle/v2/dashboards/teammember/{teamId}/{username}` | `GET /rest/bpm/federated/v2/dashboards/teammember/{teamId}/{username}` | documentation-verified |
+| Team tasks (both PUT) | `PUT /rest/bpm/wle/v2/dashboards/teamtasks/{teamId}` | `PUT /rest/bpm/federated/v2/dashboards/teamtasks/{teamId}` | PFS: runtime-verified (HTTP 200, status only); NF: documentation-verified |
+| Team task trend | `GET /rest/bpm/wle/v2/dashboards/teamtasktrend/{teamId}` | `GET /rest/bpm/federated/v2/dashboards/teamtasktrend/{teamId}` | runtime-verified (HTTP 200, status only) |
+| Task reassignment | `PUT /rest/bpm/wle/v1/task/{taskId}?action=assign` | N/A (V2 scope) | documentation-verified |
 
 ### Authorization expectations
 
 - `managedGlobalTeams` is the documented endpoint for manager-scoped team discovery
 - Manager-level permission required for cross-user task assignment
-- BAW and PFS both enforce manager authorization at the API level — HTTP 400 if caller manages no teams
+- Business Automation Workflow and PFS both enforce manager authorization at the API level — HTTP 400 if caller manages no teams
 - Do not include reassignment in a read-only manager dashboard baseline
 
 ### Validation status
 
-- WLE v2 dashboard APIs: ✅ VERIFIED — safe to generate for BAW 24+; gate on FDR probe
-- PFS v2 dashboard APIs: ✅ VERIFIED — all four endpoints confirmed; see `references/federated-api-guide.md`
+- WLE v2 dashboard APIs: HTTP 200 observed on Cloud Pak for Business Automation 26.0.0 for four of seven operations (status only; response schema not asserted). Generate for Business Automation Workflow 24+ behind an FDR gate that follows the four outcome classes in `non-federated-api-guide.md` §Manager and team dashboard APIs.
+- PFS v2 dashboard APIs: HTTP 200 observed on Cloud Pak for Business Automation 26.0.0 for five of six operations (the single-member call is documentation-verified only). Generate with a validation gate; see `references/federated-api-guide.md`.
 
 ### Known blockers
 
@@ -122,21 +122,21 @@ identifies trends, and allows drill-down to team detail.
 
 | Data | NF Endpoint | FED Endpoint | Verification |
 |---|---|---|---|
-| Per-team summary | `GET /rest/bpm/wle/v2/dashboards/teamsummary/{teamId}` (iterated) | `GET /rest/bpm/federated/v2/dashboards/teamsummary` | ✅ VERIFIED |
-| Per-team trend | `GET /rest/bpm/wle/v2/dashboards/teamtasktrend/{teamId}` (iterated) | `GET /rest/bpm/federated/v2/dashboards/teamtasktrend/{teamId}` (iterated) | ✅ VERIFIED |
+| Per-team summary | `GET /rest/bpm/wle/v2/dashboards/teamsummary/{teamId}` (iterated) | `GET /rest/bpm/federated/v2/dashboards/teamsummary` | runtime-verified (HTTP 200, status only) |
+| Per-team trend | `GET /rest/bpm/wle/v2/dashboards/teamtasktrend/{teamId}` (iterated) | `GET /rest/bpm/federated/v2/dashboards/teamtasktrend/{teamId}` (iterated) | runtime-verified (HTTP 200, status only) |
 
 Cross-team aggregation is client-side or backend rollup using per-team API calls.
-No dedicated executive-level aggregate endpoint has been identified; confirm with IBM/PM before assuming one is needed.
+No dedicated executive-level aggregate endpoint has been identified; confirm with IBM before assuming one is needed.
 
 ### Authorization expectations
 
-- BAW enforces `teamsummary` results to teams the calling user manages — the "executive" view is a client-side rollup over all teams returned (no additional portal-side role check required)
+- Business Automation Workflow enforces `teamsummary` results to teams the calling user manages — the "executive" view is a client-side rollup over all teams returned (no additional portal-side role check required)
 - Do not assume enterprise-wide access or global admin visibility
-- No additional portal-side role check is needed — BAW scopes the API response to the caller's managed teams
+- No additional portal-side role check is needed — Business Automation Workflow scopes the API response to the caller's managed teams
 
 ### Validation status
 
-- Per-team APIs: ✅ VERIFIED — `teamsummary` and `teamtasktrend` runtime tested against both WLE v2 and PFS v2 dashboard endpoints; safe to generate
+- Per-team APIs: `teamsummary` and `teamtasktrend` returned HTTP 200 on both WLE v2 and PFS v2 (Cloud Pak for Business Automation 26.0.0; status only). Generate with a validation gate.
 
 ### Known blockers
 
@@ -148,9 +148,9 @@ No dedicated executive-level aggregate endpoint has been identified; confirm wit
 
 ### Portal purpose
 
-A user with BAW administrator privileges who needs cross-user and cross-team visibility beyond
+A user with Business Automation Workflow administrator privileges who needs cross-user and cross-team visibility beyond
 what a manager or task worker sees. The portal surface changes but the underlying security model
-does not: BAW enforces what each user can see based on their server-side role, exactly as
+does not: Business Automation Workflow enforces what each user can see based on their server-side role, exactly as
 Workplace and Process Portal do.
 
 ### Required dashboards
@@ -161,39 +161,42 @@ Workplace and Process Portal do.
 
 ### Required data
 
-| Data | Endpoint | Admin-specific parameter | Verification |
+| Data | Endpoint | Admin-specific parameter | Evidence |
 |---|---|---|---|
-| Detect admin rights | `GET /rest/bpm/wle/v1/searches/actions` | Presence of `ACTION_ADMINISTER_SHARED_SAVED_SEARCHES` or `ACTION_SAVED_SEARCH_SUPER_ADMIN` in response | ✅ VERIFIED (CP4BA 26.0.0) |
-| All claimed tasks (cross-user) | `PUT /rest/bpm/wle/v1/tasks` | `allClaimed=true` as **query parameter** (not request body); empty or minimal body `{}` accepted; non-admin users receive 0 results | ✅ VERIFIED (CP4BA 26.0.0) |
-| All process instances (cross-user) | `GET /rest/bpm/wle/v1/processes/search` | `includeNonAdmin=true` as query parameter; admin scope returns more instances than a non-admin user; non-admin users get a scoped subset regardless of flag | ✅ VERIFIED (CP4BA 26.0.0) |
+| Saved-search permissions | `GET /rest/bpm/wle/v1/searches/actions` | Saved-search policies only (see `baw-rest.md`) — **not** a task/process admin signal | runtime-verified (HTTP 200 only); `data.actions` envelope IBM-documented (24.0.1) but unobserved on 26.0.0; action strings unobserved |
+| All claimed tasks (cross-user) | `PUT /rest/bpm/wle/v1/tasks` | **GATED — not generated.** `allClaimed` placement is unverified. Ask for on-environment verification with an admin and a non-admin account first (see [`baw-rest.md`](baw-rest.md)) | Not reproducible: no runtime check; no IBM page |
+| All process instances (cross-user) | `GET /rest/bpm/wle/v1/processes/search` | `includeNonAdmin=true` as query parameter; non-admin users reportedly get a scoped subset | Reported to work on Cloud Pak for Business Automation 26.0.0, but no runtime check reproduces it; the path is untested in this project; entitlement not documented in IBM pages consulted |
 
 ### Authorization expectations
 
-- Admin behavior is driven by the BAW server-side role — there is no separate admin API stack
-- A portal built with this skill is a different UI surface; the BAW security model does not change
-- BAW returns admin-scoped data only to users who hold the appropriate server-side permission
-- Do not gate admin views with portal-side role checks — rely entirely on what BAW returns
+- Admin behaviour is driven by Business Automation Workflow server-side authorization — there is no separate admin API stack
+- A portal built with this skill is a different UI surface; the Business Automation Workflow security model does not change
+- Saved-search administration (`ACTION_ADMINISTER_SHARED_SAVED_SEARCHES`, `ACTION_SAVED_SEARCH_SUPER_ADMIN`) is **not** a universal Business Automation Workflow administrator role. It authorizes saved-search operations only
+- Task-, process-instance- and per-action rights are separate: e.g. `ACTION_SUSPEND_INSTANCE`, `ACTION_RESUME_INSTANCE`, `ACTION_RETRY_INSTANCE`, `ACTION_ABORT_INSTANCE`, `ACTION_DELETE_INSTANCE`, `ACTION_CHANGE_INSTANCE_DUEDATE` each have their own policy and default eligibility
+- Do not gate admin views with portal-side role checks — rely entirely on what Business Automation Workflow returns
 
-### Admin detection pattern
+### Capability-specific gating pattern
 
-Check the response from `GET /rest/bpm/wle/v1/searches/actions`. If the returned actions list
-includes `ACTION_ADMINISTER_SHARED_SAVED_SEARCHES` or `ACTION_SAVED_SEARCH_SUPER_ADMIN`, the
-authenticated user has administrator-level saved-search rights. Use this as the runtime signal
-to show or hide admin UI surfaces.
+Do not use `GET /rest/bpm/wle/v1/searches/actions` as an admin-UI gate. Instead, for each admin
+panel:
 
-### Validation status
+1. Render nothing by default.
+2. Issue the panel's own request (`includeNonAdmin=true`; the cross-user task panel stays blocked, see the table above).
+3. Show the panel only on HTTP 200 with a usable result; on 401/403 or an empty result, show a neutral "not available for your account" state. An empty result is ambiguous (no data vs. no entitlement) — do not claim the user is or is not an administrator.
+4. Use saved-search actions solely to enable or disable saved-search controls.
 
-- All three admin API patterns: ✅ VERIFIED against CP4BA 26.0.0
-- Admin detection via `GET /rest/bpm/wle/v1/searches/actions`: confirmed — `ACTION_ADMINISTER_SHARED_SAVED_SEARCHES` present for admin users, absent for standard users
-- Cross-user task visibility via `PUT /rest/bpm/wle/v1/tasks?allClaimed=true`: confirmed — admin users see tasks across all users; non-admin users receive 0 results; parameter must be a **query parameter**, not a body field
-- Cross-user process visibility via `GET /rest/bpm/wle/v1/processes/search?includeNonAdmin=true`: confirmed — admin scope returns the full set of process instances; non-admin users see a scoped subset; BAW enforces access server-side; both calls return HTTP 200
+### Evidence status
 
-### Implementation notes (runtime-confirmed)
+- `GET /searches/actions`: only the HTTP 200 status is runtime-verified; action strings are not asserted, so "ADMINISTER present for admin, absent for standard users" is an unreproduced claim.
+- `includeNonAdmin` and the cross-user task request: reports of success cannot be reproduced; no runtime check exists. The open placement question and the untested `/processes/search` path are noted in [`baw-rest.md`](baw-rest.md) and remain unresolved.
+- Exact server-side entitlement for these cross-user calls is **unknown**; re-verify on the target environment with an admin and a non-admin account before shipping.
 
-- `allClaimed=true` must be passed as a **query parameter** on `PUT /rest/bpm/wle/v1/tasks`, not in the request body. The body is a `SavedSearchDefinition` object; `allClaimed` is not a recognized body field and will return HTTP 400 if placed there.
-- `includeNonAdmin=true` is a query parameter on `GET /rest/bpm/wle/v1/processes/search`. Non-admin users receive a scoped subset; BAW enforces the restriction server-side.
-- The `processes/search` response envelope uses `data.processes[]` (not `data.items[]`) and `data.overview` (aggregate counts). Generate code accordingly.
+### Implementation notes
+
+- `includeNonAdmin=true` is a query parameter on `GET /rest/bpm/wle/v1/processes/search`. Business Automation Workflow enforces the restriction server-side.
+- The `processes/search` response envelope was reported as `data.processes[]` (not `data.items[]`) and `data.overview` (aggregate counts); confirm against the target environment.
 
 ### Known blockers
 
-- None
+- "Administrator" is defined above as a user with Business Automation Workflow administrator privileges, but the exact server entitlement is unconfirmed (next bullet); do not assume it means full Business Automation Workflow system administrator rights
+- Exact entitlements for the cross-user calls are unknown and have no reproducible evidence

@@ -1,22 +1,22 @@
 ---
 name: generate-baw-bpmn
-description: Generates BPMN 2.0 XML that imports cleanly into IBM Business Automation Workflow (BAW) — processes and complex business object variables (via a bundled XSD) — by writing a process JSON and running a bundled deterministic generator that emits BAW's own export dialect and packages the .zip the import wizards expect. Use whenever the user wants a BPMN file for BAW, asks to "generate BPMN," "create a .bpmn I can import," "turn this workflow into a BAW process/service flow," mentions BPMN import errors or elements disappearing on import, or has a process source in any form — a chat description, a requirements/BRD/blueprint document, an SOP, meeting notes, or an earlier blueprint parse — and needs the importable XML. Also triggers on conversational process descriptions like "I want to model a workflow for…" or "help me design a process for…".
+description: "Generates BPMN 2.0 XML that imports cleanly into IBM Business Automation Workflow, covering processes and complex business object variables (via a bundled XSD). Writes a process JSON and runs a bundled deterministic generator that emits the product's own export dialect and packages the .zip the import wizards expect. Use whenever the user wants a BPMN file, asks to 'generate BPMN' or 'create a .bpmn I can import', wants to turn a workflow into a process or service flow, mentions BPMN import errors or elements disappearing on import, or has a process source in any form (chat description, requirements/BRD/blueprint document, SOP, meeting notes, or earlier blueprint parse) and needs the importable XML. Also triggers on conversational descriptions like 'I want to model a workflow for...'. When the process includes serviceTask elements, coordinate with generate-baw-service-flow to produce the matching importable TWX for each service flow."
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: Generate BAW BPMN
-  short_description: Generate importable BPMN 2.0 XML files and bundled XSD for IBM BAW from any process description, document, or chat input.
-  author: IBM BAW Team
+  display_name: Generate Business Automation Workflow BPMN
+  short_description: Generate importable BPMN 2.0 XML files and bundled XSD for IBM Business Automation Workflow from any process description, document, or chat input.
+  author: IBM Business Automation Workflow Team
 ---
 
-# Generate BAW BPMN
+# Generate Business Automation Workflow BPMN
 
-Produce a BPMN 2.0 file that imports successfully into IBM BAW on the first attempt.
+Produce a BPMN 2.0 file that imports successfully into IBM Business Automation Workflow on the first attempt.
 The reliability comes from three deliberate choices:
 
 1. **You decide, the tool writes.** You read the user's process description and capture
@@ -24,12 +24,12 @@ The reliability comes from three deliberate choices:
    bundled `scripts/generate_baw_bpmn.py` deterministically converts it to XML. Never
    hand-write BPMN XML: ids, references, and namespace details are exactly the kind of
    fussy output that must come from a generator, not a fresh guess.
-2. **The XML is BAW's own dialect.** The generator reproduces the format BAW itself
+2. **The XML is Business Automation Workflow's own dialect.** The generator reproduces the format Business Automation Workflow itself
    exports — `bpmnid-` UUID ids, `processType="None"`, named flows, a `laneSet` when
    roles are defined, no diagram section (see [references/BAW_BPMN_DIALECT.md](references/BAW_BPMN_DIALECT.md)). What
-   BAW writes, BAW reads.
+   Business Automation Workflow writes, Business Automation Workflow reads.
 3. **Only mappable constructs exist.** Every element type the config schema allows maps
-   1:1 to a row in IBM's documented import mapping. The generator rejects at validation time anything BAW would silently drop or lossily convert, where it's cheap to fix.
+   1:1 to a row in IBM's documented import mapping. The generator rejects at validation time anything Business Automation Workflow would silently drop or lossily convert, where it's cheap to fix.
 
 Ids are derived deterministically (uuid5) from the config, so regenerating the same
 config yields byte-identical XML and every `sourceRef`/`targetRef` is guaranteed to
@@ -64,11 +64,11 @@ concrete options instead of leaving it open-ended.
 
 **When to ask about the process:** If the user has NOT already stated what process they want to model.
 
-**When to skip:** If they've clearly described a process (e.g., "I need a BAW process for expense approvals"). Move straight to the documentation check below.
+**When to skip:** If they've clearly described a process (e.g., "I need a Business Automation Workflow process for expense approvals"). Move straight to the documentation check below.
 
 Ask one focused question:
 
-> "What process are you looking to model in BAW? For example: an approval workflow, an onboarding process, a claims handling flow."
+> "What process are you looking to model in Business Automation Workflow? For example: an approval workflow, an onboarding process, a claims handling flow."
 
 Once you know the process name and rough goal, **immediately ask about supporting documentation** — one question, conversationally:
 
@@ -315,12 +315,27 @@ If no → ask:
       System lane automatically. Do not model pools (separate participants). See
       [references/BAW_BPMN_DIALECT.md](references/BAW_BPMN_DIALECT.md).
    - **Service flows for serviceTasks:** name each `serviceTask` exactly what its
-     callable service flow should be named. BAW creates the (empty) service flows from
-     the serviceTask names on import; the user completes their logic in Process Designer.
+     callable service flow should be named. After generating the BPMN, coordinate
+     with `generate-baw-service-flow` to produce a TWX for those service flows (see
+     step 5a below).
 
 4. **Write the config** to `business-processes/configs/[Domain]/[ProcessName].bpmn.json`
    (create the folders if needed; follow existing folder conventions if the project
    already has some).
+
+5a. **Generate service flow TWX for serviceTasks (if any).** If the config contains
+    any `serviceTask` elements, activate `generate-baw-service-flow` to generate the
+    matching importable TWX alongside the BPMN. Pass the service task names and their
+    associated variable types (from the `variables` and `businessObjects` already
+    defined) as the input. The service flow skill will produce
+    `output/<ProjectName>_services.twx`. Include the TWX path in the final output
+    report and post-import checklist.
+
+    **How to pass context to `generate-baw-service-flow`:**
+    - List the `serviceTask` names from the config (these become flow `name` values).
+    - Provide the input/output variable types from the process `variables` array for
+      each task — the service flow skill maps them to its BO definitions.
+    - The service flow skill runs its own generator and reports its TWX path back.
 
 5. **Validate, then generate — into a dedicated folder per process.** Every process
    gets its own output directory (kebab-case process name), because each run produces
@@ -420,6 +435,9 @@ Report back:
 - **Process:** name, pattern (linear / approval / parallel / combination), element and
   flow counts.
 - **Service flows BAW will generate:** the serviceTask names (one flow each).
+- **Service flow TWX (if generated):** path to `output/<ProjectName>_services.twx` and
+  confirmation it was produced by `generate-baw-service-flow`. This TWX must be imported
+  **in addition to** the BPMN zip — it delivers the callable service flow artifacts.
 - **Business objects (if any):** names and where they're used, noting the `.xsd` rides
   inside the zip.
 - **Config:** path, and confirmation it validated (mention any warnings and why they're
@@ -432,7 +450,12 @@ Report back:
 - **Import route:**
   - **Traditional BAW (Workflow Center):** Workflow Center → Process Apps → Import Process App
   - **CP4BA containerized (Business Automation Studio):** Business Automation Studio → Business automations → Workflow → Import
+  When a service flow TWX was generated, note both imports:
+  1. Import the `.zip` (BPMN process)
+  2. Import `<ProjectName>_services.twx` (service flows)
 - **Post-import checklist:** the short list from [references/BAW_BPMN_DIALECT.md](references/BAW_BPMN_DIALECT.md).
+  When service flows were generated, add: "Wire each service task in Process Designer
+  to the matching service flow from the imported TWX."
 - **Review page (if published):** the artifact link, now showing the final round-tripped
   diagram and documentation.
 

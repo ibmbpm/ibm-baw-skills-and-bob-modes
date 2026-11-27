@@ -28,7 +28,7 @@ class sf_validate system
 
 **Fake swimlanes — use with judgment.** `subgraph "Role Name" ... end` around a role's
 nodes visually groups them like a swimlane, with zero effect on the generated BPMN
-(diagram layout is ignored by BAW on import — see [BAW_BPMN_DIALECT.md](BAW_BPMN_DIALECT.md)). This helps when a
+(diagram layout is ignored by Business Automation Workflow on import — see [BAW_BPMN_DIALECT.md](BAW_BPMN_DIALECT.md)). This helps when a
 process has clear blocks of same-actor work (e.g., all of intake is the agent, then all
 of review is underwriting). It hurts when actors interleave tightly (approve → reject →
 re-review → approve), because Mermaid clusters each subgraph spatially and the

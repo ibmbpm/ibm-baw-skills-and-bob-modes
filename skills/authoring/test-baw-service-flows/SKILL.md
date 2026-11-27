@@ -1,22 +1,22 @@
 ---
 name: test-baw-service-flows
-description: "Generate and execute automated tests for IBM BAW Service Flows. Phase A discovers the Service Flow, reads its input/output contract, and produces a structured test suite covering happy path, error paths, and boundary conditions. Phase B invokes the Service Flow — preferring the exposed Automation Service OpenAPI endpoint, falling back to direct service start, then to a process fallback — and returns a structured test report. Use when the user says 'test this service flow', 'generate tests for my service', 'validate my integration service', 'run service flow tests', 'test the automation service', or wants to test a BAW integration service without building a test harness manually. Also use proactively when a user shares a Service Flow and asks if it works, wants to verify inputs and outputs, or asks how to test before going to production."
+description: "Generate and execute automated tests for IBM Business Automation Workflow Service Flows. Phase A discovers the Service Flow, reads its input/output contract, and produces a structured test suite covering happy path, error paths, and boundary conditions. Phase B invokes the Service Flow — preferring the exposed Automation Service OpenAPI endpoint, falling back to direct service start, then to a process fallback — and returns a structured test report. Use when the user says 'test this service flow', 'generate tests for my service', 'validate my integration service', 'run service flow tests', 'test the automation service', or wants to test a Business Automation Workflow integration service without building a test harness manually. Also use proactively when a user shares a Service Flow and asks if it works, wants to verify inputs and outputs, or asks how to test before going to production."
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: Test BAW Service Flows
-  short_description: Generate and execute automated test suites for IBM BAW Service Flows against live BAW and CP4BA environments.
-  author: IBM BAW Team
+  display_name: Test Business Automation Workflow Service Flows
+  short_description: Generate and execute automated test suites for IBM Business Automation Workflow Service Flows against live Business Automation Workflow and Cloud Pak for Business Automation environments.
+  author: IBM Business Automation Workflow Team
 ---
 
-# Test BAW Service Flows
+# Test Business Automation Workflow Service Flows
 
-Generate comprehensive test suites for IBM BAW Service Flows and execute them against a live environment, capturing structured pass/fail results usable for regression tracking.
+Generate comprehensive test suites for IBM Business Automation Workflow Service Flows and execute them against a live environment, capturing structured pass/fail results usable for regression tracking.
 
 | Phase | What it does |
 |---|---|
@@ -32,9 +32,9 @@ The skill uses MCP when relevant tools are present; REST is the fallback.
 - **Phase A:** If Authoring MCP tools are present → use MCP for service flow discovery. If absent → use REST per the steps in `references/SERVICE_FLOW_DISCOVERY.md`.
 - **Phase B:** Use the first available invocation path (see Priority Order below). The Phase A login session (if it exists) is still valid.
 
-### CP4BA URL — resolve before the first API call
+### Cloud Pak for Business Automation URL — resolve before the first API call
 
-When the user provides a CP4BA URL (contains `cpd-` or ends without a port), determine the environment type from the URL path segment **and any context the user has already provided** — do not probe blindly:
+When the user provides a Cloud Pak for Business Automation URL (contains `cpd-` or ends without a port), determine the environment type from the URL path segment **and any context the user has already provided** — do not probe blindly:
 
 | Signal | Type | Action |
 |---|---|---|
@@ -68,7 +68,7 @@ See `references/BAW_CONNECTION.md` for the full authentication procedure for eac
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 ## Phase A — Test Suite Generation
@@ -79,27 +79,27 @@ Full discovery protocol is in `references/SERVICE_FLOW_DISCOVERY.md`. Follow it 
 
 Resolve in this order — do not announce step names to the user, just act.
 
-1. **Authenticate.** Follow `references/BAW_CONNECTION.md`. On CP4BA: obtain a Zen token via `GET /v1/preauth/validateAuth`, then exchange it for a CSRF token via `POST {BAW_BASE_URL}/ops/system/login`. Both the authoring host (`/bas`) and the runtime host (`/baw-<instance>`) require separate tokens — obtain both if you need to export a TWX from authoring while running tests on the runtime. Use **Python stdlib `urllib`** for all HTTP calls — never `curl` or PowerShell (see `references/BAW_CONNECTION.md` for the cross-platform pattern).
+1. **Authenticate.** Follow `references/BAW_CONNECTION.md`. On Cloud Pak for Business Automation: obtain a Zen token via `GET /v1/preauth/validateAuth`, then exchange it for a CSRF token via `POST {BAW_BASE_URL}/ops/system/login`. Both the authoring host (`/bas`) and the runtime host (`/baw-<instance>`) require separate tokens — obtain both if you need to export a TWX from authoring while running tests on the runtime. Use **Python stdlib `urllib`** for all HTTP calls — never `curl` or PowerShell (see `references/BAW_CONNECTION.md` for the cross-platform pattern).
 
-2. **Identify the Service Flow.** Call **both** exposed-item endpoints — they list different things on CP4BA:
+2. **Identify the Service Flow.** Call **both** exposed-item endpoints — they list different things on Cloud Pak for Business Automation:
    - `GET {BAW_BASE_URL}/rest/bpm/wle/v1/exposed/process` — BPMN processes and some service types
-   - `GET {BAW_BASE_URL}/rest/bpm/wle/v1/exposed/service` — Ajax-exposed services (integration Service Flows appear here on CP4BA, not in `/exposed/process`)
+   - `GET {BAW_BASE_URL}/rest/bpm/wle/v1/exposed/service` — Ajax-exposed services (integration Service Flows appear here on Cloud Pak for Business Automation, not in `/exposed/process`)
 
-   Do not call `/bpm/exposed-processes` — it returns 404 on CP4BA runtimes. If neither endpoint returns integration service flows for the target app, proceed to TWX export (see `references/SERVICE_FLOW_DISCOVERY.md` Step 6).
+   Do not call `/bpm/exposed-processes` — it returns 404 on Cloud Pak for Business Automation runtimes. If neither endpoint returns integration service flows for the target app, proceed to TWX export (see `references/SERVICE_FLOW_DISCOVERY.md` Step 6).
 
 3. **Determine exposure type.** From the TWX XML for each service flow:
    - `isAjaxExposed=true` **and** `isSecured=false` → **startable** (direct WLE v1 invocation works)
    - `isAjaxExposed=true` **and** `isSecured=true` → **process_embedded** (requires `callerModelId`; invoke via parent process)
    - `isAjaxExposed=false` → **process_embedded** (direct invocation blocked with HTTP 401 `CWTBG0549E`)
-   - BAW 21+ and published as Automation Service → **automation_service** (preferred)
+   - Business Automation Workflow 21+ and published as Automation Service → **automation_service** (preferred)
 
-   Record `exposure_type` in the test suite metadata. Full detection procedure including BAW version check is in `references/SERVICE_FLOW_DISCOVERY.md`.
+   Record `exposure_type` in the test suite metadata. Full detection procedure including Business Automation Workflow version check is in `references/SERVICE_FLOW_DISCOVERY.md`.
 
 4. **Read the I/O contract.** Retrieve the full input variable list (names, types, required flag, default values) and the output variable list (names, types). Also read any declared error outputs or fault types. Ask the user:
    > *"I found [Service Flow name] in [app] — it accepts [N input fields] and returns [M output fields]. Are there any specific error scenarios, boundary values, or input combinations you especially want covered?"*
 
 5. **Ask about execution:**
-   > *"Once the test suite is ready, would you like me to run it against your BAW server straight away, or just generate the file for review first?"*
+   > *"Once the test suite is ready, would you like me to run it against your Business Automation Workflow server straight away, or just generate the file for review first?"*
 
 ### Generating the tests
 
@@ -124,7 +124,7 @@ Full execution protocol is in `references/SERVICE_FLOW_EXECUTION.md`. Key endpoi
 
 - **Direct start:** `POST /rest/bpm/wle/v1/service/{serviceId}?action=start` with `Content-Type: application/x-www-form-urlencoded` and body `params=<JSON>`.
 - **Process start (fallback):** `POST /rest/bpm/wle/v1/process?action=start&bpdId=<bpdId>&processAppId=<appId>` with `params=<JSON>`.
-- **Process poll:** `GET /rest/bpm/wle/v1/process/{piid}?parts=data,variables` — **not** `/bpm/processes/{id}` (that path returns all-null fields on CP4BA runtimes).
+- **Process poll:** `GET /rest/bpm/wle/v1/process/{piid}?parts=data,variables` — **not** `/bpm/processes/{id}` (that path returns all-null fields on Cloud Pak for Business Automation runtimes).
 
 > **Isolation guarantee.** Phase B only ever creates new service invocations or process instances for testing. It never touches, modifies, or terminates any pre-existing instance. Test invocations are synthetic and all input data is test data only — never substitute real personal data, production record IDs, or live integration credentials.
 
@@ -139,21 +139,21 @@ Full execution protocol is in `references/SERVICE_FLOW_EXECUTION.md`. Key endpoi
    > *"⚠️ I'll invoke the Service Flow on the BAS integrated playback server. Any external side effects the service triggers (database writes, REST calls to real APIs) will be real. Do you want to continue? (yes / no)"*
 
    **Runtime / unknown:**
-   > *"⚠️ Running these tests will invoke the Service Flow on your BAW server. It is strongly recommended to run against a non-production environment to avoid unintended side effects. Do you want to continue? (yes / no)"*
+   > *"⚠️ Running these tests will invoke the Service Flow on your Business Automation Workflow server. It is strongly recommended to run against a non-production environment to avoid unintended side effects. Do you want to continue? (yes / no)"*
 
    Wait for explicit "yes" before starting.
-5. **REST only — authenticate** (skip if session from Phase A is still valid): read `references/CREDENTIAL_HANDLING.md` to resolve credentials, then authenticate. Use **Python stdlib `urllib`** for all HTTP calls — never `curl` or PowerShell. For CP4BA: obtain a Zen token via `GET /v1/preauth/validateAuth`, then a CSRF token via `POST {BAW_BASE_URL}/ops/system/login`. For on-premises: use Basic auth on `POST {BAW_BASE_URL}/ops/system/login` and store the `{BAW_CSRF}` and `{BAW_SESSION}` cookies. See `references/BAW_CONNECTION.md` for the full authentication flow.
+5. **REST only — authenticate** (skip if session from Phase A is still valid): follow `references/CREDENTIAL_HANDLING.md` for how to authenticate and execute each call. See `references/BAW_CONNECTION.md` for URL and environment rules.
 6. **Production warning.** If the server URL contains `prod`, the user says it is production, or it matches a known production hostname, add:
    > *"This appears to be a production server. Invoking service flows here may trigger real integrations (email, database, external APIs). Are you sure you want to continue on production?"*
    Wait for explicit confirmation.
 
 ### Priority order for service invocation
 
-Check in this order and use the first path that is available. The BAW version (detected in Phase A via `/rest/bpm/wle/v1/systems`) determines which paths are viable:
+Check in this order and use the first path that is available. The Business Automation Workflow version (detected in Phase A via `/rest/bpm/wle/v1/systems`) determines which paths are viable:
 
 | Priority | Path | When to use |
 |---|---|---|
-| 1 | **Exposed Automation Service** | BAW 21+ only. Service Flow is exposed as an Automation Service with a generated OpenAPI contract. Use `POST /automationservices/rest/{appAcronym}/{serviceName}` with the JSON body from the test case `input.data`. Skip this path entirely on BAW 8.6. |
+| 1 | **Exposed Automation Service** | Business Automation Workflow 21+ only. Service Flow is exposed as an Automation Service with a generated OpenAPI contract. Use `POST /automationservices/rest/{appAcronym}/{serviceName}` with the JSON body from the test case `input.data`. Skip this path entirely on Business Automation Workflow 8.6. |
 | 2 | **Direct service start** | Service Flow is directly startable (`isAjaxExposed=true`). Use `POST /rest/bpm/wle/v1/service/{serviceId}?action=start` with `Content-Type: application/x-www-form-urlencoded` and body `params=<JSON>`. |
 | 3 | **Process fallback** | Service Flow is only accessible through an exposed process (`isAjaxExposed=false`). Use `POST /bpm/processes?model=<model>&container=<container>&version=<version>` then poll `GET /bpm/processes/{processId}?optional_parts=data,variables` for the output. |
 
@@ -214,5 +214,5 @@ Out of scope — do not attempt:
 - **BPMN Process testing** — use `generate-baw-tests`.
 - **Coach/UI field validation** — use `generate-baw-tests`.
 - **Case application testing** — out of scope for both skills.
-- **Federated multi-system orchestration** — each test targets a single BAW system.
+- **Federated multi-system orchestration** — each test targets a single Business Automation Workflow system.
 - **Authoring or modifying Service Flow definitions** — use `service-artifact-generation`.

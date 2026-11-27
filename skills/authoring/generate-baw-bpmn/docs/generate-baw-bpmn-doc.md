@@ -1,10 +1,10 @@
-# Generate BAW BPMN — Documentation
+# Generate Business Automation Workflow BPMN — Documentation
 
-> Generates BPMN 2.0 XML that imports cleanly into IBM Business Automation Workflow (BAW) — processes and complex business object variables (via a bundled XSD) — by writing a process JSON and running a bundled deterministic generator that emits BAW's own export dialect and packages the `.zip` the import wizards expect.
+> Generates BPMN 2.0 XML that imports cleanly into IBM Business Automation Workflow — processes and complex business object variables (via a bundled XSD) — by writing a process JSON and running a bundled deterministic generator that emits Business Automation Workflow's own export dialect and packages the `.zip` the import wizards expect.
 
 ## Purpose
 
-This skill turns any process description into a validated, import-ready BAW artifact: a `.bpmn`, an optional `.xsd` for business objects, a `.zip` that the BAW import wizards accept on first attempt, and a generated `README.md` with a Mermaid diagram and process documentation. It is intended for BAW developers and process authors who need importable BPMN without hand-writing XML. Use it whenever you want to model a workflow in BAW from a chat description, a requirements document, an SOP, meeting notes, or an existing process design — including when a previous import attempt lost elements or swimlanes.
+This skill turns any process description into a validated, import-ready Business Automation Workflow artifact: a `.bpmn`, an optional `.xsd` for business objects, a `.zip` that the Business Automation Workflow import wizards accept on first attempt, and a generated `README.md` with a Mermaid diagram and process documentation. It is intended for Business Automation Workflow developers and process authors who need importable BPMN without hand-writing XML. Use it whenever you want to model a workflow in Business Automation Workflow from a chat description, a requirements document, an SOP, meeting notes, or an existing process design — including when a previous import attempt lost elements or swimlanes.
 
 ## Setup and configuration
 
@@ -14,18 +14,18 @@ This skill turns any process description into a validated, import-ready BAW arti
 
 ## Compatibility
 
-- **BAW import wizards only** — the deliverable is a `.zip` for Workflow Center → **Import Process App** or Process Designer → **File > Import**. The skill does not deploy to a running BAW server.
-- **Single none start event per process** — BAW honors only one start event per process on import; multiple starts will be silently dropped.
-- **No BPMN DI / layout section** — BAW ignores incoming diagram layout and auto-arranges on import. Diagram layout is an expected post-import step in Process Designer.
-- **Supported constructs only** — the generator rejects elements outside IBM's documented import mapping (callActivity, signal/escalation/compensation events, data stores, pools) at validation time rather than letting BAW silently drop them on import.
-- **Business objects require BAW 22.x or later** — the `.xsd` sidecar mechanism requires a BAW version that supports itemDefinition-based business object import.
+- **Business Automation Workflow import wizards only** — the deliverable is a `.zip` for Workflow Center → **Import Process App** or Process Designer → **File > Import**. The skill does not deploy to a running Business Automation Workflow server.
+- **Single none start event per process** — Business Automation Workflow honors only one start event per process on import; multiple starts will be silently dropped.
+- **No BPMN DI / layout section** — Business Automation Workflow ignores incoming diagram layout and auto-arranges on import. Diagram layout is an expected post-import step in Process Designer.
+- **Supported constructs only** — the generator rejects elements outside IBM's documented import mapping (callActivity, signal/escalation/compensation events, data stores, pools) at validation time rather than letting Business Automation Workflow silently drop them on import.
+- **Business objects require Business Automation Workflow 22.x or later** — the `.xsd` sidecar mechanism requires a Business Automation Workflow version that supports itemDefinition-based business object import.
 
 ## Prompt examples
 
 ### Model a process from a conversational description
 
 **Prompt:**
-> I need a BAW process for handling customer refund requests. A customer submits a refund request online, the system validates it against our refund policy, then a service agent reviews it and either approves or denies it. Approved refunds get processed automatically by the system and the customer gets a confirmation email. Denied requests also get an email notification. Domain is CustomerService.
+> I need a Business Automation Workflow process for handling customer refund requests. A customer submits a refund request online, the system validates it against our refund policy, then a service agent reviews it and either approves or denies it. Approved refunds get processed automatically by the system and the customer gets a confirmation email. Denied requests also get an email notification. Domain is CustomerService.
 
 **What to expect:** The skill walks you through a guided conversation (plan → data model → confirmation), then generates a `.bpmn`, `.xsd`, and `.zip` in `business-processes/bpmn/CustomerService/refund-request-handling/`, plus a process config JSON and a `README.md` with a Mermaid diagram.
 
@@ -34,16 +34,16 @@ This skill turns any process description into a validated, import-ready BAW arti
 ### Model a process with business object data
 
 **Prompt:**
-> Generate a BAW process for a job position request. A hiring manager submits a new position, the general manager approves or rejects it, and HR then finds and screens candidates. I want real business objects: a Position object with id, title, department, headcount, and status, and a Candidate object with name, email, phone, and screeningOutcome. Wire them to the tasks that use them.
+> Generate a Business Automation Workflow process for a job position request. A hiring manager submits a new position, the general manager approves or rejects it, and HR then finds and screens candidates. I want real business objects: a Position object with id, title, department, headcount, and status, and a Candidate object with name, email, phone, and screeningOutcome. Wire them to the tasks that use them.
 
-**What to expect:** The skill proposes a data model (in YAML), lets you refine it, then generates `.bpmn` + `.xsd` + `.zip` with BAW-compatible itemDefinitions and a sidecar XSD defining the Position and Candidate complex types.
+**What to expect:** The skill proposes a data model (in YAML), lets you refine it, then generates `.bpmn` + `.xsd` + `.zip` with itemDefinitions compatible with Business Automation Workflow and a sidecar XSD defining the Position and Candidate complex types.
 
 ---
 
 ### Extract a process from a requirements document or BRD
 
 **Prompt:**
-> Here is section 4.1 of our loan origination BRD — please generate the importable BAW BPMN from it:
+> Here is section 4.1 of our loan origination BRD — please generate the importable Business Automation Workflow BPMN from it:
 >
 > "4.1 Loan Application Process. When an applicant submits a loan application online, the system performs an automated credit check. If the credit score is below 600, a loan officer conducts a manual underwriting review and either approves with conditions, approves outright, or declines. Applications above 600 are auto-approved. Approved applications in either path proceed to document collection by the loan coordinator. Once documents are received, the system activates the loan and sends a disbursement notice to the applicant. If documents are not received within 10 business days, the application is automatically cancelled."
 
@@ -54,18 +54,18 @@ This skill turns any process description into a validated, import-ready BAW arti
 ### Fix a broken BPMN import (swimlanes disappearing, elements dropped)
 
 **Prompt:**
-> My BPMN import into BAW keeps losing the swimlanes and one gateway always disappears on import. The process is a new employee onboarding: HR enters employee details, IT provisions accounts and orders equipment in parallel, then a welcome meeting is scheduled. Can you regenerate this properly so it imports cleanly?
+> My BPMN import into Business Automation Workflow keeps losing the swimlanes and one gateway always disappears on import. The process is a new employee onboarding: HR enters employee details, IT provisions accounts and orders equipment in parallel, then a welcome meeting is scheduled. Can you regenerate this properly so it imports cleanly?
 
-**What to expect:** The skill explains what BAW's import mapping does (and doesn't) support — the skill replaces lanes with role annotations and Process Designer team assignments, and only supported gateway/event types survive — then generates a clean `.bpmn`/`.zip` that imports without surprises.
+**What to expect:** The skill explains what Business Automation Workflow's import mapping does (and doesn't) support — the skill replaces lanes with role annotations and Process Designer team assignments, and only supported gateway/event types survive — then generates a clean `.bpmn`/`.zip` that imports without surprises.
 
 ---
 
 ### Automation-heavy process with service flows and error handling
 
 **Prompt:**
-> I need a BAW process for a nightly data sync. The system fetches open orders from our ERP, enriches each order with product catalog data, then publishes them to our warehouse platform. If the publish step fails, someone from the ops team needs to investigate and either retry or cancel the batch. Everything is automated except that last step.
+> I need a Business Automation Workflow process for a nightly data sync. The system fetches open orders from our ERP, enriches each order with product catalog data, then publishes them to our warehouse platform. If the publish step fails, someone from the ops team needs to investigate and either retry or cancel the batch. Everything is automated except that last step.
 
-**What to expect:** The skill creates a serviceTask-heavy config (fetch, enrich, publish as named service flows) with an error boundary event on the publish task routing to a user task for ops, generates `.bpmn`/`.zip`, and reports the service flow names BAW will create on import.
+**What to expect:** The skill creates a serviceTask-heavy config (fetch, enrich, publish as named service flows) with an error boundary event on the publish task routing to a user task for ops, generates `.bpmn`/`.zip`, and reports the service flow names Business Automation Workflow will create on import.
 
 ---
 
@@ -81,16 +81,16 @@ This skill turns any process description into a validated, import-ready BAW arti
 ### Out-of-scope redirect — coach or widget development
 
 **Prompt:**
-> Can you build the BAW coach UI for my expense approval process? I want a form with fields for expense type, amount, and receipt attachment.
+> Can you build the Business Automation Workflow coach UI for my expense approval process? I want a form with fields for expense type, amount, and receipt attachment.
 
-**What to expect:** The skill redirects this request to the `create-baw-widget` skill, which handles BAW coach view development.
+**What to expect:** The skill redirects this request to the `create-baw-widget` skill, which handles Business Automation Workflow coach view development.
 
 ---
 
-### Out-of-scope redirect — deploying to a BAW server
+### Out-of-scope redirect — deploying to a Business Automation Workflow server
 
 **Prompt:**
-> Once the BPMN is generated, can you deploy it directly to our BAW server at https://baw.mycompany.com?
+> Once the BPMN is generated, can you deploy it directly to our Business Automation Workflow server at https://baw.mycompany.com?
 
 **What to expect:** The skill clarifies that deployment to a running server is out of scope; it delivers the `.zip` file and the import route (Workflow Center or Process Designer), and redirects server-side deployment to the `version-lifecycle-manager` skill.
 

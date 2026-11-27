@@ -1,4 +1,4 @@
-# BAW REST Reference — troubleshoot-baw-logs
+# Business Automation Workflow REST Reference — troubleshoot-baw-logs
 
 ---
 
@@ -164,7 +164,7 @@ Authorization: Basic <base64(username:password)>
 | `tasks[*].dueTime` | `tasks[*].due_time` |
 
 **Notes:**
-- Strip all keys beginning with `@` from `variables` before presenting business data — these are internal BAW metadata fields, not process variables.
+- Strip all keys beginning with `@` from `variables` before presenting business data — these are internal Business Automation Workflow metadata fields, not process variables.
 - Task pagination: if `tasks` returns exactly `taskLimit` entries, there may be more. Re-call with `taskOffset` incremented by `taskLimit` until fewer entries than `taskLimit` are returned.
 - `state` uses `STATE_*` constants (e.g. `STATE_FAILED`, `STATE_FINISHED`); `executionState` uses human-readable labels (e.g. `Active`, `Completed`).
 
@@ -176,13 +176,13 @@ Authorization: Basic <base64(username:password)>
 
 ---
 
-## `/ops/std/bpm/logs` *(OPS — Liberty only)*
+## `/ops/std/bpm/logs` *(OPS — Cloud Pak for Business Automation 26.0.3 and later only)*
 
 ### GET /ops/std/bpm/logs
 
-**Retrieve the BAW server messages.log**
+**Retrieve the Business Automation Workflow server messages.log**
 
-Returns the raw text content of the Liberty `messages.log` file. Available on Liberty-based BAW deployments only.
+Returns the raw text content of the Liberty `messages.log` file. Available on Cloud Pak for Business Automation environments at 26.0.3 or later only.
 (unverified by IBM docs — grounded by manual inspection of MCP server source)
 
 **Parameters:**
@@ -193,9 +193,9 @@ Returns the raw text content of the Liberty `messages.log` file. Available on Li
 **Responses:**
 
 - `200` — Success. Response body is the raw log text (not JSON). Save to a temp file and read with a line range.
-- `200` with empty body — The server is not Liberty. This endpoint only works on Liberty-based deployments.
+- `200` with empty body — The server is not a Cloud Pak for Business Automation 26.0.3 or later environment. This endpoint only works on Cloud Pak for Business Automation 26.0.3 and later.
 - `403` — The caller lacks admin authorization.
-- `404` — The endpoint is not wired on this BAW release.
+- `404` — The endpoint is not available on this release (it requires Cloud Pak for Business Automation 26.0.3 or later).
 - `500` — Internal server error.
 
 **Handling each response:**
@@ -203,7 +203,7 @@ Returns the raw text content of the Liberty `messages.log` file. Available on Li
 | Response | Action |
 |---|---|
 | 200 + non-empty body | Parse as raw log text. Read last 200 lines first. |
-| 200 + empty body | Tell user: "This API is only available on Liberty-based BAW. Please paste the relevant log section." |
+| 200 + empty body | Tell user: "This API is only available on Cloud Pak for Business Automation 26.0.3 and later. Please paste the relevant log section." |
 | 403 | Tell user admin rights are required and ask them to paste the log. |
 | 404 | Tell user the endpoint is not available on this server and ask them to paste the log. |
 

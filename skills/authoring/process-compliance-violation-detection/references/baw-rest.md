@@ -1,4 +1,4 @@
-# BAW REST API Reference — process-compliance-violation-detection
+# Business Automation Workflow REST API Reference — process-compliance-violation-detection
 
 Generated from `baw-ops.26.0.0.json`. Base path: `/ops`.
 
@@ -26,7 +26,7 @@ Obtain a CSRF prevention token and optionally refresh the user's group membershi
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `refresh_groups` | boolean | yes | Whether to refresh the caller's group membership in the BAW database. Pass `false` unless you need a group refresh. |
+| `refresh_groups` | boolean | yes | Whether to refresh the caller's group membership in the Business Automation Workflow database. Pass `false` unless you need a group refresh. |
 | `requested_lifetime` | integer | no | Token lifetime in seconds (max 7200, default 7200). |
 
 **Responses:**
@@ -104,7 +104,7 @@ Each entry in `containers`:
 
 **Summary:** Export a process application or toolkit snapshot as a .twx file
 
-Downloads a specified process application snapshot or toolkit snapshot as a binary `.twx` file. Only BAW administrators or users with project read permission are authorized. The suggested filename is URL-encoded in the `Content-Disposition` response header.
+Downloads a specified process application snapshot or toolkit snapshot as a binary `.twx` file. Only Business Automation Workflow administrators or users with project read permission are authorized. The suggested filename is URL-encoded in the `Content-Disposition` response header.
 
 **Authentication:** Session cookies (`{BAW_SESSION}`) + `BPMCSRFToken: {BAW_CSRF}`
 
@@ -130,6 +130,13 @@ Cookie: LtpaToken2=...; JSESSIONID=...
 ```
 
 Save the response body as `{container}-{version}.twx`. Verify the HTTP status code and the downloaded file size before proceeding to analysis.
+
+**Accept header:** this endpoint returns a binary file and answers `406 Not Acceptable` to `Accept: application/json`, which the bundled `baw_rest.py` sends by default. Always override it with `-H "Accept: application/octet-stream"` and save the file with `-o`:
+
+```bash
+baw_rest.py request GET /ops/std/bpm/containers/{container}/versions/{version}/export \
+    -H "Accept: application/octet-stream" -o ./{container}-{version}.twx
+```
 
 **Responses:**
 

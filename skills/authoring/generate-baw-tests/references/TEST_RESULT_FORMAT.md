@@ -133,6 +133,6 @@ Then show the full detail block for each `FAIL` or `ERROR` test. Express failure
 
 > TC-002 FAIL: Expected task "Finance Approval" after HR rejection, but found "End Event: Rejected" instead. The process terminated at step 2 rather than routing to Finance.
 
-> TC-ERR-1 ERROR: Could not complete task "Process Refund" (task ID 1042). The BAW server returned HTTP 500 with "Internal service error". The test is inconclusive. Check the server logs for errors in the RefundService integration service.
+> TC-ERR-1 ERROR: Could not complete task "Process Refund" (task ID 1042). The Business Automation Workflow server returned HTTP 500 with "Internal service error". The test is inconclusive. Check the server logs for errors in the RefundService integration service.
 
 Never show raw JSON error payloads to the user. Translate them into one sentence that describes what failed and what to investigate next.

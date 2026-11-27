@@ -1,23 +1,23 @@
 # Process compliance violation detection documentation
 
-> Evaluate IBM BAW and CP4BA process applications against compliance, governance, regulatory, business policy, architecture, or standards documents (for example, SOX, GDPR, ISO, or corporate policies). The skill detects violations, gaps, and risks, then recommends remediation using documented BAW/CP4BA platform capabilities.
+> Evaluate IBM Business Automation Workflow and Cloud Pak for Business Automation process applications against compliance, governance, regulatory, business policy, architecture, or standards documents (for example, SOX, GDPR, ISO, or corporate policies). The skill detects violations, gaps, and risks, then recommends remediation using documented Business Automation Workflow or Cloud Pak for Business Automation platform capabilities.
 
 ## Purpose
 
-This skill is for IBM Business Automation Workflow (BAW) and IBM Cloud Pak for Business Automation (CP4BA) developers, architects, and compliance officers who need to verify that a process application meets a given compliance standard before going to production. Provide a compliance document (policy, regulation, internal standard, or named regulation such as SOX or GDPR) and a process application (exported `.twx` file or a live BAW server to export from), and the skill runs a structured eight-phase analysis pipeline: rule extraction → rule confirmation → process artifact discovery → evidence evaluation → Socratic gap-filling → violation detection → remediation recommendations → report generation. The skill also supports document-only analysis (extract rules with no process app yet) and process-only analysis (evaluate against the built-in default rule set when you have no compliance document). For general design-time scoring across six internal control domains without external policy documents, use `audit-baw-readiness`.
+This skill is for IBM Business Automation Workflow and IBM Cloud Pak for Business Automation developers, architects, and compliance officers who need to verify that a process application meets a given compliance standard before going to production. Provide a compliance document (policy, regulation, internal standard, or named regulation such as SOX or GDPR) and a process application (exported `.twx` file or a live Business Automation Workflow server to export from), and the skill runs a structured eight-phase analysis pipeline: rule extraction → rule confirmation → process artifact discovery → evidence evaluation → Socratic gap-filling → violation detection → remediation recommendations → report generation. The skill also supports document-only analysis (extract rules with no process app yet) and process-only analysis (evaluate against the built-in default rule set when you have no compliance document). For general design-time scoring across six internal control domains without external policy documents, use `audit-baw-readiness`.
 
 ## Setup and configuration
 
-- **No MCP server required.** This skill uses only HTTP calls to the BAW REST API and local file reads. No special MCP tools are needed.
-- **BAW REST access (REST mode only):** You need a BAW server URL and valid credentials. The skill handles authentication (CSRF token and session cookies) internally. The skill uses credentials only within the session and never writes them to a file.
-- **Path mode (no server access needed):** Export the `.twx` file from your authoring environment (**Workflow Center** for traditional BAW or **Business Automation Studio** for CP4BA containerized), then provide the local file path. No server credentials are required.
+- **No MCP server required.** This skill uses only HTTP calls to the Business Automation Workflow REST API and local file reads. No special MCP tools are needed.
+- **Business Automation Workflow REST access (REST mode only):** You need a Business Automation Workflow server URL and valid credentials. The skill handles authentication (CSRF token and session cookies) internally. The skill uses credentials only within the session and never writes them to a file.
+- **Path mode (no server access needed):** Export the `.twx` file from your authoring environment (**Workflow Center** for traditional Business Automation Workflow or **Business Automation Studio** for Cloud Pak for Business Automation containerized), then provide the local file path. No server credentials are required.
 - **Workspace write access:** The skill writes two output files to your workspace directory: `Rules.md` (the active rule set) and `[ProcessAppName]-compliance-report.md`.
 
 ## Compatibility
 
-- **IBM BAW and CP4BA only.** The rule extraction, evidence model, and remediation map are specific to BAW and CP4BA artifacts (BPDs, human tasks, coaches, decision services, Business Performance Data Warehouse (BPDW) tracking groups, and so on). The skill does not support non-BAW process platforms.
+- **IBM Business Automation Workflow and Cloud Pak for Business Automation only.** The rule extraction, evidence model, and remediation map are specific to Business Automation Workflow and Cloud Pak for Business Automation artifacts (BPDs, human tasks, coaches, decision services, Business Performance Data Warehouse (BPDW) tracking groups, and so on). The skill does not support process platforms other than Business Automation Workflow.
 - **Process analysis requires a `.twx` file.** The skill can read a `.twx` file from a local path (Path mode) or export one from a live server through REST (REST mode). Without a `.twx` source, only document-only analysis is possible.
-- **BAW REST API version:** REST endpoints are drawn from the BAW 26.0.x Operations API (`/ops` base path). Server versions significantly older than 26.x may expose different endpoint paths.
+- **Business Automation Workflow REST API version:** REST endpoints are drawn from the Business Automation Workflow 26.0.x Operations API (`/ops` base path). Server versions significantly older than 26.x may expose different endpoint paths.
 - **Report output is always Markdown.** The skill always writes output as a `.md` file and does not offer alternative formats.
 
 ## Prompt examples
@@ -29,16 +29,16 @@ This skill is for IBM Business Automation Workflow (BAW) and IBM Cloud Pak for B
 **Prompt:**
 > I need a full compliance analysis. The compliance document is at `docs/policies/SOX_Section404_Controls.md` and the process application TWX file is at `exports/InvoiceApproval-SS2.0.twx`.
 
-**What to expect:** The skill extracts rules from the compliance document, confirms the rule set with you, evaluates all process artifacts in the `.twx` against those rules, asks targeted questions to resolve evidence gaps, then writes a complete 13-section Markdown report (`InvoiceApproval-compliance-report.md`) with violation findings, severity levels, and BAW-specific remediation recommendations.
+**What to expect:** The skill extracts rules from the compliance document, confirms the rule set with you, evaluates all process artifacts in the `.twx` against those rules, asks targeted questions to resolve evidence gaps, then writes a complete 13-section Markdown report (`InvoiceApproval-compliance-report.md`) with violation findings, severity levels, and remediation recommendations specific to Business Automation Workflow.
 
 ---
 
-### Full analysis: live BAW server (REST mode)
+### Full analysis: live Business Automation Workflow server (REST mode)
 
 **Prompt:**
-> I need a compliance check against our GDPR data-handling policy at `policies/GDPR_Article32.md`. The process app is live on our BAW server at `https://baw.corp.example.com:9443`. Username is `<username>`, password is `<password>`. Process app acronym is `CUST`, snapshot is `SS3.1`.
+> I need a compliance check against our GDPR data-handling policy at `policies/GDPR_Article32.md`. The process app is live on our Business Automation Workflow server at `https://baw.corp.example.com:9443`. Username is `<username>`, password is `<password>`. Process app acronym is `CUST`, snapshot is `SS3.1`.
 
-**What to expect:** The skill logs in to the BAW server, lists available process apps to validate the acronyms, exports the `.twx` file, then runs the same full analysis pipeline. The skill confirms the HTTP status of each REST call before proceeding.
+**What to expect:** The skill logs in to the Business Automation Workflow server, lists available process apps to validate the acronyms, exports the `.twx` file, then runs the same full analysis pipeline. The skill confirms the HTTP status of each REST call before proceeding.
 
 ---
 
@@ -54,9 +54,9 @@ This skill is for IBM Business Automation Workflow (BAW) and IBM Cloud Pak for B
 ### Document-only analysis: no process app yet
 
 **Prompt:**
-> I only have a compliance document right now and no process app yet. The document is at `compliance/HR_Hiring_Policy_v2.md`. Can you extract the rules and tell me what BAW evidence I need to prove compliance for each one?
+> I only have a compliance document right now and no process app yet. The document is at `compliance/HR_Hiring_Policy_v2.md`. Can you extract the rules and tell me what Business Automation Workflow evidence I need to prove compliance for each one?
 
-**What to expect:** The skill extracts all rules from the document, assigns `DOC-NNN` IDs with category and severity, writes `Rules.md`, and for each rule specifies which BAW artifact or behavior constitutes proof. The skill produces no violation findings and no overall verdict.
+**What to expect:** The skill extracts all rules from the document, assigns `DOC-NNN` IDs with category and severity, writes `Rules.md`, and for each rule specifies which Business Automation Workflow artifact or behavior constitutes proof. The skill produces no violation findings and no overall verdict.
 
 ---
 
@@ -100,4 +100,4 @@ This skill is for IBM Business Automation Workflow (BAW) and IBM Cloud Pak for B
 **Prompt:**
 > Audit the Accounts Payable process against our ISO 27001 controls at `policies/ISO27001_AppendixA.md`. I'll provide the process app later.
 
-**What to expect:** The skill offers to perform document-only analysis immediately (extracting rules and writing `Rules.md`) and states that process-side evaluation requires either a `.twx` file path or BAW server credentials. It does not invent process content.
+**What to expect:** The skill offers to perform document-only analysis immediately (extracting rules and writing `Rules.md`) and states that process-side evaluation requires either a `.twx` file path or Business Automation Workflow server credentials. It does not invent process content.

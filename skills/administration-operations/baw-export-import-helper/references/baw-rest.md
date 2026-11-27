@@ -1,4 +1,4 @@
-# BAW REST API reference
+# Business Automation Workflow REST API reference
 
 ---
 
@@ -22,7 +22,7 @@ Obtains a CSRF prevention token and optionally refreshes the user's group member
 ### `GET /ops/std/bpm/containers`
 **Retrieve a list of all process applications and toolkits**
 
-Retrieves a list of all process applications and toolkits on the Workflow Center server or Workflow Server that the user can see. Only IBM Business Automation Workflow (BAW) users are authorized to perform this call.
+Retrieves a list of all process applications and toolkits on the Workflow Center server or Workflow Server that the user can see. Only IBM Business Automation Workflow users are authorized to perform this call.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — Cross-site request forgery prevention token for IBM Business Automation Workflow REST APIs.
@@ -42,7 +42,7 @@ Retrieves a list of all process applications and toolkits on the Workflow Center
 ### `POST /ops/std/bpm/containers`
 **Create a process application or toolkit**
 
-Creates a process application or toolkit. Only BAW authors are authorized to perform this call.
+Creates a process application or toolkit. Only Business Automation Workflow authors are authorized to perform this call.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
@@ -60,7 +60,7 @@ Creates a process application or toolkit. Only BAW authors are authorized to per
 ### `GET /ops/std/bpm/containers/{container}`
 **Retrieve process application or toolkit details**
 
-Retrieves detailed information for a specified process application or toolkit, including a list of all its snapshots. Only BAW administrators or users with project read permission are authorized to perform this call.
+Retrieves detailed information for a specified process application or toolkit, including a list of all its snapshots. Only Business Automation Workflow administrators or users with project read permission are authorized to perform this call.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
@@ -77,7 +77,7 @@ Retrieves detailed information for a specified process application or toolkit, i
 ### `DELETE /ops/std/bpm/containers/{container}`
 **Delete a process application or toolkit**
 
-Deletes an archived process application or toolkit and all its snapshots from the Workflow Center server. None of them can include dependencies from other process applications. Only BAW administrators are authorized to perform this call.
+Deletes an archived process application or toolkit and all its snapshots from the Workflow Center server. None of them can include dependencies from other process applications. Only Business Automation Workflow administrators are authorized to perform this call.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
@@ -96,7 +96,7 @@ Deletes an archived process application or toolkit and all its snapshots from th
 ### `GET /ops/std/bpm/containers/{container}/branches`
 **Retrieve a list of all tracks for a process application or toolkit**
 
-Retrieves information about all the tracks or a subset of the tracks of a specific process application or toolkit on the Workflow Center server or Workflow Server. Only BAW administrators or users with project read permission are authorized to perform this call.
+Retrieves information about all the tracks or a subset of the tracks of a specific process application or toolkit on the Workflow Center server or Workflow Server. Only Business Automation Workflow administrators or users with project read permission are authorized to perform this call.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
@@ -116,7 +116,7 @@ Retrieves information about all the tracks or a subset of the tracks of a specif
 ### `POST /ops/std/bpm/containers/{container}/branches`
 **Create a new track in a process application or toolkit**
 
-Creates a track in a process application or toolkit. Only BAW administrators or users with project write permission are authorized to perform this call.
+Creates a track in a process application or toolkit. Only Business Automation Workflow administrators or users with project write permission are authorized to perform this call.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
@@ -135,7 +135,7 @@ Creates a track in a process application or toolkit. Only BAW administrators or 
 ### `POST /ops/std/bpm/containers/{container}/versions`
 **Create snapshots of process applications or toolkits**
 
-Creates snapshots of process applications or toolkits on the Workflow Center server. You can use this API to automate the creation of an offline backup of the current snapshots of your process applications and toolkits. You can use the API for only 1 process application or toolkit at a time. Only BAW administrators or users with project write permission are authorized to perform this call.
+Creates snapshots of process applications or toolkits on the Workflow Center server. You can use this API to automate the creation of an offline backup of the current snapshots of your process applications and toolkits. You can use the API for only 1 process application or toolkit at a time. Only Business Automation Workflow administrators or users with project write permission are authorized to perform this call.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.
@@ -152,7 +152,7 @@ Creates snapshots of process applications or toolkits on the Workflow Center ser
 ### `GET /ops/std/bpm/containers/{container}/versions`
 **Retrieve information about all snapshots or a subset of snapshots**
 
-Retrieves information about all the snapshots or a subset of the snapshots of a specific process application or toolkit on the Workflow Center server or Workflow Server. Only BAW administrators or users with project read permission are authorized to perform this call.
+Retrieves information about all the snapshots or a subset of the snapshots of a specific process application or toolkit on the Workflow Center server or Workflow Server. Only Business Automation Workflow administrators or users with project read permission are authorized to perform this call.
 
 > **Note:** For Workflow Server, this API returns only deployed snapshots.
 
@@ -202,7 +202,7 @@ Deletes process application or toolkit snapshots that match the specified criter
 ### `GET /ops/std/bpm/containers/{container}/versions/{version}`
 **Retrieve the information for a specified snapshot**
 
-Retrieves detailed information about a specified process application or toolkit snapshot, including the business process management capability it uses and its development status. Only BAW administrators or users with project read permission are authorized to perform this call.
+Retrieves detailed information about a specified process application or toolkit snapshot, including the business process management capability it uses and its development status. Only Business Automation Workflow administrators or users with project read permission are authorized to perform this call.
 
 **Parameters:**
 - `BPMCSRFToken` (header, string) *(required)* — CSRF prevention token for IBM Business Automation Workflow REST APIs.

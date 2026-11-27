@@ -49,7 +49,7 @@ receives...") become entries in the `roles` section — **not** BPMN pools or la
 
 The README generator will produce a role assignment table and use role names in the
 "Performed by" column — giving the swimlane clarity of the other tool's output
-without adding XML BAW will drop. Teams are then assigned in Process Designer post-import.
+without adding XML Business Automation Workflow will drop. Teams are then assigned in Process Designer post-import.
 
 ## 3. Extract the full data model
 
@@ -71,7 +71,7 @@ Model each child as its own `businessObject`; the parent carries it as `"list": 
 
 **Step 4 — wire all variables.** Set `outputFrom` to the task that first creates or
 captures the object. Set `inputTo` to every task that reads or updates it — not just the
-last consumer. Skipping intermediate wiring means BAW won't generate data mappings for
+last consumer. Skipping intermediate wiring means Business Automation Workflow won't generate data mappings for
 those tasks.
 
 **`xsd:anyType` is a last resort**, not a default. Use it only when the document gives

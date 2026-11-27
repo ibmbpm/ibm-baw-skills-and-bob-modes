@@ -1,32 +1,32 @@
 ---
 name: create-baw-portal
 description: >
-  API-knowledge and portal-development skill for IBM® Business Automation Workflow (BAW).
-  Teaches developers which BAW APIs are needed for a requested portal, what they do, how to
+  API-knowledge and portal-development skill for IBM® Business Automation Workflow.
+  Teaches developers which Business Automation Workflow APIs are needed for a requested portal, what they do, how to
   use them correctly, and how authorization, authentication, CORS, proxies, pagination, and
   XSRF affect implementation. Supports non-federated (WLE REST) and federated (PFS) environments.
   Three usage patterns: (1) API guidance only, (2) adapt an existing application, (3) generate
   a new portal or full application. Carbon is the default design system where appropriate.
-  Does NOT generate BAW process diagrams (BPMN) or internal BAW XML artifacts.
+  Does NOT generate Business Automation Workflow process diagrams (BPMN) or internal Business Automation Workflow XML artifacts.
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
 metadata:
   version: "1.0.0"
-  display_name: BAW Portal Builder
-  short_description: Build IBM BAW task portals — API guidance, portal generation, and existing-app integration for non-federated and PFS environments.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Portal Builder
+  short_description: Build IBM Business Automation Workflow task portals — API guidance, portal generation, and existing-app integration for non-federated and PFS environments.
+  author: IBM Business Automation Workflow Team
   example_prompts:
-    - "Generate a personal task dashboard portal for BAW"
-    - "Which API do I call to get the current user's name in my BAW portal?"
-    - "I have an existing React app — add BAW task list integration using axios"
-    - "How does pagination work with the BAW task list endpoint?"
-    - "Generate a standalone single HTML BAW portal, no build tools"
+    - "Generate a personal task dashboard portal for Business Automation Workflow"
+    - "Which API do I call to get the current user's name in my Business Automation Workflow portal?"
+    - "I have an existing React app — add Business Automation Workflow task list integration using axios"
+    - "How does pagination work with the Business Automation Workflow task list endpoint?"
+    - "Generate a standalone single HTML Business Automation Workflow portal, no build tools"
     - "We're on Process Federation Server — show me how to fetch a federated task list"
-    - "How do I open a BAW task in an iframe modal?"
-    - "How do I handle XSRF tokens when calling BAW APIs?"
+    - "How do I open a Business Automation Workflow task in an iframe modal?"
+    - "How do I handle XSRF tokens when calling Business Automation Workflow APIs?"
 ---
 
 <!-- baw-rest-ops: baw-wle-v1.26.0.0.json: /user/current, /tasks, /task/{taskId}, /searches/tasks, /searches/tasks/{idOrName}, /searches/actions, /searches/tasks/meta/fields, /searches/tasks/meta/constraintFields, /searches/tasks/meta/businessDataFields, /managedGlobalTeams, /globalTeams, /globalTeamUsers/{id}, /team/{teamId}, /team, /group/{groupNameOrID}, /exposed, /process -->
@@ -36,218 +36,114 @@ metadata:
 
 # create-baw-portal skill
 
-## When to use this skill
-
-Use this skill when a developer asks to:
-
-- Understand which BAW REST APIs to call for a portal pattern (task dashboard, manager view, executive view)
-- Integrate a portal with BAW task data, user identity, or team information
-- Generate a new portal or full application that connects to BAW
-- Adapt an existing application (React, Vue, plain JS, etc.) to use BAW APIs
-- Understand authentication, CORS, proxy, XSRF, or pagination requirements
-- Generate standalone single-HTML portal implementations
-- Understand federated (PFS) versus non-federated (WLE) API differences
-- Identify what BAW APIs are missing or unvalidated for a requested capability
-
-Do not use this skill for:
-
-- BAW process (BPMN) generation → `generate-baw-bpmn`
-- Internal BAW XML or BPEL authoring
-
----
+Teaches which Business Automation Workflow APIs a portal needs, how to call them correctly, and how authentication, authorization, CORS, proxies, pagination and CSRF/XSRF affect the implementation. Covers non-federated (WLE REST, "NF") and federated (Process Federation Server, "PFS") environments. Not for BPMN, BPEL or other internal Business Automation Workflow XML (use `generate-baw-bpmn`).
 
 ## Identify the usage pattern
 
-Before proceeding, determine which of the three patterns applies:
-
-| Pattern | Trigger phrases | Action |
+| Pattern | Typical request | Action |
 |---|---|---|
-| **API guidance only** | "Which API…", "What does this endpoint do…", "How does pagination work…", "What fields does the task list return…" | Provide accurate, evidence-classified API guidance from the references. No code unless asked. |
-| **Existing application adaptation** | "I have a React app…", "Add BAW integration to my app…", "How do I call BAW from my Node/Vue/Angular app…" | Read the existing stack. Provide targeted integration guidance and code examples that fit the existing patterns. Do not replace the existing architecture. |
-| **New portal or application generation** | "Generate a portal…", "Create a task dashboard…", "Build a BAW portal for my team…" | Generate using the developer-selected stack. Default to React only when no stack is specified. Support standalone single HTML when requested. |
-
----
+| API guidance only | "Which API…", "How does pagination work…" | Answer from the references; no code unless asked. |
+| Existing application | "I have a React app…", "Add Business Automation Workflow to my app…" | Read its stack, HTTP client, auth pattern and structure first. Add a service module in the existing style; do not refactor unrelated code. |
+| New portal or application | "Generate a portal…", "Build a task dashboard…" | Use the requested stack (React if none), including standalone single HTML. |
 
 ## Gather required information
 
-Before generating code or guidance, determine:
+Ask once, before generating anything, for what the request does not already supply:
 
-1. **Deployment environment** — non-federated BAW (WLE REST) or federated (PFS required)?
-2. **Usage pattern** — guidance, adaptation, or generation?
-3. **Persona(s)** — task worker, manager/team lead, executive/process owner, administrator-aware?
-4. **Technology stack** — React, Vue, Angular, plain JS, single HTML, or developer's existing stack?
-5. **Hosting** — same-origin BAW-hosted, external with proxy/gateway, or direct external access?
-6. **Company branding** — brand name, primary color, or use defaults?
+1. **Hosting profile** (essential, never default, because wrong-profile code cannot work).
+   - **A**: Hosted on Business Automation Workflow, same origin. No CORS or proxy; task iframe works.
+   - **A2**: portal embedded in a Business Automation Workflow Coach (same-origin benefits).
+   - **C-proxy**: external app behind a reverse proxy. Task iframe needs the portal origin in the Business Automation Workflow CSP `frame-ancestors` and HTTPS.
+   - **C-direct**: external app calling Business Automation Workflow directly. Needs a bearer token, a CORS allowlist and the same iframe prerequisites.
+2. **Environment**: NF or PFS. Ask when PFS context is evident ("Process Federation Server", "federated tasks"); never assume NF then. Default to NF only when there is no PFS context, and say so.
+3. **Persona(s)**: task worker, manager/team lead, executive, administrator. Requirements: `references/personas-and-capabilities.md`.
+4. **Stack** (default React) and **branding** (default IBM text-only; see hosting guide). State defaults you apply.
 
-### Defaults for new portal generation
+Skip questions when everything is answered, for API guidance, or when the user says to proceed. In a no-questions run, if an essential fact is missing, stop and list it. Never guess an essential fact or an API contract. Profile definitions and prerequisites: `references/hosting-and-generation.md`.
 
-When the user requests new portal or application generation and has not specified the following, apply documented defaults rather than blocking:
+## Select capabilities
 
-- **Stack not specified** → default to **React**. State this assumption at the top of the response (e.g. "Defaulting to React since no stack was specified — let me know if you prefer Vue, Angular, or plain JS.").
-- **Deployment environment not specified** → default to **non-federated (WLE REST)**. State this assumption. Do not assume non-federated when PFS context is mentioned.
-- **Hosting not specified** → default to **same-origin BAW-hosted**. State this assumption. Provide proxy/CORS notes as a comment in generated code so the developer knows what to change for external deployments.
-- **Company branding not specified** → default to **IBM branding**: header reads `IBM` (in `--ibm-blue-50`) + `BAW Process Portal` (in white). Do not generate placeholder SVG logos, initials badges, or any graphic that could be mistaken for another company's brand. If the developer names a company, use that name as plain text only.
+Use `capabilities/intent-map.json` and `capabilities/catalog.json` as the registry. They are agent reference material: search for the intent alias, `CAP-*` or operation ID and read only that record; never load a whole file.
 
-**Block and ask only when:**
-- The user explicitly mentions an existing application — read the stack before generating.
-- PFS or Process Federation Server is mentioned — confirm the federated deployment before generating federated code.
+1. Classify the request (guidance, adaptation, generation). For a simple "which endpoint" question, go straight to the guide section and operation.
+2. Resolve NF versus PFS. `CAP-*-NF` applies to NF only, `CAP-*-PFS` to PFS only.
+3. Find the intent whose `aliases` match; take its capability list for the resolved deployment. If none fits, read `discoveryAmbiguities`; read `selectionRules` only when strategies conflict.
+4. For each required operation, read its catalog record and the matching guide section. Surface the capability's `limitations` to the developer. When strategies are mutually exclusive (for example saved-search execution), implement only the chosen one.
+5. Resolve hosting and authentication prerequisites (hosting guide) and state any unmet one before writing code.
+6. Features with a playbook: load the playbook before generating code. Playbooks sequence the work; contracts stay in the catalog and guides.
 
----
+| Feature | Intent IDs | Playbook |
+|---|---|---|
+| Saved searches (manage, execute) | `INT-SAVED-SEARCH-MGMT`, `INT-SAVED-SEARCH-EXEC` | [`saved-search-management.md`](references/playbooks/saved-search-management.md) |
+| Task list, detail, actions, launch | `INT-TASK-INBOX`, `INT-TASK-DETAIL`, `INT-TASK-ACTIONS`, `INT-TASK-LAUNCH` | [`task-lifecycle.md`](references/playbooks/task-lifecycle.md) |
+| Discover and start a process | `INT-PROCESS-DISCOVER-AND-START` | NF: [§Process launch](references/non-federated-api-guide.md#process-launch) and task-lifecycle §4.3. PFS: the federated playbook |
+| Any PFS deployment | any intent resolved to PFS | [`federated-portal-integration.md`](references/playbooks/federated-portal-integration.md), together with the intent's own playbook |
 
-## When to inspect an existing repository
+For discovery questions (what can be built), use [`feature-catalog.md`](references/feature-catalog.md). Present only groups relevant to the persona and environment; do not claim parity with IBM portals. Once chosen, resolve through the intent map.
 
-If the user has an existing application:
-
-1. Read the existing stack, dependencies, and folder structure before recommending any API patterns.
-2. Identify the existing HTTP client (fetch, axios, etc.) and use it rather than introducing a new one.
-3. Identify the existing authentication pattern and map BAW session or token requirements to it.
-4. Preserve the existing component architecture. Do not refactor unrelated code.
-
----
-
-## Choose the correct API family
-
-Read [`references/baw-rest.md`](references/baw-rest.md) for the canonical list of validated API paths, methods, and parameters. Read [`references/non-federated-api-guide.md`](references/non-federated-api-guide.md) and [`references/federated-api-guide.md`](references/federated-api-guide.md) for usage patterns, authentication behavior, response shapes, and deployment caveats. Use both together — `baw-rest.md` defines what the API accepts; the guides explain how to use it correctly.
+## API family and rules
 
 | Condition | API family |
 |---|---|
-| Single BAW server, no PFS | WLE REST API (`/rest/bpm/wle/v1/`) |
-| Process Federation Server deployed | PFS Federated API (`/rest/bpm/federated/v1/`) |
-| Manager or executive dashboards, BAW 24+ | WLE v2 dashboard APIs (`/rest/bpm/wle/v2/dashboards/`) |
-| Manager or executive dashboards, PFS | PFS v2 dashboard APIs (`/rest/bpm/federated/v2/dashboards/`) |
-| Task mutations (claim, assign, finish, cancel) | WLE v1 task action pattern (delivery scope label: V2 — not a reference to the WLE v2 API family) |
+| Single Business Automation Workflow server | WLE REST `/rest/bpm/wle/v1/` |
+| Process Federation Server | PFS `/rest/bpm/federated/v1/` |
+| Manager/executive dashboards, Business Automation Workflow 24+ with FDR | WLE v2 `/rest/bpm/wle/v2/dashboards/` |
+| Manager/executive dashboards, PFS | PFS v2 `/rest/bpm/federated/v2/dashboards/` |
 
-**Key rules:**
+- Never invent an endpoint, parameter, field or response shape. Take paths and parameters from [`baw-rest.md`](references/baw-rest.md) and behaviour from the guides and catalog. `/rest/bpm/wle/v1/teams` does not exist; use `team/{teamId}`, `managedGlobalTeams` or `globalTeams`.
+- `size=500` means up to 500 tasks. Check `totalCount`, page with `offset`, and show a visible truncation message when items are missing. Never present a partial list as complete.
+- `filterByCurrentUser=true` and `interaction=claimed_and_available` are not interchangeable.
+- **CSRF/XSRF:** whether a deployment needs a `BPMCSRFToken` header or an `XSRF-TOKEN` check for mutations must be confirmed, not guessed. Obtain a token only through the documented login call; never fabricate, hard-code or log one; never disable a check, spoof `User-Agent` or weaken TLS or authentication. Contract: [`non-federated-api-guide.md` §XSRF / CSRF](references/non-federated-api-guide.md#xsrf--csrf-for-wle-rest-mutations); PFS: `federated-api-guide.md`.
+- **FDR (manager/executive dashboards):** WLE v2 dashboards need Business Automation Workflow 24+ with FDR enabled and return HTTP 503 without it. Probe at runtime and render a plain empty state, for example `if (res.status === 503) show('Team workload data is unavailable. Contact your BAW administrator.')`. Never show the status or error code in the UI.
+- **Saved searches:** load the playbook. Use the numeric `id`, send complete definitions on update, execute with one strategy, and treat an unrecognised envelope as an error.
+- **Errors:** every data view has loading, empty, error and permission-denied states. Never turn a failed or unrecognised response into an empty list.
+- **Authorization:** Business Automation Workflow enforces it server-side. Do not gate views on portal-side role checks, and do not use `searches/actions` policies as proof of task or process administration rights.
+- **Task UI:** open the existing Business Automation Workflow task UI (iframe, panel or tab); do not rebuild task completion. An iframe in an external portal needs both prerequisites from the hosting guide; if unmet, generate no iframe code, state both prerequisites and offer new-tab launch. Never use an absolute `https://{baw-host}/teamworks/...` URL as an iframe `src`.
 
-- Do not use `/rest/bpm/wle/v1/teams` (plural) — this endpoint does not exist. The correct endpoints are: `/rest/bpm/wle/v1/team/{teamId}` (singular — look up a single modeled team by ID, documented in IBM BAW docs), `/rest/bpm/wle/v1/managedGlobalTeams` (teams managed by the current user), and `/rest/bpm/wle/v1/globalTeams` (all global teams visible to the current user).
-- `size=500` means up to 500 tasks, not all tasks. Always check `totalCount` and page when needed.
-- **CSRF (also called XSRF) for browser portals:** Same-origin browser portals use session cookie (`credentials: 'same-origin'`) only — no `bpm-csrf-token` header required for any WLE endpoint. `BPMCSRFToken` applies only to the BPM standard API (`/rest/bpm/std/`), not to WLE REST. Do not add CSRF header handling to generated portal code unless calling `/rest/bpm/std/` endpoints.
-- Do not use `filterByCurrentUser=true` and `interaction=claimed_and_available` interchangeably — they have different semantics.
+## Administrator persona
 
----
+Never infer unrestricted administrator access; Business Automation Workflow decides server-side what each user may see, and the portal does no role checks. Generate the standard persona UI unconditionally. Generate only supported, capability-specific admin operations, each behind its own gate: hidden by default and shown only when that panel's own request returns usable data for the signed-in user (for example `includeNonAdmin=true`). Do not generate the cross-user `allClaimed` task list (request shape unresolved) and say so. Saved-search permissions from `searches/actions` govern saved searches only. Details: `references/personas-and-capabilities.md` §Administrator.
 
 ## Preserve an existing stack
 
-When adapting an existing application:
-
-1. Keep the existing component structure and routing.
-2. Wrap BAW API calls in a service module that the existing app can import.
-3. Map BAW authentication to the existing auth pattern (same-origin session, proxy-forwarded session, or token).
-4. Use the existing HTTP client — do not add fetch wrappers if axios is already present.
-5. Do not restructure non-API parts of the application.
-
----
+Keep its structure, routing, HTTP client and auth pattern; wrap Business Automation Workflow calls in a service module; map Business Automation Workflow authentication to the existing pattern.
 
 ## Generate a new application
 
-When generating a new portal:
+1. **Interfaces first** when more than one module, author or agent contributes: fix the view identifiers, shared call signatures and layout rules before writing modules (hosting guide §Stable interfaces before parallel work). Single-file output needs no separate contract.
+2. **File safety:** before the first write in a conversation, check whether the target exists; if it was not generated in this conversation, choose a new name (`-v2`) rather than overwrite. Fixes go into the same file (hosting guide §Pre-write file safety check).
+3. Choose layout and navigation from the persona and requested features (hosting guide §Configurable design choices). API behaviour follows the guides and catalog, never an example.
+4. Meet the acceptance criteria and quality requirements in hosting guide §Mandatory requirements. Name any requested feature you omit or cannot deliver and give the reason; give a neutral placeholder for blocked features. Silently dropping a requested feature is a defect.
+5. Carbon tokens as CSS custom properties where appropriate; configurable brand variables; plain-text company name, never an invented logo.
 
-1. Use the developer-specified stack. Default to React only when no stack is specified.
-2. Support standalone single HTML when requested — this is a valid and useful output format.
-3. Derive patterns from the approved reference design in `assets/examples/ibm-baw-task-dashboard/`.
-4. Do not copy the approved reference design destructively. Treat it as a reference, not a template to be overwritten or restyled.
-5. Apply Carbon design tokens as CSS custom properties where appropriate.
-6. Support company branding via configurable CSS variables and header text.
-7. The existing BAW task UI is opened in an iframe modal — do not attempt to rebuild the task completion UI.
-8. **Always include a truncation indicator** when the task list is paginated. When `totalCount` in the API response exceeds the number of items returned, surface a visible message to the user — for example: _"Showing 500 of 1,243 tasks. Use pagination to view more."_ Do not silently drop overflow items or present a partial list as complete.
-9. **Task iframe in an external portal requires two server-side prerequisites — state both explicitly before generating iframe code for Profile C.**
-   BAW's task form issues browser-visible redirects to absolute BAW URLs mid-flow. A proxy prefix on the iframe `src` does not help — the browser follows the redirect outside the proxy and lands on the BAW origin directly. The only working approach for Profile C is:
-   - **BAW CSP change (required):** Add the portal origin to the BAW CSP `frame-ancestors` directive.
-     - **Traditional WAS deployment:** Set `Security.ContentSecurityPolicyHeaderValue` via wsadmin — `AdminTask.setBPMProperty(['-name', 'Security.ContentSecurityPolicyHeaderValue', '-value', "... frame-ancestors 'self' https://{portal-origin} ..."])` → `AdminConfig.save()` → server restart.
-     - **CP4BA on containers (OpenShift):** Edit the `ICP4ACluster` custom resource. Set `spec.baw_configuration[*].environment_config.content_security_policy_additional_frame_ancestor` to include `["https://{portal-origin}"]`. The operator applies the change without a manual server restart.
-   - **Portal must be HTTPS (required):** BAW's `LtpaToken2` is `Secure; SameSite=Strict`. An `http://` portal will not receive this cookie inside the iframe — the user gets a BAW login prompt. The portal must be served over HTTPS on the same scheme as BAW.
-   - **Profile A / A2 (BAW-hosted):** No prerequisites. Use bare relative `/teamworks/process.lsw?...` — same origin, `frame-ancestors 'self'` satisfied automatically, cookies flow freely.
-   - **Profile C, prerequisites not met:** Do not generate iframe code. Tell the developer both prerequisites and offer new-tab launch as a fallback that works without any server change.
-   - **Never generate `https://{baw-host}:{port}/teamworks/...` as an iframe `src`** — cross-origin, blocked immediately.
+## Unvalidated capabilities and customer output
 
-Read [`references/hosting-and-generation.md`](references/hosting-and-generation.md) for hosting patterns, authentication prerequisites, and CORS requirements.
+Catalog `evidence.level` and `status` are for your selection only. In responses, generated code, docs and UI, describe them in plain words: "documented by IBM, not runtime-tested", "needs FDR enabled". Never print evidence levels, check IDs, gap IDs, HTTP status codes, error codes or API paths in visible UI text.
 
----
+- Developer caveats go in the chat reply or an HTML comment, not in banners or badges.
+- Deployment-gated features (for example FDR dashboards) get a silent runtime check and a plain empty state such as "Team workload data is unavailable. Contact your Business Automation Workflow administrator."
+- Do not generate speculative code for unresolved gaps. See hosting guide §Open deployment decisions (gateway token exchange, OIDC, external validation boundary, version matrix).
+- Do not claim live runtime validation unless an authenticated Business Automation Workflow environment was used in this session.
 
-## Handle unvalidated capabilities
+## After generating
 
-This skill distinguishes runtime-tested APIs from documentation-only and untested ones. Before generating code for an unvalidated capability:
+Flag API calls that are not runtime-tested and any unvalidated capability included. Tell the developer to confirm against a live Business Automation Workflow instance before go-live: user and task list load, task open works for the chosen profile, process start closes the launcher before opening a task, keyboard-only navigation and a screen-reader pass. Checklist: hosting guide §Before delivery.
 
-1. If an API has only been confirmed in IBM documentation but not runtime-tested, say so plainly — e.g. "This endpoint is documented by IBM but has not been tested at runtime in this project."
-2. For capabilities gated on runtime validation (e.g. PFS dashboard APIs, administrator-aware endpoints), state the validation requirement clearly.
-3. The Administrator persona is defined — dashboards, APIs, and detection pattern are documented in `references/personas-and-capabilities.md`. Do not generate admin-scoped code until the relevant APIs are runtime-verified.
-4. Do not generate speculative code for unresolved gaps without explicit confirmation from the user.
+## References: load on demand
 
-Read [`references/known-gaps.md`](references/known-gaps.md) before generating code for PFS dashboard or OAuth/OIDC capabilities.
+Find the heading, operation ID, `CAP-*` ID or alias with `grep`, then read just that range.
 
----
-
-## Keep developer notes out of rendered UI
-
-API validation status, gap references, runtime-test results, and deployment caveats are
-**developer communications**, not end-user content. They must never appear as visible UI elements
-— banners, info cards, badges, or notices — in generated HTML.
-
-Apply this rule for every capability gated on a deployment condition or validation gap:
-
-1. **Developer communication** → place in the chat response text or as an HTML comment. Never
-   render it as a visible DOM element.
-2. **Deployment-gated features** (e.g. FDR required for dashboard APIs) → generate a clean
-   runtime check in JavaScript. Catch the relevant HTTP status silently and render a plain,
-   user-facing empty-state message. Never hardcode HTTP status codes, internal error codes
-   (`CWTBG0788E`), gap IDs, or API paths into any visible UI string.
-3. **Feature not yet available** → render a neutral empty state (e.g. "This feature is not
-   available in your environment. Contact your administrator."). No technical details visible.
-
-**Concrete pattern for FDR-gated features:**
-```js
-if (res.status === 503) {
-  resultEl.innerHTML = '<p>Team workload data is unavailable. Contact your BAW administrator.</p>';
-  return;
-}
-```
-Not:
-```js
-// ❌ Never do this
-result.innerHTML = '<strong>HTTP 503 — FDR not enabled.</strong> Contact your BAW administrator.';
-```
-
----
-
-## Validate and report results
-
-After generating or adapting code:
-
-1. Flag any API call that has not been runtime-tested — use plain language, not internal evidence labels.
-2. Identify any unvalidated capabilities included and state the validation required.
-3. Do not claim live runtime validation unless an authenticated BAW environment was used in this session.
-4. For other stacks, state equivalent quality requirements from [`references/quality-and-validation.md`](references/quality-and-validation.md).
-
-For standalone HTML implementations, point the developer to the quality bar defined in
-[`references/quality-and-validation.md`](references/quality-and-validation.md). The three static
-audit scripts (`audit-a11y.mjs`, `audit-security.mjs`, `audit-refresh.mjs`) validate the approved
-reference example only — they are hardcoded to
-`assets/examples/ibm-baw-task-dashboard/ibm-baw-task-dashboard.html` and cannot be pointed at
-generated output. Use them to understand the expected quality bar, not as a post-generation check
-for new portals.
-
----
-
-## References
-
-Read the appropriate references before responding:
-
-| Reference | When to read |
+| Request | Load |
 |---|---|
-| [`references/architecture-and-usage.md`](references/architecture-and-usage.md) | Always — understand the skill's flow and output types |
-| [`references/baw-rest.md`](references/baw-rest.md) | Always before generating any BAW API call — canonical paths, methods, and parameters for all four API families (WLE v1/v2, PFS v1/v2) |
-| [`references/non-federated-api-guide.md`](references/non-federated-api-guide.md) | Always before generating any non-federated BAW API calls — tasks, user identity, task launch, mutations, dashboard endpoints |
-| [`references/federated-api-guide.md`](references/federated-api-guide.md) | Always before generating any PFS/federated API calls |
-| [`references/personas-and-capabilities.md`](references/personas-and-capabilities.md) | Understanding persona requirements and API mapping |
-| [`references/hosting-and-generation.md`](references/hosting-and-generation.md) | Stack selection, hosting, CORS, auth, generation patterns |
-| [`references/quality-and-validation.md`](references/quality-and-validation.md) | Accessibility, security, refresh pipeline, static audit scripts |
-| [`references/known-gaps.md`](references/known-gaps.md) | Unresolved API and validation gaps affecting any capability |
+| NF (WLE REST) | [`non-federated-api-guide.md`](references/non-federated-api-guide.md): only the sections for the feature; add §Authentication and §XSRF / CSRF for mutation code |
+| PFS | [`federated-api-guide.md`](references/federated-api-guide.md) sections plus the federated playbook; NF sections only for operations the playbook routes to the source system |
+| Exact path, method, parameters | [`baw-rest.md`](references/baw-rest.md): the matching family section |
+| Operation or capability contract | [`catalog.json`](capabilities/catalog.json): that record only |
+| Which capability fits | [`intent-map.json`](capabilities/intent-map.json): that intent only |
+| Hosting, auth, CORS, iframe, generation, quality, open decisions | [`hosting-and-generation.md`](references/hosting-and-generation.md) |
+| Persona requirements | [`personas-and-capabilities.md`](references/personas-and-capabilities.md): the persona's section |
+| Discovery | [`feature-catalog.md`](references/feature-catalog.md) |
 
----
+## Out of scope
 
-## What this skill does not do
-
-- Generate internal BAW XML or BPEL artifacts
-- Build BAW processes or BPMN diagrams
-- Rebuild the BAW task completion UI (the existing BAW task UI is launched via iframe)
-- Generate admin-scoped code before administrator API endpoints are runtime-verified (see `references/personas-and-capabilities.md` §Administrator)
+BPMN or BPEL authoring, internal Business Automation Workflow XML, rebuilding the Business Automation Workflow task completion UI, and unconditional admin-scoped code.

@@ -1,26 +1,26 @@
 # Version Lifecycle Manager — Documentation
 
-> Manages IBM Business Automation Workflow (BAW) Process App and Toolkit version lifecycle via the Operations REST API — handles state-changing operations including installing apps, managing snapshots (activating, deactivating, deleting), and reading, setting, and syncing environment variables — entirely from the command line.
+> Manages IBM Business Automation Workflow Process App and Toolkit version lifecycle via the Operations REST API — handles state-changing operations including installing apps, managing snapshots (activating, deactivating, deleting), and reading, setting, and syncing environment variables — entirely from the command line.
 
 ## Purpose
 
-This skill administers the full snapshot lifecycle of BAW Process Apps and Toolkits by calling the BAW Operations REST API directly. It handles state-changing operations: installing applications, activating/deactivating snapshots, deleting snapshots, and reading, setting, or synchronizing environment variables on a running server. It does not perform read-only queries or metadata inspection — use `version-inspector` for those. For every destructive or disruptive operation (deactivation, deletion, sync to live), the skill presents a plain-language summary of the effect and requires explicit confirmation before making any API call.
+This skill administers the full snapshot lifecycle of Business Automation Workflow Process Apps and Toolkits by calling the Business Automation Workflow Operations REST API directly. It handles state-changing operations: installing applications, activating/deactivating snapshots, deleting snapshots, and reading, setting, or synchronizing environment variables on a running server. It does not perform read-only queries or metadata inspection — use `version-inspector` for those. For every destructive or disruptive operation (deactivation, deletion, sync to live), the skill presents a plain-language summary of the effect and requires explicit confirmation before making any API call.
 
 > **Companion skill:** Use the `version-inspector` skill to browse and inspect snapshot metadata (version names, statuses, dependencies, container listings) before taking lifecycle actions here. The two skills are designed to work together — inspect first, act with version-lifecycle-manager.
 
 ## Setup and configuration
 
-- BAW server URL and credentials are required. The skill asks for them if not supplied.
+- Business Automation Workflow server URL and credentials are required. The skill asks for them if not supplied.
 - On-premises: provide `https://<host>:9443` (default port) and a username/password for Basic authentication. LTPA token is also accepted for SSO environments.
-- CP4BA (Cloud Pak for Business Automation): provide the CP4BA route (e.g. `https://<cpd-route>/bas`) and a Zen API key (generated from **Profile → API Key** in the CP4BA admin UI). If Basic auth returns 403, the skill exchanges credentials for a Bearer token automatically.
-- BAW on Cloud: provide the tenant URL (`https://<tenant>.baw.ibmcloud.com`) and an IBM Cloud IAM Bearer token.
+- Cloud Pak for Business Automation: provide the Cloud Pak for Business Automation route (e.g. `https://<cpd-route>/bas`) and a Zen API key (generated from **Profile → API Key** in the Cloud Pak for Business Automation admin UI). If Basic auth returns 403, the skill exchanges credentials for a Bearer token automatically.
+- Business Automation Workflow on Cloud: provide the tenant URL (`https://<tenant>.baw.ibmcloud.com`) and an IBM Cloud IAM Bearer token.
 - No local software, packages, or MCP servers are required. The skill uses `execute_command` (curl) when available, or shows the exact command for you to run.
 - **For install operations:** the skill fetches the `.twx` file directly from the source server via the REST export API (`GET /ops/std/bpm/containers/{container}/versions/{version}/export`). If the source server is unavailable, a locally supplied `.twx` file path is accepted as a fallback.
 
 ## Compatibility
 
-- BAW 18.0.0.0 or later required. The Operations REST API (`/ops/std/bpm/...`) used for activate, deactivate, delete, and env-var operations is not available on IBM Business Process Manager (BPM) 8.x (pre-2018). If your server is BPM 8.x, use the Process Admin Console instead.
-- Supported deployment types: BAW on-premises (root-mount or prefixed context root), BAW on Cloud, and CP4BA.
+- Business Automation Workflow 18.0.0.0 or later required. The Operations REST API (`/ops/std/bpm/...`) used for activate, deactivate, delete, and env-var operations is not available on IBM Business Process Manager 8.x (pre-2018). If your server is Business Process Manager 8.x, use the Process Admin Console instead.
+- Supported deployment types: Business Automation Workflow on-premises (root-mount or prefixed context root), Business Automation Workflow on Cloud, and Cloud Pak for Business Automation.
 - The API treats snapshot acronyms as case-sensitive. An acronym mismatch returns `CWTBG0624E` or `CWTBG0646E`.
 
 ## Prompt examples
@@ -50,7 +50,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 ### Delete a snapshot (destructive)
 
 **Prompt:**
-> Delete snapshot ARCHIVE_2021 from the LOANAPP process app on our CP4BA cluster at https://cpd.openshift.myorg.com/bas. My Zen API key is zen-abcd-1234.
+> Delete snapshot ARCHIVE_2021 from the LOANAPP process app on our Cloud Pak for Business Automation cluster at https://cpd.openshift.myorg.com/bas. My Zen API key is zen-abcd-1234.
 
 **What to expect:**
 
@@ -146,7 +146,7 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 **Prompt:**
 > Can you export snapshot v2.0 of HRAPP as a .twx file so I have a backup before I delete it?
 
-**What to expect:** The skill notes that the REST export API is used internally to fetch TWX files for install operations, but that saving an archival backup is done through the authoring environment UI — **Workflow Center** (traditional BAW) or **Business Automation Studio** (CP4BA containerized). The skill redirects you there before proceeding with any deletion.
+**What to expect:** The skill notes that the REST export API is used internally to fetch TWX files for install operations, but that saving an archival backup is done through the authoring environment UI — **Workflow Center** (traditional Business Automation Workflow) or **Business Automation Studio** (Cloud Pak for Business Automation containerized). The skill redirects you there before proceeding with any deletion.
 
 ---
 
@@ -155,4 +155,4 @@ This skill administers the full snapshot lifecycle of BAW Process Apps and Toolk
 **Prompt:**
 > Migrate all running process instances on LOANAPP v1.5 to the new snapshot v2.0.
 
-**What to expect:** The skill explains that instance migration is a separate administration task handled through the BAW Process Admin Console migration tooling, not via the snapshot lifecycle API, and directs you there instead.
+**What to expect:** The skill explains that instance migration is a separate administration task handled through the Business Automation Workflow Process Admin Console migration tooling, not via the snapshot lifecycle API, and directs you there instead.

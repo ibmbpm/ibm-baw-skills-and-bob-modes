@@ -1,10 +1,10 @@
-# Create BAW Widget — Documentation
+# Create Business Automation Workflow Widget — Documentation
 
-> Creates or modifies IBM Business Automation Workflow (BAW) custom Coach View widgets — the widgets/{WidgetName}/ folder structure with Layout.html, InlineCSS.css, inlineJavascript.js, config.json, business object JSON, optional event handlers, and BAW-integrated preview files — then packages them into an importable .twx toolkit file.
+> Creates or modifies IBM Business Automation Workflow custom Coach View widgets — the widgets/{WidgetName}/ folder structure with Layout.html, InlineCSS.css, inlineJavascript.js, config.json, business object JSON, optional event handlers, and preview files integrated with Business Automation Workflow — then packages them into an importable .twx toolkit file.
 
 ## Purpose
 
-This skill helps developers create, scaffold, update, or fix custom UI elements (Coach Views) in IBM Business Automation Workflow (BAW). You build custom widgets as modular HTML, CSS, and JS components and package them into an importable `.twx` toolkit file. You import the file into the BAW authoring environment: Workflow Center for traditional BAW, or Business Automation Studio for CP4BA containerized deployments. Use this skill when you need to build modern, custom-styled UI elements that go beyond the stock BAW controls, style components to match the Carbon Design System, or fix canvas preview issues in the Coach Designer.
+This skill helps developers create, scaffold, update, or fix custom UI elements (Coach Views) in IBM Business Automation Workflow. You build custom widgets as modular HTML, CSS, and JS components and package them into an importable `.twx` toolkit file. You import the file into the Business Automation Workflow authoring environment: Workflow Center for traditional Business Automation Workflow, or Business Automation Studio for Cloud Pak for Business Automation containerized deployments. Use this skill when you need to build modern, custom-styled UI elements that go beyond the stock Business Automation Workflow controls, style components to match the Carbon Design System, or fix canvas preview issues in the Coach Designer.
 
 ## Setup and configuration
 
@@ -18,12 +18,12 @@ This skill helps developers create, scaffold, update, or fix custom UI elements 
 
 ## Compatibility
 
-- **IBM BAW and CP4BA compatibility:** Designed and tested for compatibility with IBM Business Automation Workflow 25.x, 26.x, and legacy IBM BPM systems.
-- **BAW WebPD manual import only:** The skill packs widgets into standard `.twx` toolkit files. You must complete the import step manually in the authoring environment:
-  - **Traditional BAW (Workflow Center):** Workflow Center > Process Apps > Import
-  - **CP4BA containerized (Business Automation Studio):** Business Automation Studio > Business automations > Toolkits > Import
+- **IBM Business Automation Workflow and Cloud Pak for Business Automation compatibility:** Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation. The bundled packaging template and samples are from Business Automation Workflow 25.0.1.
+- **Business Automation Workflow WebPD manual import only:** The skill packs widgets into standard `.twx` toolkit files. You must complete the import step manually in the authoring environment:
+  - **Traditional Business Automation Workflow (Workflow Center):** Workflow Center > Process Apps > Import
+  - **Cloud Pak for Business Automation containerized (Business Automation Studio):** Business Automation Studio > Business automations > Toolkits > Import
 - **Plain CSS only, scoped to the widget:** Write standard CSS. Local packaging does not support LESS compilation. The skill simulates Carbon Design System theme variables with literal hex values and variable name comments.
-- **Dojo-based canvas preview pattern:** The Coach Designer canvas preview must follow the BAW Dojo `mixObject` structure. You cannot manipulate standard vanilla DOM elements globally on the canvas.
+- **Dojo-based canvas preview pattern:** The Coach Designer canvas preview must follow the Business Automation Workflow Dojo `mixObject` structure. You cannot manipulate standard vanilla DOM elements globally on the canvas.
 - **Business object naming:** Use PascalCase for business object names and camelCase for property names. Each schema must define both `"name"` and `"type": "businessObject"`, or packaging fails.
 
 ## Prompt examples
@@ -31,7 +31,7 @@ This skill helps developers create, scaffold, update, or fix custom UI elements 
 ### Create a simple, display-only widget with scalar data binding
 
 **Prompt:**
-> I need a new BAW coach widget called StatusBadge that shows a colored pill (green/yellow/red) with a text label, bound to a simple status string like 'ON_TRACK', 'AT_RISK', or 'DELAYED'. No business object is needed, keep it simple. Put it under widgets/StatusBadge/.
+> I need a new Business Automation Workflow coach widget called StatusBadge that shows a colored pill (green/yellow/red) with a text label, bound to a simple status string like 'ON_TRACK', 'AT_RISK', or 'DELAYED'. No business object is needed, keep it simple. Put it under widgets/StatusBadge/.
 
 **What to expect:** Bob creates the `widgets/StatusBadge/` directory containing the `Layout.html`, `InlineCSS.css`, and `inlineJavascript.js` files, along with the `StatusBadge.svg` palette icon, `datamodel.md` documentation, and Dojo preview files under `AdvancePreview/`.
 
@@ -49,16 +49,16 @@ This skill helps developers create, scaffold, update, or fix custom UI elements 
 ### Add interactive event handlers to an existing widget
 
 **Prompt:**
-> Add a load.js and change.js event handler to my existing MultiSelect widget in widgets/MultiSelect/ so that it registers a custom BAW event on load and re-renders whenever the selection changes.
+> Add a load.js and change.js event handler to my existing MultiSelect widget in widgets/MultiSelect/ so that it registers a custom Business Automation Workflow event on load and re-renders whenever the selection changes.
 
-**What to expect:** Bob adds `load.js` and `change.js` to `widgets/MultiSelect/widget/events/`, uses the `var _this = this;` pattern to scope the BAW context safely, and documents their behavior in `eventHandler.md`.
+**What to expect:** Bob adds `load.js` and `change.js` to `widgets/MultiSelect/widget/events/`, uses the `var _this = this;` pattern to scope the Business Automation Workflow context safely, and documents their behavior in `eventHandler.md`.
 
 ---
 
 ### Fix a broken Coach Designer canvas preview (Dojo mixObject pattern)
 
 **Prompt:**
-> Our TasksList widget's preview isn't showing up correctly in BAW Designer — can you check widgets/TasksList/AdvancePreview/ and fix it so it follows the proper BAW preview pattern and does not double-render on the canvas?
+> Our TasksList widget's preview isn't showing up correctly in Business Automation Workflow Designer — can you check widgets/TasksList/AdvancePreview/ and fix it so it follows the proper Business Automation Workflow preview pattern and does not double-render on the canvas?
 
 **What to expect:** Bob analyzes the preview HTML and JS, corrects the Dojo `require` modules, structures the JS as a valid `mixObject` exporting standard lifecycle methods (`createPreview`, `generateSampleData`), and ensures the HTML is blank or uses proper `.DesignContentBox` CSS scoping to prevent doubling.
 
@@ -69,16 +69,16 @@ This skill helps developers create, scaffold, update, or fix custom UI elements 
 **Prompt:**
 > I've finished making the ProgressBar and TasksList widgets. Please register any custom business objects and package them into a TWX file that I can import.
 
-**What to expect:** Bob runs the business object registration script followed by the packager script, reports the final `.twx` output path and incremented version, and provides step-by-step import instructions for both Workflow Center (traditional BAW) and Business Automation Studio (CP4BA containerized).
+**What to expect:** Bob runs the business object registration script followed by the packager script, reports the final `.twx` output path and incremented version, and provides step-by-step import instructions for both Workflow Center (traditional Business Automation Workflow) and Business Automation Studio (Cloud Pak for Business Automation containerized).
 
 ---
 
-### Out-of-scope redirect — deploying directly to a BAW server
+### Out-of-scope redirect — deploying directly to a Business Automation Workflow server
 
 **Prompt:**
-> Please deploy the packaged ProgressBar widget directly to my BAW server located at dev-server.example.com.
+> Please deploy the packaged ProgressBar widget directly to my Business Automation Workflow server located at dev-server.example.com.
 
-**What to expect:** Bob explains that automated server deployment is out of scope for this skill and redirects you to use the standard authoring environment import UI — Workflow Center (traditional BAW) or Business Automation Studio (CP4BA) — for importing the generated `.twx` file.
+**What to expect:** Bob explains that automated server deployment is out of scope for this skill and redirects you to use the standard authoring environment import UI — Workflow Center (traditional Business Automation Workflow) or Business Automation Studio (Cloud Pak for Business Automation) — for importing the generated `.twx` file.
 
 ---
 
@@ -87,4 +87,4 @@ This skill helps developers create, scaffold, update, or fix custom UI elements 
 **Prompt:**
 > Can you design an entire loan application dashboard layout composing the StatusBadge, ProgressBar, and TasksList widgets together on one screen?
 
-**What to expect:** Bob explains that composing multi-widget coach page layouts is a different step performed inside the BAW Coach Designer UI, and instead provides the datamodel specifications for each widget so you know exactly how to bind them on the page.
+**What to expect:** Bob explains that composing multi-widget coach page layouts is a different step performed inside the Business Automation Workflow Coach Designer UI, and instead provides the datamodel specifications for each widget so you know exactly how to bind them on the page.

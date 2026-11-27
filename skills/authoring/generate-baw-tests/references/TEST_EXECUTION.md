@@ -11,7 +11,7 @@ Phase B is read and create only with respect to existing data. These rules are a
 
 1. Always start fresh. Every test case begins with a `start_process` call that creates a new process instance. Never claim, complete, update, suspend, resume, retry, or terminate an instance that the current test run did not start.
 2. Never search for and reuse existing instances. Do not call `search_processes` or `list_processes` and pick an existing instance to drive. The skill creates, owns, and drives test instances to completion.
-3. Test instances are disposable. The instances that a test run creates are real BAW instances and appear in the server's task lists and reporting. This behavior is expected and acceptable on nonproduction environments. On production, warn the user first (see the pre-execution setup below).
+3. Test instances are disposable. The instances that a test run creates are real Business Automation Workflow instances and appear in the server's task lists and reporting. This behavior is expected and acceptable on nonproduction environments. On production, warn the user first (see the pre-execution setup below).
 4. The skill performs no side-effect cleanup. The skill does not delete or terminate test instances after the run. If the user wants to clean up, they can use the `inspect-baw-processes` skill. Do not offer to terminate the instances automatically.
 5. Input data is test data only. The values in each test case's `input.data` and step `output` blocks are synthetic test values. Never substitute real personal data, production record IDs, or live integration credentials into the test payload.
 
@@ -36,7 +36,7 @@ Before you execute any test case:
    - MCP absent: use REST. Continue with steps 2 and 3 below.
 
 2. REST only: obtain a session. Ask for the server URL and credentials immediately before the first login call, not earlier:
-   > *"What is your BAW server URL and credentials? (for example, `https://baw.example.com:9443`) I use them only to get a session token, and I do not store them."*
+   > *"What is your Business Automation Workflow server URL and credentials? (for example, `https://baw.example.com:9443`) I use them only to get a session token, and I do not store them."*
 
    If `{BAW_BASE_URL}` and credentials are already set from Phase A, reuse them and do not ask again.
 
@@ -47,7 +47,7 @@ Before you execute any test case:
 
    On success (HTTP 201), capture `csrf_token` from the JSON body and store it as `{BAW_CSRF}`. Capture the `LtpaToken2` and `JSESSIONID` cookies from the `Set-Cookie` headers and store them as `{BAW_SESSION}`. Send `BPMCSRFToken: {BAW_CSRF}` and the cookie on all subsequent requests. The session is valid for all `/ops/…` and `/bpm/…` calls.
 
-   Do not use `/rest/bpm/wle/v1/system/login`. That path is the legacy WLE path and is not valid in BAW 26.x.
+   Do not use `/rest/bpm/wle/v1/system/login`. That path is the legacy WLE path and is not valid in Business Automation Workflow 26.x.
 
    If login returns 401 or 400, ask the user to check their credentials and re-enter them.
 

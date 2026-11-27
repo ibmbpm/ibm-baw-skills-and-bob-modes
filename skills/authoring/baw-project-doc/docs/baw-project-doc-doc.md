@@ -1,10 +1,10 @@
-# BAW Project Doc — Documentation
+# Business Automation Workflow Project Doc — Documentation
 
-> Generates comprehensive, up-to-date documentation for IBM Business Automation Workflow (BAW) applications by analyzing process models, services, integrations, business objects, and application artifacts — no MCP server or live server connection required.
+> Generates comprehensive, up-to-date documentation for IBM Business Automation Workflow applications by analyzing process models, services, integrations, business objects, and application artifacts — no MCP server or live server connection required.
 
 ## Purpose
 
-This skill produces a complete Markdown documentation file for a BAW process application. Give it a TWX export, a BPMN + XSD pair (from the `generate-baw-bpmn` skill), or a ZIP archive containing those files, and it writes a structured document covering every process, service, business object, coach view, integration point, and gap it can identify. It also posts a plain-language summary in chat — written for a business analyst or project manager — so the key points are immediately readable without opening the file.
+This skill produces a complete Markdown documentation file for a Business Automation Workflow process application. Give it a TWX export, a BPMN + XSD pair (from the `generate-baw-bpmn` skill), or a ZIP archive containing those files, and it writes a structured document covering every process, service, business object, coach view, integration point, and gap it can identify. It also posts a plain-language summary in chat — written for a business analyst or project manager — so the key points are immediately readable without opening the file.
 
 ## Setup and configuration
 
@@ -15,10 +15,10 @@ This skill produces a complete Markdown documentation file for a BAW process app
 
 ## Compatibility
 
-- **TWX exports from BAW ≥ 8.6.x (CP4A flat layout) and older ≤ 8.5 subfolder layout** are both supported. The extraction script handles both automatically.
+- **TWX exports from Business Automation Workflow ≥ 8.6.x (CP4A flat layout) and older ≤ 8.5 subfolder layout** are both supported. The extraction script handles both automatically.
 - **BPMN + XSD output from the `generate-baw-bpmn` skill** is fully supported as an alternative input.
 - **BPMN + XSD input does not provide services, coach views, or integration endpoint details.** These are only extracted from a TWX export. The skill notes the gap automatically in the Assumptions & Gaps section.
-- **No live BAW server connection required.** This skill does not support REST API or MCP paths (`get_process_model`, `export_solution_expanded`).
+- **No live Business Automation Workflow server connection required.** This skill does not support REST API or MCP paths (`get_process_model`, `export_solution_expanded`).
 
 ## Prompt examples
 
@@ -36,7 +36,7 @@ This skill produces a complete Markdown documentation file for a BAW process app
 **Prompt:**
 > Can you generate documentation for my Leave Management application?
 
-**What to expect:** The skill searches `business-processes/`, finds no match, and gives you clear instructions for exporting a TWX from your authoring environment — **Workflow Center** (traditional BAW) or **Business Automation Studio** (CP4BA containerized) — or providing a BPMN+XSD pair. The skill does not request server credentials.
+**What to expect:** The skill searches `business-processes/`, finds no match, and gives you clear instructions for exporting a TWX from your authoring environment — **Workflow Center** (traditional Business Automation Workflow) or **Business Automation Studio** (Cloud Pak for Business Automation containerized) — or providing a BPMN+XSD pair. The skill does not request server credentials.
 
 ---
 
@@ -52,7 +52,7 @@ This skill produces a complete Markdown documentation file for a BAW process app
 ### Document from a BPMN + XSD pair
 
 **Prompt:**
-> Document my BAW process from these files: `ExpenseApproval.bpmn` and `ExpenseApproval.xsd`
+> Document my Business Automation Workflow process from these files: `ExpenseApproval.bpmn` and `ExpenseApproval.xsd`
 
 **What to expect:** The skill parses the BPMN for process flow, lanes, steps, and decision logic, and the XSD for business object schemas, then writes the documentation — noting in Assumptions & Gaps that services and coach views are not available from this input type.
 
@@ -70,7 +70,7 @@ This skill produces a complete Markdown documentation file for a BAW process app
 ### Out-of-scope redirect — request for auto-generation via REST API or MCP
 
 **Prompt:**
-> Generate documentation for my BAW process app by connecting to the server.
+> Generate documentation for my Business Automation Workflow process app by connecting to the server.
 
 **What to expect:** The skill explains that REST API and MCP server paths are not in scope for this skill and asks you to provide a TWX export, a BPMN + XSD pair, or a ZIP instead.
 

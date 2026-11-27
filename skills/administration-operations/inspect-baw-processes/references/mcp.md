@@ -1,6 +1,6 @@
 # inspect-baw-processes: MCP execution reference
 
-Maps each semantic operation to its IBM Business Automation Workflow (BAW) Runtime MCP tool. Read this file when the skill has determined MCP is the active transport. Do not read it during REST execution.
+Maps each semantic operation to its IBM Business Automation Workflow Runtime MCP tool. Read this file when the skill has determined MCP is the active transport. Do not read it during REST execution.
 
 ---
 
@@ -71,7 +71,7 @@ Valid for any instance state. Irreversible.
 
 ## system_id (federation)
 
-All action tools accept an optional `system_id`. On standalone BAW, omit it. The MCP server routes to the configured default. In IBM Cloud Pak for Business Automation (CP4BA) federated deployments, `search_processes` (advanced search) returns a `system_id` for each result. Pass it to the action tool for that instance. Never show `system_id` to the user.
+All action tools accept an optional `system_id`. On standalone Business Automation Workflow, omit it. The MCP server routes to the configured default. In IBM Cloud Pak for Business Automation federated deployments, `search_processes` (advanced search) returns a `system_id` for each result. Pass it to the action tool for that instance. Never show `system_id` to the user.
 
 ---
 
@@ -87,4 +87,4 @@ The following table shows the instance status that each operation requires:
 | modify_process_due_date | Any |
 | terminate_process | Any |
 
-A call on an instance in the wrong state returns a BAW 400 error. Verify current status before acting if unsure.
+A call on an instance in the wrong state returns a Business Automation Workflow 400 error. Verify current status before acting if unsure.

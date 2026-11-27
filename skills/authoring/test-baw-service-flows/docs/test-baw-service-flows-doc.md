@@ -1,24 +1,24 @@
-# Test BAW Service Flows — Documentation
+# Test Business Automation Workflow Service Flows — Documentation
 
-> Generate and execute automated tests for IBM BAW Service Flows — covering happy path, error paths, and boundary conditions — and return a structured pass/fail report, without requiring a manual test harness.
+> Generate and execute automated tests for IBM Business Automation Workflow Service Flows — covering happy path, error paths, and boundary conditions — and return a structured pass/fail report, without requiring a manual test harness.
 
 ## Purpose
 
-This skill automates end-to-end testing of IBM BAW Service Flows. It operates in two phases: **Phase A** discovers the target Service Flow, reads its input/output contract, and produces a structured test suite (JSON + Markdown); **Phase B** invokes the service against a live BAW environment with each set of test inputs, asserts the outputs, and delivers a plain-language results report. Use this skill whenever you want to validate an integration service before promoting to production, verify a change doesn't break an existing service contract, or quickly build regression coverage without writing test code manually.
+This skill automates end-to-end testing of IBM Business Automation Workflow Service Flows. It operates in two phases: **Phase A** discovers the target Service Flow, reads its input/output contract, and produces a structured test suite (JSON + Markdown); **Phase B** invokes the service against a live Business Automation Workflow environment with each set of test inputs, asserts the outputs, and delivers a plain-language results report. Use this skill whenever you want to validate an integration service before promoting to production, verify a change doesn't break an existing service contract, or quickly build regression coverage without writing test code manually.
 
 ## Setup and configuration
 
-- **IBM BAW environment** — a live Workflow Runtime instance with the target process app snapshot deployed and activated. The skill cannot run against a Workflow Authoring (BAS/design-time) environment.
-- **Credentials** — a BAW username and password (or a CP4BA IAM/Zen token) with permission to invoke the service. Credentials are used only to obtain a session token and are not stored beyond the session.
-- **BAW Authoring MCP server** (optional) — if the IBM BAW Authoring MCP server is connected, the skill uses it for faster service discovery in Phase A. If absent, it falls back to the BAW REST API automatically — no manual configuration needed.
+- **IBM Business Automation Workflow environment** — a live Workflow Runtime instance with the target process app snapshot deployed and activated. The skill cannot run against a Workflow Authoring (BAS/design-time) environment.
+- **Credentials** — a Business Automation Workflow username and password (or a Cloud Pak for Business Automation IAM/Zen token) with permission to invoke the service. Credentials are used only to obtain a session token and are not stored beyond the session.
+- **Business Automation Workflow Authoring MCP server** (optional) — if the IBM Business Automation Workflow Authoring MCP server is connected, the skill uses it for faster service discovery in Phase A. If absent, it falls back to the Business Automation Workflow REST API automatically — no manual configuration needed.
 - **No additional packages or scripts required** — the skill has no Python scripts, Node dependencies, or local binaries to install.
 
 ## Compatibility
 
-- **Workflow Runtime required** — the target BAW server must be a Workflow Runtime instance. CP4BA Workflow Authoring (`/bas` route) cannot execute service flows; the skill will stop and ask for a runtime URL if a BAS endpoint is detected.
+- **Workflow Runtime required** — the target Business Automation Workflow server must be a Workflow Runtime instance. Cloud Pak for Business Automation Workflow Authoring (`/bas` route) cannot execute service flows; the skill will stop and ask for a runtime URL if a BAS endpoint is detected.
 - **Process app must be deployed** — the target snapshot must be installed and active on the server before testing. If it is missing, you must deploy it first (use the `baw-deployment-manager` skill or Process Admin Console).
 - **Service Flows only** — this skill does not test BPMN processes with user tasks. For process/coach testing use the `generate-baw-tests` skill.
-- **BAW 21+** — the Automation Service endpoint (`/automationservices/rest/...`) requires BAW 21 or later. On older versions the skill falls back to the direct-start or process-fallback invocation path automatically.
+- **Business Automation Workflow 21+** — the Automation Service endpoint (`/automationservices/rest/...`) requires Business Automation Workflow 21 or later. On older versions the skill falls back to the direct-start or process-fallback invocation path automatically.
 
 ## Prompt examples
 
@@ -31,7 +31,7 @@ This skill automates end-to-end testing of IBM BAW Service Flows. It operates in
 
 ---
 
-### Run an existing test suite against a BAW server
+### Run an existing test suite against a Business Automation Workflow server
 
 **Prompt:**
 > Here is my test suite — run all tests against `https://baw-dev.example.com:9443`. Username is `<your-username>`, password is `<your-password>`.
@@ -72,9 +72,9 @@ _Before using this prompt, save your test suite as `IQ-sf-test-suite.json` and a
 ### Generate tests without an MCP server connected (REST mode)
 
 **Prompt:**
-> Generate tests for the `Credit Risk Score` service flow in the Lending app (acronym LND, snapshot LNDV8). I don't have the BAW MCP server connected right now.
+> Generate tests for the `Credit Risk Score` service flow in the Lending app (acronym LND, snapshot LNDV8). I don't have the Business Automation Workflow MCP server connected right now.
 
-**What to expect:** The skill asks for your BAW server URL and credentials, then uses the BAW REST API for all discovery — authenticating, checking for Automation Services, and reading the OpenAPI contract — before generating `LND-sf-test-suite.json` and `LND-sf-test-suite.md`.
+**What to expect:** The skill asks for your Business Automation Workflow server URL and credentials, then uses the Business Automation Workflow REST API for all discovery — authenticating, checking for Automation Services, and reading the OpenAPI contract — before generating `LND-sf-test-suite.json` and `LND-sf-test-suite.md`.
 
 ---
 

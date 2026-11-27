@@ -1,6 +1,6 @@
 # TWX XML structure reference
 
-A `.twx` file is a ZIP archive. The structure documented here is based on direct inspection of real BAW TWX exports. IBM does not publish a formal XML schema for TWX internals in the public product documentation, so the dependency-mapper script uses these paths as heuristics — validate results against the actual artifacts in the specific TWX version being analyzed.
+A `.twx` file is a ZIP archive. The structure documented here is based on direct inspection of real Business Automation Workflow TWX exports. IBM does not publish a formal XML schema for TWX internals in the public product documentation, so the dependency-mapper script uses these paths as heuristics — validate results against the actual artifacts in the specific TWX version being analyzed.
 
 ## Archive layout
 

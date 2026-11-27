@@ -1,33 +1,21 @@
 ---
 name: review-baw-code
-description: >
-  Perform automated, severity-ranked code quality reviews across IBM BAW artifacts —
-  server scripts, coach (client-side) scripts, integration service scripts, HTML, CSS,
-  and optionally a Checkstyle XML report. Accepts an uploaded .twx file directly and
-  extracts it automatically. Flags hardcoded values (URLs, credentials, IPs), undeclared
-  tw.local.* variables, inconsistent error-logging patterns, synchronous Thread.sleep
-  calls, unbounded loops, and other performance anti-patterns. Each finding includes the
-  artifact name, line/location, rule violated, severity (Critical / High / Medium / Low),
-  and a recommended fix. Use whenever a BAW developer says "review my scripts", "check
-  for hardcoded values", "find unused variables", "audit my BAW code", "analyze my TWX
-  artifacts", "run a code review before deployment", uploads a .twx file, or provides a
-  Checkstyle report to ingest. Also triggers when the user mentions code quality, code
-  smell, anti-patterns, or performance issues in BAW artifacts.
+description: "Perform automated, severity-ranked code quality reviews across IBM Business Automation Workflow artifacts: server scripts, coach (client-side) scripts, integration service scripts, HTML, CSS, and optionally a Checkstyle XML report. Accepts an uploaded .twx file directly and extracts it automatically. Flags hardcoded values (URLs, credentials, IPs), undeclared tw.local.* variables, inconsistent error-logging patterns, synchronous Thread.sleep calls, unbounded loops, and other performance anti-patterns. Each finding includes artifact name, location, rule violated, severity (Critical / High / Medium / Low), and a recommended fix. Use whenever a developer says 'review my scripts', 'check for hardcoded values', 'find unused variables', 'audit my code', 'analyze my TWX artifacts', 'run a code review before deployment', uploads a .twx file, or provides a Checkstyle report. Also triggers on code quality, code smell, anti-patterns, or performance issues in these artifacts."
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: BAW Code Review
-  short_description: Automated severity-ranked code quality review of IBM BAW artifacts — scripts, coaches, and services — from an uploaded TWX file.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Code Review
+  short_description: Automated severity-ranked code quality review of IBM Business Automation Workflow artifacts — scripts, coaches, and services — from an uploaded TWX file.
+  author: IBM Business Automation Workflow Team
 ---
-# Review BAW code
+# Review Business Automation Workflow code
 
-Scan JavaScript artifacts extracted from a BAW TWX application and produce a
+Scan JavaScript artifacts extracted from a Business Automation Workflow TWX application and produce a
 severity-ranked findings report. The goal is to surface real issues before deployment —
 hardcoded values that break across environments, variables used before the script declares them,
 logging that makes incidents hard to diagnose, and patterns that degrade runtime
@@ -45,7 +33,7 @@ finding.
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 
@@ -58,20 +46,15 @@ following paths in order — stop at the first that succeeds.
 
 ### Path 1 — REST export (preferred)
 
-Read credentials from `references/CREDENTIAL_HANDLING.md`. If the container acronym or snapshot version is not yet known, ask the user before calling the export endpoint.
+Follow `references/CREDENTIAL_HANDLING.md`. If the container acronym or snapshot version is not yet known, ask the user before calling the export endpoint.
 
 **Step 1 — Download the TWX:**
+
+Call `GET /ops/std/bpm/containers/<container>/versions/<version>/export` with the query `use_enhanced_filenames=true`, and save the binary response to `$TWX_WORKDIR/app.twx` (create the working directory first):
 
 ```bash
 TWX_WORKDIR=/tmp/twx-review
 mkdir -p "$TWX_WORKDIR"
-
-curl -sk \
-  -H "Authorization: Basic <base64(BAW_USERNAME:BAW_PASSWORD)>" \
-  -H "BPMCSRFToken: {BAW_CSRF}" \
-  -b /tmp/baw_cookies.txt \
-  "{BAW_BASE_URL}/ops/std/bpm/containers/<container>/versions/<version>/export?use_enhanced_filenames=true" \
-  -o "$TWX_WORKDIR/app.twx"
 ```
 
 If the download returns a non-200 HTTP status or the saved file is empty, report the
@@ -83,8 +66,8 @@ error and fall through to Path 2.
 unzip -q "$TWX_WORKDIR/app.twx" -d "$TWX_WORKDIR"
 ```
 
-Non-zero exit means the download was not a valid ZIP (the file is corrupt, or curl
-saved an error page instead). Report the error and fall through to Path 2.
+Non-zero exit means the download was not a valid ZIP (the file is corrupt, or the
+server returned an error page instead). Report the error and fall through to Path 2.
 
 ### Path 2 — Uploaded or local TWX file (fallback)
 
@@ -221,7 +204,7 @@ humans.
 
 #### [ARTIFACT_NAME] — line N
 **Rule:** HARD-01 — Hardcoded credential
-**Finding:** `password = "hunter2"` — the script assigns a string literal directly to a
+**Finding:** `password = "<literal string>"` — the script assigns a string literal directly to a
   variable whose name suggests a credential.
 **Fix:** Store credentials in a BAW managed team/environment variable, a process
   variable initialized from a system configuration property, or an external secrets
@@ -285,15 +268,15 @@ Report the delta: *"3 of 7 previous issues resolved; 1 new issue introduced."*
 ## Boundaries
 
 In scope:
-- JavaScript artifacts from BAW TWX: server scripts, coach (client-side) scripts,
+- JavaScript artifacts from Business Automation Workflow TWX: server scripts, coach (client-side) scripts,
   integration service scripts.
-- HTML and CSS from BAW coach views.
+- HTML and CSS from Business Automation Workflow coach views.
 - Checkstyle XML reports mapped to the same finding structure.
 - Custom rules supplied by the user in the current conversation.
 
 Out of scope — hand off to the appropriate skill instead:
-- **BAW process flow modelling** → `generate-baw-bpmn`
-- **BAW runtime process inspection** → `inspect-baw-processes`
+- **Business Automation Workflow process flow modelling** → `generate-baw-bpmn`
+- **Business Automation Workflow runtime process inspection** → `inspect-baw-processes`
 - **Business object generation** → `generate-baw-business-objects`
 - **Coach widget scaffolding** → `create-baw-widget`
 - **TWX packaging / deployment** — not covered by any script-level review skill.

@@ -1,7 +1,7 @@
 # TWX Toolkit XML Structure Reference
 
 This document describes the **confirmed** file layout and element schema used by
-`analyze_toolkit_deps.py` to parse a BAW TWX export.
+`analyze_toolkit_deps.py` to parse a Business Automation Workflow TWX export.
 
 ---
 
@@ -16,7 +16,7 @@ analysis are:
 | `META-INF/metadata.xml` | Minimal; rarely contains useful data (often empty) |
 | `META-INF/properties.json` | Flags like `{"twxWithoutToolkits":"false"}` |
 | `objects/<prefix>.<uuid>.xml` | One XML file per artifact (process, service, BO, coach, etc.) |
-| `toolkits/<snapshot-id>.zip` | BAW embeds each declared toolkit dependency as a nested ZIP |
+| `toolkits/<snapshot-id>.zip` | Business Automation Workflow embeds each declared toolkit dependency as a nested ZIP |
 | `files/<asset-id>/<uuid>` | Binary managed assets (ignored by this skill) |
 
 ---
@@ -84,14 +84,14 @@ Key attributes extracted by the script:
 | `dependency/snapshot` | `originalCreationDate` | ISO 8601 creation date |
 
 > **Important:** There is **no** `<toolkitDependency>` or `<dependency type="toolkit">`
-> element in this version of BAW.  All dependency declarations use the nested
+> element in this version of Business Automation Workflow.  All dependency declarations use the nested
 > `<project>` / `<branch>` / `<snapshot>` element structure shown above.
 
 ---
 
 ## Embedded toolkit ZIPs (`toolkits/`)
 
-BAW embeds each toolkit listed in `<dependencies>` as a nested ZIP:
+Business Automation Workflow embeds each toolkit listed in `<dependencies>` as a nested ZIP:
 
 ```
 toolkits/2064.1080ded6-d153-4654-947c-2d16fce170db.zip   ← System Data
@@ -109,7 +109,7 @@ transitive dependencies (the toolkit's own `<dependencies>` section).
 
 ## Artifact object files (`objects/`)
 
-BAW serializes each artifact in the process app as an individual XML file with
+Business Automation Workflow serializes each artifact in the process app as an individual XML file with
 a numeric type prefix and UUID:
 
 | Prefix | Artifact type |
@@ -171,7 +171,7 @@ accurately map usage and distinguish active from unused toolkits.
 
 ## Notes on tip snapshot detection
 
-The `package.xml` format in BAW 8.6.x does **not** include a `tip="true"` flag
+The `package.xml` format in Business Automation Workflow 8.6.x does **not** include a `tip="true"` flag
 on `<dependency>` or `<snapshot>`.  The script detects tip references by
 inspecting the snapshot name: a snapshot named `"Tip"` (case-insensitive) is
 flagged as a live-branch reference.  Because this detection relies on the

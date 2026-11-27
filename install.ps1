@@ -27,7 +27,7 @@
     Example: -Skills "generate-baw-bpmn,inspect-baw-processes"
 
 .PARAMETER Uninstall
-    Remove all IBM BAW skills and modes from both global and project locations.
+    Remove all IBM Business Automation Workflow skills and modes from both global and project locations.
 
 .PARAMETER DryRun
     Preview what would be installed without writing any files.
@@ -323,7 +323,7 @@ function New-Env {
     }
 
     Copy-Item -Path $EnvExample -Destination $EnvFile -Force
-    Write-Ok "Created .env — open it and fill in your BAW server URL and credentials."
+    Write-Ok "Created .env at $EnvFile — open it and fill in your Business Automation Workflow server URL and credentials."
 }
 
 # ── Print summary ─────────────────────────────────────────────────────────────
@@ -356,9 +356,11 @@ function Write-Summary {
     if ($InstalledSkills.Count -gt 0 -and -not $DryRun) {
         Write-Host "`n✓ Setup complete!" -ForegroundColor Green
         Write-Host '  Open IBM Bob and switch to IBM BAW Author or IBM BAW Admin mode.'
-        Write-Host '  Then try: "Generate a BAW BPMN process for expense approvals"' -ForegroundColor Cyan
+        Write-Host '  Then try: "Generate a Business Automation Workflow BPMN process for expense approvals"' -ForegroundColor Cyan
         if (Test-Path $EnvFile) {
-            Write-Host "`n  Next step: Edit .env and replace the placeholder values with your BAW server URL and credentials." -ForegroundColor Yellow
+            Write-Host "`n  Next step: Edit $EnvFile and replace the placeholder values with your Business Automation Workflow server URL and credentials." -ForegroundColor Yellow
+            Write-Host '  Skills read .env from the root of the folder you have open in Bob (your workspace).'
+            Write-Host "  If you will work in a different folder, copy this file there: Copy-Item `"$EnvFile`" <your-workspace>\.env"
         }
     }
 
@@ -426,9 +428,9 @@ function Invoke-Uninstall {
 
     Write-Host ''
     if ($removedCount -gt 0) {
-        Write-Host '✓ IBM BAW skills and Bob modes have been successfully uninstalled.' -ForegroundColor Green
+        Write-Host '✓ IBM Business Automation Workflow skills and Bob modes have been successfully uninstalled.' -ForegroundColor Green
     } else {
-        Write-Host 'Nothing to uninstall — no IBM BAW skills were found in ~\.bob\skills\ or .bob\skills\.' -ForegroundColor Yellow
+        Write-Host 'Nothing to uninstall — no IBM Business Automation Workflow skills were found in ~\.bob\skills\ or .bob\skills\.' -ForegroundColor Yellow
     }
     Write-Host ''
 }
@@ -540,7 +542,7 @@ function Invoke-PickerSelect {
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 Write-Host ''
-Write-Host "IBM® BAW Skills and Bob Modes Installer v$ScriptVersion" -ForegroundColor White
+Write-Host "IBM® Business Automation Workflow Skills and Bob Modes Installer v$ScriptVersion" -ForegroundColor White
 Write-Dim $RepoUrl
 Write-Host ''
 

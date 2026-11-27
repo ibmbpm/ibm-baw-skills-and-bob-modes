@@ -1,13 +1,13 @@
 # TWX file analysis guide
 
-A `.twx` file is a BAW process application or toolkit export. It is a ZIP archive
+A `.twx` file is a Business Automation Workflow process application or toolkit export. It is a ZIP archive
 analyzable offline — no live server connection required.
 
 ---
 
 ## TWX file structure
 
-A TWX is a ZIP archive. Modern BAW (≥ 8.6.x / CP4A) uses a **flat objects layout**:
+A TWX is a ZIP archive. Modern Business Automation Workflow (≥ 8.6.x / CP4A) uses a **flat objects layout**:
 
 ```
 <AppName>.twx  (ZIP)
@@ -32,7 +32,7 @@ section provides the definitive `type` attribute for every object ID.
 
 ---
 
-## Legacy subfolder layout (BAW ≤ 8.5 / older exports)
+## Legacy subfolder layout (Business Automation Workflow ≤ 8.5 / older exports)
 
 Some older TWX exports use subfolders instead of the flat layout:
 

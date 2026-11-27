@@ -1,23 +1,23 @@
 ---
 name: baw-container-inventory
-description: "Inspect the container inventory of a live IBM BAW server — list all Process Apps and Toolkits, count them, search by name or acronym, view metadata, and confirm whether a specific container exists. Use when a BAW administrator wants to know what is installed on a server without opening Workflow Center or BAStudio. Trigger phrases: 'list process apps', 'list toolkits', 'what containers are installed', 'how many process apps', 'does this app exist', 'find container', 'show me the toolkits', 'container inventory', 'what is installed in BAW', 'show container details', 'look up acronym'. This skill is read-only — it queries and reports. For snapshot lifecycle operations use version-lifecycle-manager; for running process instances use inspect-baw-processes."
+description: "Inspect the container inventory of a live IBM Business Automation Workflow server — list all Process Apps and Toolkits, count them, search by name or acronym, view metadata, and confirm whether a specific container exists. Use when a Business Automation Workflow administrator wants to know what is installed on a server without opening Workflow Center or BAStudio. Trigger phrases: 'list process apps', 'list toolkits', 'what containers are installed', 'how many process apps', 'does this app exist', 'find container', 'show me the toolkits', 'container inventory', 'what is installed in Business Automation Workflow', 'show container details', 'look up acronym'. This skill is read-only — it queries and reports. For snapshot lifecycle operations use version-lifecycle-manager; for running process instances use inspect-baw-processes."
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: BAW Container Inventory
-  short_description: List and search all Process Apps and Toolkits installed on a live IBM BAW server without opening Workflow Center.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Container Inventory
+  short_description: List and search all Process Apps and Toolkits installed on a live IBM Business Automation Workflow server without opening Workflow Center.
+  author: IBM Business Automation Workflow Team
 ---
 
-> **⚠️ REST only — MCP is not supported by this skill.** All BAW interactions use the BAW REST API exclusively via HTTP calls to `{BAW_BASE_URL}`. Do not call any MCP tools at any point — regardless of whether an MCP server is connected or not. Never tell the user to connect an MCP server; this skill does not use one. If you find yourself reaching for an MCP tool, stop and use the REST equivalent from `references/baw-rest.md` instead.
+> **⚠️ REST only — MCP is not supported by this skill.** All Business Automation Workflow interactions use the Business Automation Workflow REST API exclusively via HTTP calls to `{BAW_BASE_URL}`. Do not call any MCP tools at any point — regardless of whether an MCP server is connected or not. Never tell the user to connect an MCP server; this skill does not use one. If you find yourself reaching for an MCP tool, stop and use the REST equivalent from `references/baw-rest.md` instead.
 
-# BAW Container Inventory
+# Business Automation Workflow Container Inventory
 
-Inspect the container inventory of a live IBM BAW server — list all Process Apps and Toolkits, count them, search by name or acronym, view metadata, and confirm whether a specific container exists. No Workflow Center (traditional BAW) or Business Automation Studio (CP4BA containerized) access required.
+Inspect the container inventory of a live IBM Business Automation Workflow server — list all Process Apps and Toolkits, count them, search by name or acronym, view metadata, and confirm whether a specific container exists. No Workflow Center (traditional Business Automation Workflow) or Business Automation Studio (Cloud Pak for Business Automation containerized) access required.
 
 This skill is **read-only**. It queries and reports — it never creates, archives, or deletes containers.
 
@@ -25,7 +25,7 @@ This skill is **read-only**. It queries and reports — it never creates, archiv
 
 ## Execution mode
 
-This skill operates in **REST mode only**. All calls use the BAW REST API documented in `references/baw-rest.md`.
+This skill operates in **REST mode only**. All calls use the Business Automation Workflow REST API documented in `references/baw-rest.md`.
 
 
 ## Semantic operations
@@ -36,7 +36,7 @@ This skill operates in **REST mode only**. All calls use the BAW REST API docume
 | `list containers` | `GET /ops/std/bpm/containers` — list all containers; supports `type`, `ids`, `offset`, `size`, `optional_parts` |
 | `get container` | `GET /ops/std/bpm/containers/{container}` — fetch one container by acronym; supports `optional_parts=branches` or `optional_parts=versions` |
 
-All calls after login require `BPMCSRFToken` header and session cookie.
+Authentication and session handling for every call follow `references/CREDENTIAL_HANDLING.md`.
 
 ---
 
@@ -44,7 +44,7 @@ All calls after login require `BPMCSRFToken` header and session cookie.
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 ## Steps
@@ -74,46 +74,23 @@ Before fetching anything, identify which of these the user is asking for:
 
 ### Step 2 — Fetch containers
 
-Each curl snippet below is shown in both macOS/Linux and Windows form. Use the form that matches the platform. On Windows always use `cmd /c "curl ..."` — never call `curl` directly from PowerShell.
+Execute each call below by following `references/CREDENTIAL_HANDLING.md`.
 
 #### Fetching all pages — mandatory for list and count requests
 
-The API returns a maximum of 100 items per call. Always paginate to retrieve the full inventory before processing. Use `size=100` to minimise round-trips. Repeat with increasing `offset` until the `next` field in the response is `null` — that is the last page. Save each page's response to a file, then merge all pages into a single JSON array for the script to process.
+The API returns a maximum of 100 items per call. Always paginate to retrieve the full inventory before processing. Use `size=100` to minimise round-trips. Repeat with increasing `offset` until the `next` field in the response is `null` — that is the last page. Save each page's response to its own file in the system temp directory (for example `baw_page0.json`, `baw_page1.json`), then pass all page files to the script.
 
-**Page fetch — macOS / Linux** (increment `offset` by 100 each time):
-```bash
-curl -sk -X GET "{BAW_BASE_URL}/ops/std/bpm/containers?size=100&offset=0" \
-  -u "{BAW_USER}:{BAW_PASS}" \
-  -H "BPMCSRFToken: {BAW_CSRF}" \
-  -o /tmp/baw_page0.json
-```
-
-**Page fetch — Windows** (increment `offset` by 100 each time):
-```powershell
-cmd /c "curl -sk -X GET ""{BAW_BASE_URL}/ops/std/bpm/containers?size=100&offset=0"" -u {BAW_USER}:{BAW_PASS} -H ""BPMCSRFToken: {BAW_CSRF}"" -o %TEMP%\baw_page0.json"
-```
+**Page fetch** (increment `offset` by 100 each time):
+- Method and path: `GET /ops/std/bpm/containers`
+- Query: `size=100`, `offset=0`
+- Save the response body to `<temp_dir>/baw_page0.json`
 
 If `next` is not `null` in the response, fetch the next page (`offset=100`, `offset=200`, …) saving each to its own file. When `next` is `null`, all pages are collected.
 
-**With type filter** (`PA` or `TK`) — same pagination rule, add `?type=PA` or `?type=TK`:
-```bash
-curl -sk -X GET "{BAW_BASE_URL}/ops/std/bpm/containers?type=PA&size=100&offset=0" \
-  -u "{BAW_USER}:{BAW_PASS}" \
-  -H "BPMCSRFToken: {BAW_CSRF}" \
-  -o /tmp/baw_page0.json
-```
+**With type filter** (`PA` or `TK`) — same pagination rule, add the query `type=PA` or `type=TK`.
 
-**Single container by acronym** (no pagination):
-```bash
-# macOS / Linux
-curl -sk -X GET "{BAW_BASE_URL}/ops/std/bpm/containers/{ACRONYM}" \
-  -u "{BAW_USER}:{BAW_PASS}" \
-  -H "BPMCSRFToken: {BAW_CSRF}"
-```
-```powershell
-# Windows
-cmd /c "curl -sk -X GET ""{BAW_BASE_URL}/ops/std/bpm/containers/{ACRONYM}"" -u {BAW_USER}:{BAW_PASS} -H ""BPMCSRFToken: {BAW_CSRF}"""
-```
+**Single container by acronym** (no pagination): `GET /ops/std/bpm/containers/{ACRONYM}`.
+
 
 Append `?optional_parts=branches` or `?optional_parts=versions` when branches or versions are needed. Replace `{ACRONYM}` with the actual container acronym. Read the single-container call response directly — no script needed.
 
@@ -231,8 +208,8 @@ When `optional_parts=branches` or `optional_parts=versions` is requested for a s
 
 | Situation | What to say |
 |---|---|
-| 401 on any call after login | "Your session may have expired. Let me re-authenticate." Re-read `references/CREDENTIAL_HANDLING.md` and re-establish the session. |
-| 403 | "You may not have sufficient permissions for this operation. Check that your account has the BAW admin role." |
+| 401 on any call after login | "Your session may have expired. Let me re-authenticate." Re-establish the session as described in `references/CREDENTIAL_HANDLING.md`. |
+| 403 | "You may not have sufficient permissions for this operation. Check that your account has the Business Automation Workflow admin role." |
 | 404 on `get container` | "Container '[acronym]' was not found on the server. Confirm the acronym is correct." |
 | Network or timeout error | State what failed and ask: "Would you like me to retry, or would you prefer to check the server URL?" |
 

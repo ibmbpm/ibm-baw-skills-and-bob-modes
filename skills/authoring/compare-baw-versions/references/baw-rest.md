@@ -1,4 +1,4 @@
-# BAW REST API reference
+# Business Automation Workflow REST API reference
 
 ---
 

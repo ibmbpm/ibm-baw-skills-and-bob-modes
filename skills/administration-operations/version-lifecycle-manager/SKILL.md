@@ -1,35 +1,35 @@
 ---
 name: version-lifecycle-manager
 description: >-
-  Manages IBM Business Automation Workflow (BAW) Process App and Toolkit
+  Manages IBM Business Automation Workflow Process App and Toolkit
   version lifecycle via the Operations REST API — handles state-changing operations
   including installing applications, managing snapshots (activating, deactivating,
   deleting), and reading, setting, or synchronizing environment variables — no Process
-  Admin Console needed. Use when a BAW administrator wants to perform lifecycle
+  Admin Console needed. Use when a Business Automation Workflow administrator wants to perform lifecycle
   actions or state changes. Do NOT use for read-only queries, including snapshot metadata,
   process-app listings, and container inventories — use version-inspector for those.
-  Supports BAW on-premises, BAW on Cloud, and CP4BA (IBM Cloud Pak for Business
+  Supports Business Automation Workflow on-premises, Business Automation Workflow on Cloud, and Cloud Pak for Business Automation (IBM Cloud Pak for Business
   Automation).
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: BAW Version Lifecycle Manager
-  short_description: Activate, deactivate, install, and delete BAW snapshots and manage environment variables via the Operations REST API.
-  author: IBM BAW Team
+  display_name: Business Automation Workflow Version Lifecycle Manager
+  short_description: Activate, deactivate, install, and delete Business Automation Workflow snapshots and manage environment variables via the Operations REST API.
+  author: IBM Business Automation Workflow Team
 ---
 # Version Lifecycle Manager
 
-Manage IBM BAW Process App and Toolkit version lifecycles using the BAW Operations REST API. This skill installs applications, activates, deactivates, and deletes snapshots, verifies snapshot state, and manages environment variables — all via documented public REST endpoints with no Process Admin Console required.
+Manage IBM Business Automation Workflow Process App and Toolkit version lifecycles using the Business Automation Workflow Operations REST API. This skill installs applications, activates, deactivates, and deletes snapshots, verifies snapshot state, and manages environment variables — all via documented public REST endpoints with no Process Admin Console required.
 
 > **Companion skill:** To inspect a snapshot's metadata (version name, status, creation date, dependencies) before taking a lifecycle action, use the `version-inspector` skill. The two skills are designed to work together — inspect first, act here.
 
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 
@@ -42,30 +42,25 @@ Read `references/BAW_SNAPSHOT_API.md` for the exact API details, parameter forma
 
 ## Deployment types
 
-BAW is deployed in three forms — the base URL and authentication differ, but the API path structure is the same:
+Business Automation Workflow is deployed in three forms — the base URL and authentication differ, but the API path structure is the same:
 
 | Deployment | Base URL pattern | Auth |
 |---|---|---|
-| BAW on-premises (root mount) | `https://<host>:9443` (Ops API directly at `/ops/...`) | Basic auth or LTPA token |
-| BAW on-premises (prefixed) | `https://<host>:9443/rest`, `/bas`, or `/baw` | Basic auth or LTPA token |
-| BAW on Cloud | `https://<tenant>.baw.ibmcloud.com` | API key / OAuth |
-| CP4BA (Cloud Pak) | `https://<cpd-host>/bas` | ZenAPI key or OAuth |
+| Business Automation Workflow on-premises (root mount) | `https://<host>:9443` (Ops API directly at `/ops/...`) | Basic auth or LTPA token |
+| Business Automation Workflow on-premises (prefixed) | `https://<host>:9443/rest`, `/bas`, or `/baw` | Basic auth or LTPA token |
+| Business Automation Workflow on Cloud | `https://<tenant>.baw.ibmcloud.com` | API key / OAuth |
+| Cloud Pak for Business Automation | `https://<cpd-host>/bas` | ZenAPI key or OAuth |
 
-> **Version requirement:** The `/ops/std/bpm/...` Operations REST API (used for activate, deactivate, delete, verify, and env-var endpoints) requires **BAW 18.0.0.0 or later**. It is not available on IBM BPM 8.x (released before 2018). If the user appears to be on BPM 8.x, state this clearly — see the version detection note below.
+> **Version requirement:** The `/ops/std/bpm/...` Operations REST API (used for activate, deactivate, delete, verify, and env-var endpoints) requires **Business Automation Workflow 18.0.0.0 or later**. It is not available on IBM Business Process Manager 8.x (released before 2018). If the user appears to be on Business Process Manager 8.x, state this clearly — see the version detection note below.
 
 The default on-premises port is **9443** (HTTPS). Port 9080 (HTTP) usually redirects to 9443. If the user provides only a hostname with no port, probe port 9443 first. If the user provides only a hostname with no context root, probe the root `""` (no prefix), `/rest`, `/bas`, then `/baw` on port 9443 in that order using `POST <base-url>/ops/system/login` or container probe — use the first that returns HTTP 200, 201, 401, or 403 (401/403 means the root exists but the credentials or auth method were rejected, which is still a valid root).
 
-**Version detection:** After finding the context root, probe the Operations API with a lightweight call:
-```bash
-curl -sk -o /dev/null -w "%{http_code}" \
-  "<base-url>/ops/std/bpm/containers?containerType=PA" \
-  -H "Authorization: Basic <credentials>"
-```
-- If it returns **200, 401, or 403** → Operations API is present; proceed normally. A 403 on CP4BA typically means Basic auth is not accepted — switch to a Zen Bearer token (see CP4BA auth note below).
-- If it returns **404** but `GET <base-url>/bpm/wle/v1/processApps` returns **200** → the server is likely IBM BPM 8.x. Stop and tell the user:
-  > "The Operations REST API (`/ops/std/bpm/...`) is not available on this server. It requires IBM Business Automation Workflow 18.0 or later, but this server appears to be IBM BPM 8.x. Snapshot lifecycle management through this skill is not supported on BPM 8.x. Use the Process Admin Console on that server to manage snapshots manually."
+**Version detection:** After finding the context root, probe the Operations API with a lightweight call: `GET /ops/std/bpm/containers` with the query `containerType=PA`, and note the HTTP status.
+- If it returns **200, 401, or 403** → Operations API is present; proceed normally. A 403 on Cloud Pak for Business Automation typically means the authentication method was not accepted — see `references/CREDENTIAL_HANDLING.md`.
+- If it returns **404** but `GET <base-url>/bpm/wle/v1/processApps` returns **200** → the server is likely IBM Business Process Manager 8.x. Stop and tell the user:
+  > "The Operations REST API (`/ops/std/bpm/...`) is not available on this server. It requires IBM Business Automation Workflow 18.0 or later, but this server appears to be IBM Business Process Manager 8.x. Snapshot lifecycle management through this skill is not supported on Business Process Manager 8.x. Use the Process Admin Console on that server to manage snapshots manually."
 
-Never hard-code or invent a URL. The base URL is read from `.env` via `references/CREDENTIAL_HANDLING.md`.
+Never hard-code or invent a URL. The base URL is obtained as described in `references/CREDENTIAL_HANDLING.md`.
 
 ## Step-by-step workflow
 
@@ -73,7 +68,7 @@ Never hard-code or invent a URL. The base URL is read from `.env` via `reference
 
 Collect everything needed before constructing an API call. Ask for missing values in a single question rather than one at a time:
 
-- **BAW base URL** — read from `.env` via `references/CREDENTIAL_HANDLING.md`; ask only if missing
+- **Business Automation Workflow server** — the connection described in `references/CREDENTIAL_HANDLING.md`; if it is not configured, tell the user how to configure it rather than asking for the URL in chat
 - **Container** — Process App or Toolkit acronym (e.g. `MYAPP`) or numeric container ID
 - **Snapshot version** — snapshot acronym (e.g. `0.9.3`) or snapshot ID (tip: if unsure, list snapshots first — see `references/BAW_SNAPSHOT_API.md` section 8; snapshots are nested in the `installedSnapshots` array of the container response)
 - **Operation** — install / verify / activate / deactivate / delete / read-env-vars / set-env-vars / sync-env-vars / list-versions
@@ -117,17 +112,7 @@ Do not make the API call until the user replies affirmatively for any of the abo
 
 Construct and execute the call using the endpoint details from `references/BAW_SNAPSHOT_API.md`.
 
-Provide the exact `curl` command (or equivalent) so the user can audit what will be sent:
-
-```bash
-# Example — activate
-curl -X POST \
-  "https://baw.example.com/bas/std/bpm/containers/MYAPP/versions/0.9.3/activate" \
-  -H "Authorization: Basic <base64-encoded-credentials>" \
-  -H "Content-Type: application/json"
-```
-
-Then execute the call if you have the `execute_command` tool available, or ask the user to run it and paste the response.
+State the method, server-relative path, query and body of the call so the user can audit what will be sent, for example `POST /ops/std/bpm/containers/MYAPP/versions/0.9.3/activate`. Then execute it as described in `references/CREDENTIAL_HANDLING.md`.
 
 ### Step 5 — Report the result
 
@@ -157,31 +142,9 @@ succeeds:
 
 **Path 1 — REST export from the source server (preferred).**
 
-Ask for the source server URL, container acronym, snapshot version, and credentials only
-when the install operation is confirmed — do not ask earlier.
+Ask for the source container acronym and snapshot version only when the install operation is confirmed — do not ask earlier. The source server connection is described in `references/CREDENTIAL_HANDLING.md`.
 
-1. Obtain a CSRF token:
-   ```bash
-   CSRF=$(curl -sk -X POST "<SOURCE_BAW_BASE_URL>/ops/system/login" \
-     -H "Authorization: Basic <base64(user:pass)>" \
-     -H "Content-Type: application/json" \
-     -d '{"refresh_groups": false}' \
-     | python3 -c 'import sys,json; print(json.load(sys.stdin).get("csrf_token",""))')
-   ```
-   On CP4BA clusters, Basic auth returns 403 — exchange credentials for a Bearer token
-   first via `POST https://<cpd-host>/icp4d-api/v1/authorize`, then use
-   `Authorization: Bearer $TOKEN` on the login call and on the export call below.
-
-2. Download the TWX:
-   ```bash
-   curl -sk \
-     -H "Authorization: Basic <base64(user:pass)>" \
-     -H "BPMCSRFToken: $CSRF" \
-     "<SOURCE_BAW_BASE_URL>/ops/std/bpm/containers/<container>/versions/<version>/export?use_enhanced_filenames=true" \
-     -o /tmp/<container>_<version>.twx
-   ```
-   Verify the downloaded file is non-empty. A non-200 response or empty file means the
-   export failed — report the error and fall through to Path 2.
+Download the TWX with `GET /ops/std/bpm/containers/<container>/versions/<version>/export`, query `use_enhanced_filenames=true`, saving the binary response to `<temp_dir>/<container>_<version>.twx`. Verify the downloaded file is non-empty. A non-200 response or empty file means the export failed — report the error and fall through to Path 2.
 
 **Path 2 — locally supplied file (fallback).**
 
@@ -194,13 +157,12 @@ If the user provides a file path, use it as-is in the install call below.
 **Install call (after obtaining the file by either path):**
 
 Pass the `.twx` file as a multipart upload to the install endpoint on the **target**
-server. The target server credentials and CSRF token are obtained independently using
-the same login sequence above (target may differ from source).
+server. The target server connection is configured independently of the source — see `references/CREDENTIAL_HANDLING.md`.
 
-- If a container with the same acronym already exists on the target server, BAW may
+- If a container with the same acronym already exists on the target server, Business Automation Workflow may
   create a new snapshot within it rather than a brand-new container — verify with the
   list endpoint afterward.
-- After install, use the verify endpoint to confirm BAW registered the snapshot and
+- After install, use the verify endpoint to confirm Business Automation Workflow registered the snapshot and
   check its initial status before activating.
 
 ### Verifying a snapshot
@@ -220,25 +182,25 @@ the same login sequence above (target may differ from source).
 - Read env vars first (`GET`) before making changes so you have a baseline to roll back to if needed.
 - Setting env vars (`POST`) writes the values to the snapshot's configuration but does not push them into the running environment; use the sync endpoint afterward to apply them.
 - Syncing env vars (`POST .../sync`) applies the stored configuration to the live snapshot. Warn the user if the snapshot is currently active, since the change is immediate.
-- Keep a record of env var values externally (e.g. in a secrets manager or version-controlled config file) — BAW does not maintain a history of previous values.
+- Keep a record of env var values externally (e.g. in a secrets manager or version-controlled config file) — Business Automation Workflow does not maintain a history of previous values.
 
 ### Deleting a snapshot
-- Deletion is irreversible. Export or archive the snapshot (`.twx` file via **Workflow Center** (formerly Process Center) for traditional BAW, or **Business Automation Studio** for CP4BA) before deleting if there is any chance the version will be needed again.
+- Deletion is irreversible. Export or archive the snapshot (`.twx` file via **Workflow Center** (formerly Process Center) for traditional Business Automation Workflow, or **Business Automation Studio** for Cloud Pak for Business Automation) before deleting if there is any chance the version will be needed again.
 - You cannot delete the currently active snapshot without first deactivating it.
-- BAW may reject the deletion if there are active process instances on the snapshot; resolve those first.
-- On CP4BA, namespace-level RBAC may require additional authorization for deletion.
+- Business Automation Workflow may reject the deletion if there are active process instances on the snapshot; resolve those first.
+- On Cloud Pak for Business Automation, namespace-level RBAC may require additional authorization for deletion.
 
 ---
 
 ## Boundaries
 
-**In scope:** Installing, verifying, activating, deactivating, and deleting BAW snapshots; reading, setting, and synchronizing environment variables; listing containers and snapshot versions — all via the Operations REST API; explaining lifecycle-management implications.
+**In scope:** Installing, verifying, activating, deactivating, and deleting Business Automation Workflow snapshots; reading, setting, and synchronizing environment variables; listing containers and snapshot versions — all via the Operations REST API; explaining lifecycle-management implications.
 
 **Out of scope — redirect explicitly:**
 - **Read-only snapshot queries, metadata inspection, and container listings:** use `version-inspector`.
-- **Exporting or backing up a snapshot (.twx):** use the authoring environment UI — **Workflow Center** for traditional BAW or **Business Automation Studio** for CP4BA containerized. This skill only administers snapshots already present on the server or being installed via the install endpoint.
-- **Migrating running instances from one snapshot to another:** that is a separate administration task using the BAW Process Admin Console migration tooling.
-- **Installing or upgrading BAW itself:** not covered here.
+- **Exporting or backing up a snapshot (.twx):** use the authoring environment UI — **Workflow Center** for traditional Business Automation Workflow or **Business Automation Studio** for Cloud Pak for Business Automation containerized. This skill only administers snapshots already present on the server or being installed via the install endpoint.
+- **Migrating running instances from one snapshot to another:** that is a separate administration task using the Business Automation Workflow Process Admin Console migration tooling.
+- **Installing or upgrading Business Automation Workflow itself:** not covered here.
 - **Generating BPMN processes or Business Objects:** use `generate-baw-bpmn` or `generate-baw-business-objects`.
 
 ---
@@ -249,7 +211,7 @@ For every operation, always produce (in this order):
 
 1. **Operation summary** — container, snapshot (where applicable), intended action, and effect
 2. **Warning / confirmation prompt** (sync env vars, deactivation, and deletion only)
-3. **Curl command** — the exact API call that will be (or was) made, with placeholders replaced by the real values
+3. **API call** — the method, server-relative path, query and body that will be (or was) sent
 4. **Result** — HTTP status, response body, and a plain-language interpretation
 5. **Next steps** (optional) — what the administrator should verify or do after the operation
 
@@ -263,22 +225,16 @@ For **install**, include a follow-up suggestion to verify the snapshot using the
 
 **Example 1 — Deactivate a snapshot**
 
-Input: "Deactivate snapshot v2.1 of our HRAPP process app on https://baw.corp.example.com/bas. My username is <your-username> and password is <your-password>."
+Input: "Deactivate snapshot v2.1 of our HRAPP process app."
 
 1. Container: `HRAPP`, snapshot: `v2.1`, operation: Deactivate.
 2. Present summary and ⚠️ deactivation warning; wait for confirmation.
-3. On confirmation, construct and execute:
-   ```bash
-   curl -X POST \
-     "https://baw.corp.example.com/bas/std/bpm/containers/HRAPP/versions/v2.1/deactivate" \
-     -H "Authorization: Basic <base64-encoded-credentials>" \
-     -H "Content-Type: application/json"
-   ```
+3. On confirmation, execute `POST /ops/std/bpm/containers/HRAPP/versions/v2.1/deactivate`.
 4. Report HTTP status, response body, and note that running instances on `v2.1` complete normally but no new instances start on that version.
 
 **Example 2 — Install and verify**
 
-Input: "Install snapshot from /tmp/SUPPLYAPP_v3.twx to https://baw.prod.example.com/bas, then verify it landed."
+Input: "Install snapshot from /tmp/SUPPLYAPP_v3.twx, then verify it landed."
 
 1. Construct the install call (POST to `/ops/std/bpm/containers/install` with the `.twx` file path).
 2. After install, automatically follow up with a verify call (GET `/ops/std/bpm/containers/SUPPLYAPP/versions/v3`) and present the snapshot status.

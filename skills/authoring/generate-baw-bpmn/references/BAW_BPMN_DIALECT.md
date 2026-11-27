@@ -1,7 +1,7 @@
-# The BAW BPMN Dialect — import behavior and post-import steps
+# The Business Automation Workflow BPMN Dialect — import behavior and post-import steps
 
-`scripts/generate_baw_bpmn.py` produces BAW's export dialect (`bpmnid-` UUID ids,
-`processType="None"`, no diagram section). This reference explains what BAW creates
+`scripts/generate_baw_bpmn.py` produces Business Automation Workflow's export dialect (`bpmnid-` UUID ids,
+`processType="None"`, no diagram section). This reference explains what Business Automation Workflow creates
 from each BPMN construct on import and the post-import steps to hand the user.
 
 ## Supported constructs
@@ -12,10 +12,10 @@ Only constructs in the import mapping below should be used. Do not include eleme
 
 ## How lanes work on import
 
-**Lanes are supported and should be emitted.** BAW assigns tasks to swim-lanes using
+**Lanes are supported and should be emitted.** Business Automation Workflow assigns tasks to swim-lanes using
 two signals, in priority order:
 
-1. `<performer name="...">` child element on the task — BAW uses this as the primary
+1. `<performer name="...">` child element on the task — Business Automation Workflow uses this as the primary
    semantic signal for lane assignment and team binding.
 2. `<laneSet>/<lane>/<flowNodeRef>` membership — visual/structural fallback.
 
@@ -26,19 +26,19 @@ System lane. A System lane is always guaranteed — if none is defined in the co
 generator injects one automatically, so no "Unassigned" lane is ever created.
 
 **Pools are not emitted** — a pool in BPMN 2.0 represents a separate participant
-(a different organisation), not a swim-lane within one process. BAW's own exports
+(a different organisation), not a swim-lane within one process. Business Automation Workflow's own exports
 do not use pools for single-process models.
 
-BAW also ignores any incoming diagram/layout section and auto-arranges on import, so
+Business Automation Workflow also ignores any incoming diagram/layout section and auto-arranges on import, so
 the generator never emits one — "adjust the process layout" is an expected post-import
 step per IBM's own docs, not a gap here.
 
-## What BAW creates on import (official mapping)
+## What Business Automation Workflow creates on import (official mapping)
 
 From IBM's ["Mapping BPMN 2.0 constructs to workflow objects after import"](https://www.ibm.com/docs/en/baw/26.0.x?topic=iebm-mapping-bpmn-20-constructs-workflow-objects-after-import)
 documentation. Constructs not in this table should not be included.
 
-| BPMN construct | BAW object after import |
+| BPMN construct | Business Automation Workflow object after import |
 |---|---|
 | Process | Process (BPD) |
 | Task with performers / Human task / userTask | Activity (user task) + reference to a generated client-side human service |
@@ -63,7 +63,7 @@ documentation. Constructs not in this table should not be included.
 Note the two rows this generator leans on most: **service task → a generated service
 flow named after the task** (so name each `serviceTask` exactly what its service flow
 should be called), and **item definition → business object** (how the sidecar `.xsd`
-for `businessObjects` becomes real BAW business objects — see
+for `businessObjects` becomes real Business Automation Workflow business objects — see
 [PROCESS_JSON_SCHEMA.md](PROCESS_JSON_SCHEMA.md) for the mechanics).
 
 ## How to import (two supported routes)
@@ -72,9 +72,9 @@ Both routes want a **.zip** (the generator writes one next to the `.bpmn`, inclu
 the business-object `.xsd` when one was generated — never strip it out):
 
 - **New Process App:**
-  - **Traditional BAW (Workflow Center):** Workflow Center → Process Apps tab → **Import Process App** → choose the .zip. BAW creates the app, generates the artifacts, and auto-snapshots it. (An "Import Toolkit" equivalent exists on the Toolkits tab.)
-  - **CP4BA containerized (Business Automation Studio):** Business Automation Studio → Business automations → Workflow → **Import** → choose the .zip.
-- **Existing Process App:** Process Designer (traditional BAW) or Business Automation Studio (CP4BA) → open the app → **File > Import** →
+  - **Traditional Business Automation Workflow (Workflow Center):** Workflow Center → Process Apps tab → **Import Process App** → choose the .zip. Business Automation Workflow creates the app, generates the artifacts, and auto-snapshots it. (An "Import Toolkit" equivalent exists on the Toolkits tab.)
+  - **Cloud Pak for Business Automation containerized (Business Automation Studio):** Business Automation Studio → Business automations → Workflow → **Import** → choose the .zip.
+- **Existing Process App:** Process Designer (traditional Business Automation Workflow) or Business Automation Studio (Cloud Pak for Business Automation) → open the app → **File > Import** →
   choose the .zip. Imported artifacts get an "Imported" tag. Re-importing the same
   file creates duplicate copies — it never overwrites a previous import.
 
@@ -85,12 +85,12 @@ Multiple `.bpmn` files can share one zip to import several processes at once.
 Import success ≠ done. Hand the user this list with the generated artifacts:
 
 1. Open every generated artifact and confirm it looks as expected; read any import
-   warnings — each one usually indicates that BAW dropped or converted an unsupported construct.
+   warnings — each one usually indicates that Business Automation Workflow dropped or converted an unsupported construct.
 2. Complete the **service flow** details (connectors, scripts, data mapping).
 3. Customize the default generated **coaches** in the client-side human services.
 4. Finish the **conditional logic** on exclusive/IOR gateways (imported conditions are
-   a starting point; BAW expects them re-expressed against real variables).
+   a starting point; Business Automation Workflow expects them re-expressed against real variables).
 5. Provide **default values** for uninitialized private variables.
 6. Complete **JavaScript** in script activities.
 7. Adjust the diagram **layout** and assign **team members** to activities.
-8. Run BAW's validation and fix anything it flags.
+8. Run Business Automation Workflow's validation and fix anything it flags.

@@ -1,6 +1,6 @@
 # Default compliance rule set
 
-> **These rules are illustrative examples.** They represent widely accepted governance, operational, and security best practices for IBM BAW and CP4BA process applications, but they are not an authoritative or pre-approved standard. When the user provides no compliance document, present the rules as suggestions only. Do not apply them silently. The user must explicitly include, exclude, or modify each rule before you finalize the active rule set.
+> **These rules are illustrative examples.** They represent widely accepted governance, operational, and security best practices for IBM Business Automation Workflow and Cloud Pak for Business Automation process applications, but they are not an authoritative or pre-approved standard. When the user provides no compliance document, present the rules as suggestions only. Do not apply them silently. The user must explicitly include, exclude, or modify each rule before you finalize the active rule set.
 
 Rule IDs use the `[DEF-NNN]` series.
 Severity: Critical | High | Medium | Low
@@ -30,7 +30,7 @@ Severity: Critical | High | Medium | Low
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
-| DEF-020 | All task completions and status transitions must be traceable through the BAW built-in process history or a tracking group. | High | Business Performance Data Warehouse (BPDW) tracking group configured, or process history enabled. |
+| DEF-020 | All task completions and status transitions must be traceable through the Business Automation Workflow built-in process history or a tracking group. | High | Business Performance Data Warehouse (BPDW) tracking group configured, or process history enabled. |
 | DEF-021 | Process variables carrying decision data (approval/rejection, amount, risk score) must be tracked. | High | Tracked variables in the BPD tracking group definition. |
 | DEF-022 | The process must capture start and end times. | Medium | Verify that process instance start and end timestamps are available through process history or a tracking group. |
 
@@ -78,8 +78,8 @@ Severity: Critical | High | Medium | Low
 
 | Rule ID | Description | Severity | Required Evidence |
 |---|---|---|---|
-| DEF-070 | All Human Services (coaches) must be accessible only to authenticated users. | Critical | Lane or task restricted to a defined Team or BPM security role (not public/anonymous). |
-| DEF-071 | Administrative operations (process termination, bulk reassignment) must be restricted to the BPMAdministrator role or equivalent. | Critical | BPM security role check or process app exposure restriction. |
+| DEF-070 | All Human Services (coaches) must be accessible only to authenticated users. | Critical | Lane or task restricted to a defined Team or Business Process Manager security role (not public/anonymous). |
+| DEF-071 | Administrative operations (process termination, bulk reassignment) must be restricted to the BPMAdministrator role or equivalent. | Critical | Business Process Manager security role check or process app exposure restriction. |
 | DEF-072 | Coaches must not expose sensitive data fields (SSN, account number, PII) in plain text. Use masking or server-side retrieval. | High | Coach control configured as masked/password type, or data retrieved only on demand. |
 
 ---

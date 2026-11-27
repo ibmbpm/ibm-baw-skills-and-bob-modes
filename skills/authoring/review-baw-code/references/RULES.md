@@ -1,4 +1,4 @@
-# BAW Code Review — Rule Definitions
+# Business Automation Workflow Code Review — Rule Definitions
 
 This file is the authoritative rule reference for the `review-baw-code` skill.
 For every finding you emit, look up the rule here to confirm the severity, pattern,
@@ -27,13 +27,13 @@ contains any of `password`, `passwd`, `secret`, `apikey`, `api_key`, `token`,
 `authtoken`, `auth_token`, `credential`, `private_key` (case-insensitive).
 ```js
 // Example violations
-var password = "P@ssw0rd!";
+var password = "<example-password>";
 var apiKey = "sk-abc123";
 var dbSecret = 'prod-secret-XYZ';
 ```
-**Fix template:** Replace the literal with a BAW managed team/environment variable
+**Fix template:** Replace the literal with a Business Automation Workflow managed team/environment variable
 that the script reads through `tw.env.*`, or with a process variable that you
-initialize from a BAW configuration property (`tw.system.findManagedFile` / config
+initialize from a Business Automation Workflow configuration property (`tw.system.findManagedFile` / config
 property lookup). Never store credentials in scripts.
 
 ---
@@ -48,8 +48,8 @@ used in tests are Low, not High.
 // Violation
 var endpoint = "http://internal-srv.corp.example.com:8080/api/process";
 ```
-**Fix template:** Define the base URL as a BAW server-side environment variable or
-an IBM BAW environment-specific property, and read it at runtime:
+**Fix template:** Define the base URL as a Business Automation Workflow server-side environment variable or
+an IBM Business Automation Workflow environment-specific property, and read it at runtime:
 ```js
 var endpoint = tw.env.integrationBaseUrl + "/api/process";
 ```
@@ -72,7 +72,7 @@ an environment variable as for HARD-02.
 **Pattern:** A string literal that ends with `:<port>` where port is not 80 or 443,
 or a numeric literal assigned to a variable named `port`, `portNumber`, `serverPort`
 (case-insensitive). Exempt: well-known ports (80, 443, 8080 is borderline — flag as Low).  
-**Fix template:** Externalize the port to an environment variable or BAW configuration
+**Fix template:** Externalize the port to an environment variable or Business Automation Workflow configuration
 property.
 
 ---
@@ -119,8 +119,8 @@ single script. Detect the dominant idiom across all reviewed scripts (the idiom 
 by >50% of log calls). Flag any script that uses a different idiom. Common idioms:
 `log.info` / `log.error`, `tw.system.log`, `console.log`, a custom `logger.*` wrapper.
 **Fix template:** Standardize on the project's dominant idiom. If no convention
-exists, adopt `log.info` / `log.error` from the BAW Script Logger API, which writes
-to the BAW system log and supports severity levels.
+exists, adopt `log.info` / `log.error` from the Business Automation Workflow Script Logger API, which writes
+to the Business Automation Workflow system log and supports severity levels.
 
 ---
 
@@ -152,7 +152,7 @@ try {
 **Pattern:** `console.log(`, `console.warn(`, `console.error(` appear in a script
 that is not clearly a test or development utility (filename does not contain `test`,
 `spec`, `dev`).  
-**Fix template:** Replace with the project's standard logging idiom. BAW server logs
+**Fix template:** Replace with the project's standard logging idiom. Business Automation Workflow server logs
 do not capture `console.log` output, so it disappears in server-side scripts.
 
 ---
@@ -165,9 +165,9 @@ do not capture `console.log` output, so it disappears in server-side scripts.
 **Pattern:** `java.lang.Thread.sleep(`, `Thread.sleep(`, or the alias pattern
 `Packages.java.lang.Thread.sleep(` appears in a script.  
 **Fix template:** Remove the sleep entirely. If you need a delay between retry
-attempts, implement a BAW timer boundary event on the containing process/service task.
-If polling an external system, use a BAW intermediate timer event or an integration
-pattern with a callback. `Thread.sleep` blocks the BAW thread pool and can cause
+attempts, implement a Business Automation Workflow timer boundary event on the containing process/service task.
+If polling an external system, use a Business Automation Workflow intermediate timer event or an integration
+pattern with a callback. `Thread.sleep` blocks the Business Automation Workflow thread pool and can cause
 server-wide thread exhaustion.
 
 ---
@@ -203,7 +203,7 @@ if (count >= maxIterations) {
 (nesting depth ≥ 3).  
 **Fix template:** Extract the inner loop(s) into a named helper function, or
 reconsider the algorithm. Deeply nested loops are O(n³) or worse and are the most
-common cause of BAW server timeouts on large datasets.
+common cause of Business Automation Workflow server timeouts on large datasets.
 
 ---
 
@@ -221,7 +221,7 @@ after stripping comments.
     throw e;
 }
 ```
-Do not silently swallow exceptions in server-side BAW scripts — they make failure
+Do not silently swallow exceptions in server-side Business Automation Workflow scripts — they make failure
 diagnosis extremely difficult.
 
 ---
@@ -248,7 +248,7 @@ immediately after a `return` or `throw` statement at the same nesting level.
 ### QUAL-04 — Inline style attribute in HTML coach view
 **Severity:** Low  
 **Applies to:** HTML  
-**Pattern:** `style="` or `style='` attribute on any HTML element in a BAW coach
+**Pattern:** `style="` or `style='` attribute on any HTML element in a Business Automation Workflow coach
 view template.  
 **Fix template:** Move the style declaration to the coach view's CSS section or to a
 shared stylesheet. Inline styles bypass theming and make accessibility audits harder.
@@ -267,11 +267,11 @@ Design System theming in Process Portal.
 
 ## Checkstyle mapping guide
 
-When ingesting a Checkstyle XML report, map `source` class names to BAW rule IDs
+When ingesting a Checkstyle XML report, map `source` class names to Business Automation Workflow rule IDs
 using this table. If a Checkstyle source is not in the table, surface the finding
 under the synthetic ID `CS-<last_segment_of_source_class>` at the Checkstyle severity.
 
-| Checkstyle source class (suffix) | Closest BAW rule | Notes |
+| Checkstyle source class (suffix) | Closest Business Automation Workflow rule | Notes |
 |---|---|---|
 | `MagicNumberCheck` | HARD-04 | Hardcoded numeric constant |
 | `AvoidInlineConditionalsCheck` | QUAL-03 | Code clarity |

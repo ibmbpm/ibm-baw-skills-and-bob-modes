@@ -1,21 +1,21 @@
 ---
 name: inspect-baw-processes
-description: "Use when a BAW administrator or operator wants to find, investigate, or take action on running IBM BAW process instances: retry failed processes, suspend or resume instances, change due dates, or answer questions like \"what's broken right now?\", \"show me everything overdue in the Claims app\", or \"why did this instance fail?\" Covers the full Process Inspector workflow: searching by status/app/owner/date, drilling into instance details and business data, and executing lifecycle actions. Do not use for authoring new processes (generate-baw-bpmn), creating coach widgets (create-baw-widget), or building custom portals (create-baw-portal). Do not use for audit readiness, compliance checks, or questions about whether a process application is ready for an audit. Use audit-baw-readiness for those."
+description: "Use when a Business Automation Workflow administrator or operator wants to find, investigate, or take action on running IBM Business Automation Workflow process instances: retry failed processes, suspend or resume instances, change due dates, or answer questions like \"what's broken right now?\", \"show me everything overdue in the Claims app\", or \"why did this instance fail?\" Covers the full Process Inspector workflow: searching by status/app/owner/date, drilling into instance details and business data, and executing lifecycle actions. Do not use for authoring new processes (generate-baw-bpmn), creating coach widgets (create-baw-widget), or building custom portals (create-baw-portal). Do not use for audit readiness, compliance checks, or questions about whether a process application is ready for an audit. Use audit-baw-readiness for those."
 license: Apache-2.0
-compatibility: "IBM BAW 22.x and later; IBM CP4BA 22.x and later"
+compatibility: "Compatible with all IBM-supported releases of IBM Business Automation Workflow and IBM Cloud Pak for Business Automation, as defined by the IBM Software Support Lifecycle."
 allowed-tools:
   - Read
   - Edit
   - Bash
 metadata:
   version: "1.0.0"
-  display_name: Inspect BAW Processes
-  short_description: "Find, investigate, and act on running IBM BAW process instances: retry failures, suspend, resume, and change due dates."
-  author: IBM BAW Team
+  display_name: Inspect Business Automation Workflow Processes
+  short_description: "Find, investigate, and act on running IBM Business Automation Workflow process instances: retry failures, suspend, resume, and change due dates."
+  author: IBM Business Automation Workflow Team
 ---
-# Inspect BAW Processes
+# Inspect Business Automation Workflow Processes
 
-Search, inspect, and act on IBM Business Automation Workflow (BAW) process instances at runtime. This skill covers three categories of work: finding instances by filter, inspecting the details of a specific instance, and taking lifecycle actions (suspend, resume, retry, terminate, change due date).
+Search, inspect, and act on IBM Business Automation Workflow process instances at runtime. This skill covers three categories of work: finding instances by filter, inspecting the details of a specific instance, and taking lifecycle actions (suspend, resume, retry, terminate, change due date).
 
 One rule applies to all categories: **always resolve the instance ID by searching first**. The instance ID must always come from a search result, not from the user.
 
@@ -35,7 +35,7 @@ Stay on the chosen path for the entire session. Do not use a failed tool call as
 ## Credentials
 
 Never prompt the user for credentials. Credentials are only needed when making a REST call.
-When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it — it will read credentials from `.env` automatically, and only prompt the user if a value is missing from that file. Do this once per session only.
+When a REST call is about to be made, read `references/CREDENTIAL_HANDLING.md` and follow it for how to authenticate and execute the call. Do this once per session only.
 
 ---
 
@@ -142,7 +142,7 @@ Translate user language to a status value before filtering:
 ## Disambiguation rules
 
 **`search_processes_by_filter` vs `search_processes` (advanced DSL)**
-Always call `search_processes_by_filter` first for all natural-language requests. It maps directly to the v1 BAW endpoint and is the reliable default. Call `search_processes` only when the user explicitly needs a complex boolean condition that `search_processes_by_filter` cannot express (for example, combining AND/OR across multiple fields). Never use `search_processes` as the default.
+Always call `search_processes_by_filter` first for all natural-language requests. It maps directly to the v1 Business Automation Workflow endpoint and is the reliable default. Call `search_processes` only when the user explicitly needs a complex boolean condition that `search_processes_by_filter` cannot express (for example, combining AND/OR across multiple fields). Never use `search_processes` as the default.
 
 **App name vs acronym**
 The user gives a full name, but the operation needs the acronym. Always resolve the acronym by calling `list_exposed_processes`. Never guess.
@@ -155,7 +155,7 @@ The user gives a full name, but the operation needs the acronym. Always resolve 
 
 **All action operations work on one instance at a time.** No bulk operation exists. Iterate for bulk requests.
 
-**Non-federated environments.** In IBM Cloud Pak for Business Automation (CP4BA) federated deployments, instance results from the advanced search include a `system_id`, which you must pass to action operations. On standalone BAW, omit it. See `references/mcp.md` for details.
+**Non-federated environments.** In IBM Cloud Pak for Business Automation federated deployments, instance results from the advanced search include a `system_id`, which you must pass to action operations. On standalone Business Automation Workflow, omit it. See `references/mcp.md` for details.
 
 ---
 

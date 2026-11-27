@@ -102,7 +102,7 @@ dry_notice() {
 usage() {
   printf '%b\n' \
     "" \
-    "${C_BOLD}IBM® BAW Skills and Bob Modes Installer v${VERSION}${C_RESET}" \
+    "${C_BOLD}IBM® Business Automation Workflow Skills and Bob Modes Installer v${VERSION}${C_RESET}" \
     "${C_DIM}${REPO_URL}${C_RESET}" \
     "" \
     "${C_BOLD}USAGE${C_RESET}" \
@@ -115,7 +115,7 @@ usage() {
     "  --skills <list>           Install specific skills only (comma-separated names)" \
     "                            e.g. \"generate-baw-bpmn,inspect-baw-processes\"" \
     "                            Omit to install all skills (recommended)" \
-    "  --uninstall               Remove all BAW skills and modes from both locations" \
+    "  --uninstall               Remove all Business Automation Workflow skills and modes from both locations" \
     "  --dry-run                 Preview changes without writing any files" \
     "  --help, -h                Show this help message" \
     "" \
@@ -124,7 +124,7 @@ usage() {
     "  ./install.sh --scope project                 # Install into current project's .bob/" \
     "  ./install.sh --dry-run                       # Preview what would be installed" \
     "  ./install.sh --skills generate-baw-bpmn      # Install one specific skill" \
-    "  ./install.sh --uninstall                     # Remove all BAW skills and modes" \
+    "  ./install.sh --uninstall                     # Remove all Business Automation Workflow skills and modes" \
     "" \
     "${C_BOLD}AVAILABLE SKILLS${C_RESET}"
   _list_available_skills
@@ -425,7 +425,7 @@ _create_env() {
   fi
 
   cp "${ENV_EXAMPLE}" "${ENV_FILE}"
-  success "Created .env — open it and fill in your BAW server URL and credentials."
+  success "Created .env at ${ENV_FILE} — open it and fill in your Business Automation Workflow server URL and credentials."
 }
 
 # ── Print summary ─────────────────────────────────────────────────────────────
@@ -473,9 +473,11 @@ _print_summary() {
   if [ "${skill_count}" -gt 0 ] && ! $DRY_RUN; then
     echo -e "\n${C_GREEN}${C_BOLD}✓ Setup complete!${C_RESET}"
     echo -e "  Open IBM Bob and switch to ${C_BOLD}IBM BAW Author${C_RESET} or ${C_BOLD}IBM BAW Admin${C_RESET} mode."
-    echo -e "  Then try: ${C_CYAN}\"Generate a BAW BPMN process for expense approvals\"${C_RESET}"
+    echo -e "  Then try: ${C_CYAN}\"Generate a Business Automation Workflow BPMN process for expense approvals\"${C_RESET}"
     if [ -f "${ENV_FILE}" ]; then
-      echo -e "\n  ${C_YELLOW}Next step:${C_RESET} Edit ${C_BOLD}.env${C_RESET} and replace the placeholder values with your BAW server URL and credentials."
+      echo -e "\n  ${C_YELLOW}Next step:${C_RESET} Edit ${C_BOLD}${ENV_FILE}${C_RESET} and replace the placeholder values with your Business Automation Workflow server URL and credentials."
+      echo -e "  Skills read ${C_BOLD}.env${C_RESET} from the root of the folder you have open in Bob (your workspace)."
+      echo -e "  If you will work in a different folder, copy this file there: ${C_DIM}cp \"${ENV_FILE}\" <your-workspace>/.env${C_RESET}"
     fi
   fi
 
@@ -552,9 +554,9 @@ _uninstall() {
 
   echo ""
   if [ "${removed_count}" -gt 0 ]; then
-    echo -e "${C_GREEN}${C_BOLD}✓ IBM BAW skills and Bob modes have been successfully uninstalled.${C_RESET}"
+    echo -e "${C_GREEN}${C_BOLD}✓ IBM Business Automation Workflow skills and Bob modes have been successfully uninstalled.${C_RESET}"
   else
-    echo -e "${C_YELLOW}Nothing to uninstall — no IBM BAW skills were found in ~/.bob/skills/ or .bob/skills/.${C_RESET}"
+    echo -e "${C_YELLOW}Nothing to uninstall — no IBM Business Automation Workflow skills were found in ~/.bob/skills/ or .bob/skills/.${C_RESET}"
   fi
   echo ""
 }
@@ -737,7 +739,7 @@ main() {
   fi
 
   echo ""
-  echo -e "${C_BOLD}IBM® BAW Skills and Bob Modes Installer v${VERSION}${C_RESET}"
+  echo -e "${C_BOLD}IBM® Business Automation Workflow Skills and Bob Modes Installer v${VERSION}${C_RESET}"
   dim "${REPO_URL}"
   echo ""
 

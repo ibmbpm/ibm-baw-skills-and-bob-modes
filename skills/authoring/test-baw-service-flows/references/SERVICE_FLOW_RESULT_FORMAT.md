@@ -62,7 +62,7 @@ The execution protocol in `SERVICE_FLOW_EXECUTION.md` writes to this format. Use
 - `ERROR` — an invocation failure (4xx/5xx on unexpected path, timeout, auth failure) prevented the test from producing assertable output. Result is inconclusive.
 - `SKIPPED` — the test was excluded from this run (for example, user requested only happy-path tests).
 
-`process_instance_id` is non-null only when the `process_embedded` invocation path was used — it records the BAW process instance ID created during the test, for post-run cleanup reference.
+`process_instance_id` is non-null only when the `process_embedded` invocation path was used — it records the Business Automation Workflow process instance ID created during the test, for post-run cleanup reference.
 
 ---
 
